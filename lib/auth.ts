@@ -1,9 +1,45 @@
 import { NextAuthOptions } from 'next-auth'
 import TwitterProvider from 'next-auth/providers/twitter'
+import CredentialsProvider from 'next-auth/providers/credentials'
 import { prisma } from './prisma'
 
 export const authOptions: NextAuthOptions = {
   providers: [
+    // Temporary bypass provider for testing
+    CredentialsProvider({
+      id: 'demo',
+      name: 'Demo Login',
+      credentials: {
+        username: { label: 'Username', type: 'text', placeholder: 'demo' }
+      },
+      async authorize(credentials) {
+        if (credentials?.username === 'demo') {
+          // Create or find demo user
+          let user = await prisma.user.findUnique({
+            where: { twitterId: 'demo-user' }
+          })
+          
+          if (!user) {
+            user = await prisma.user.create({
+              data: {
+                twitterId: 'demo-user',
+                twitterHandle: 'demo_user',
+                name: 'Demo User',
+                profileImage: '/default-avatar.png',
+              }
+            })
+          }
+          
+          return {
+            id: user.id,
+            name: user.name,
+            email: 'demo@example.com',
+            image: user.profileImage,
+          }
+        }
+        return null
+      }
+    }),
     TwitterProvider({
       clientId: process.env.TWITTER_CLIENT_ID!,
       clientSecret: process.env.TWITTER_CLIENT_SECRET!,

@@ -28,6 +28,19 @@ export default function SignIn() {
     }
   }
 
+  const handleDemoSignIn = async () => {
+    setIsLoading(true)
+    try {
+      await signIn('demo', { 
+        username: 'demo',
+        callbackUrl: '/' 
+      })
+    } catch (error) {
+      console.error('Demo sign in error:', error)
+      setIsLoading(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-dark-900 flex items-center justify-center px-4">
       <div className="max-w-md w-full space-y-8">
@@ -52,7 +65,22 @@ export default function SignIn() {
           </p>
         </div>
 
-        <div className="card">
+        <div className="card space-y-4">
+          {/* Demo Login Button */}
+          <button
+            onClick={handleDemoSignIn}
+            disabled={isLoading}
+            className="w-full flex items-center justify-center px-4 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+          >
+            {isLoading ? (
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-3" />
+            ) : (
+              <MessageCircle className="w-5 h-5 mr-3" />
+            )}
+            {isLoading ? 'Connecting...' : 'Demo Login (Test Features)'}
+          </button>
+
+          {/* Twitter Login Button */}
           <button
             onClick={handleTwitterSignIn}
             disabled={isLoading}
