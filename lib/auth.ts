@@ -59,8 +59,8 @@ export const authOptions: NextAuthOptions = {
         if (user) {
           session.user.id = user.id
           session.user.twitterHandle = user.twitterHandle
-          session.user.walletAddress = user.walletAddress
-          session.user.bio = user.bio
+          session.user.walletAddress = user.walletAddress || undefined
+          session.user.bio = user.bio || undefined
         }
       }
       return session
