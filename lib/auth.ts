@@ -15,29 +15,42 @@ export const authOptions: NextAuthOptions = {
       if (account?.provider === 'twitter' && profile) {
         try {
           const twitterProfile = profile as any
+          console.log('Twitter profile:', twitterProfile) // Debug log
+          
+          // Handle both v1.1 and v2.0 API response formats
+          const profileData = twitterProfile.data || twitterProfile
+          const userId = profileData.id || profileData.id_str
+          const username = profileData.username || profileData.screen_name
+          const displayName = profileData.name
+          const profileImageUrl = profileData.profile_image_url || profileData.profile_image_url_https
+          
+          if (!userId || !username) {
+            console.error('Missing required profile data:', { userId, username, profileData })
+            return false
+          }
           
           // Check if user exists
           let existingUser = await prisma.user.findUnique({
-            where: { twitterId: twitterProfile.data.id }
+            where: { twitterId: userId }
           })
 
           if (!existingUser) {
             // Create new user
             existingUser = await prisma.user.create({
               data: {
-                twitterId: twitterProfile.data.id,
-                twitterHandle: twitterProfile.data.username,
-                name: twitterProfile.data.name,
-                profileImage: twitterProfile.data.profile_image_url,
+                twitterId: userId,
+                twitterHandle: username,
+                name: displayName || username,
+                profileImage: profileImageUrl,
               }
             })
           } else {
             // Update existing user
             existingUser = await prisma.user.update({
-              where: { twitterId: twitterProfile.data.id },
+              where: { twitterId: userId },
               data: {
-                name: twitterProfile.data.name,
-                profileImage: twitterProfile.data.profile_image_url,
+                name: displayName || existingUser.name,
+                profileImage: profileImageUrl || existingUser.profileImage,
               }
             })
           }
@@ -68,7 +81,9 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, account, profile }) {
       if (account?.provider === 'twitter' && profile) {
         const twitterProfile = profile as any
-        token.sub = twitterProfile.data.id
+        const profileData = twitterProfile.data || twitterProfile
+        const userId = profileData.id || profileData.id_str
+        token.sub = userId
       }
       return token
     },
