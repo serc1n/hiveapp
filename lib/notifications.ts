@@ -59,10 +59,10 @@ export async function sendNotificationToGroupMembers(
           },
           payload
         )
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error sending notification to subscription:', error)
         // Remove invalid subscription
-        if (error.statusCode === 410) {
+        if (error?.statusCode === 410) {
           await prisma.pushSubscription.delete({
             where: { id: subscription.id }
           })
