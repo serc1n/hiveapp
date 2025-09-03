@@ -9,7 +9,7 @@ interface Group {
   profileImage: string | null
   contractAddress: string | null
   memberCount: number
-  isCreator: boolean
+  isCreator?: boolean
 }
 
 interface GroupSettingsModalProps {
