@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { Send, Hash, Users, Bell, BellOff, MoreVertical, UserPlus, UserMinus, Sparkles } from 'lucide-react'
-import { MessageList } from './MessageList'
+import { FigmaChatList } from './FigmaChatList'
 import { AnnouncementModal } from './AnnouncementModal'
 import { GroupSettingsModal } from './GroupSettingsModal'
 import { MembersListModal } from './MembersListModal'
@@ -269,19 +269,28 @@ export function ChatArea({ groupId, onBack }: ChatAreaProps) {
   return (
     <>
       <div className="flex flex-col w-full" style={{ height: '100dvh' }}>
-              {/* Header - Desktop Only */}
-              <div className="hidden sm:flex items-center justify-between p-4 border-b border-gray-800 bg-black flex-shrink-0">
-                <div className="flex items-center space-x-3">
-                  {group?.profileImage && (
-                    <img
-                      src={getImageUrl(group.profileImage, 'group')}
-                      alt={group.name}
-                      className="w-8 h-8 rounded-full object-cover"
-                    />
+              {/* Enhanced Header - Desktop Only */}
+              <div className="hidden sm:flex items-center justify-between p-6 bg-gradient-to-r from-gray-900 to-gray-800 border-b border-gray-700 flex-shrink-0 shadow-lg">
+                <div className="flex items-center space-x-4">
+                  {group?.profileImage ? (
+                    <div className="w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-blue-400 to-purple-500 p-0.5">
+                      <img
+                        src={getImageUrl(group.profileImage, 'group')}
+                        alt={group.name}
+                        className="w-full h-full rounded-full object-cover bg-gray-800"
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                      <Hash className="w-6 h-6 text-white" />
+                    </div>
                   )}
                   <div>
-                    <h2 className="text-lg font-semibold text-white">{group?.name}</h2>
-                    <p className="text-sm text-gray-400">{group?.memberCount} members</p>
+                    <h2 className="text-xl font-bold text-white">{group?.name}</h2>
+                    <p className="text-sm text-gray-300 flex items-center">
+                      <Users className="w-4 h-4 mr-1" />
+                      {group?.memberCount} members
+                    </p>
                   </div>
                 </div>
                 
@@ -290,10 +299,10 @@ export function ChatArea({ groupId, onBack }: ChatAreaProps) {
                   {(group?.isCreator || isMember) && (
                     <button
                       onClick={() => setShowAISummary(true)}
-                      className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
+                      className="p-3 hover:bg-gray-700 rounded-xl transition-all duration-200 bg-gray-800 border border-gray-600 shadow-md hover:shadow-lg"
                       title="AI Summary"
                     >
-                      <Sparkles className="w-5 h-5 text-white" />
+                      <Sparkles className="w-5 h-5 text-blue-400" />
                     </button>
                   )}
                   
@@ -301,22 +310,22 @@ export function ChatArea({ groupId, onBack }: ChatAreaProps) {
                   {(group?.isCreator || isMember) && (
                     <button
                       onClick={() => setShowGroupSettings(true)}
-                      className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
+                      className="p-3 hover:bg-gray-700 rounded-xl transition-all duration-200 bg-gray-800 border border-gray-600 shadow-md hover:shadow-lg"
                       title="Group Settings"
                     >
-                      <MoreVertical className="w-5 h-5 text-gray-400" />
+                      <MoreVertical className="w-5 h-5 text-gray-300" />
                     </button>
                   )}
                 </div>
               </div>
 
-              {/* Mobile Header - Shows back button, group info, and controls */}
-              <div className="sm:hidden flex items-center justify-between p-3 border-b border-gray-800 bg-black flex-shrink-0">
-                <div className="flex items-center space-x-2">
+              {/* Enhanced Mobile Header */}
+              <div className="sm:hidden flex items-center justify-between p-4 bg-gradient-to-r from-gray-900 to-gray-800 border-b border-gray-700 flex-shrink-0 shadow-lg">
+                <div className="flex items-center space-x-3">
                   {onBack && (
                     <button
                       onClick={onBack}
-                      className="p-1 hover:bg-gray-800 rounded-full transition-colors"
+                      className="p-2 hover:bg-gray-700 rounded-xl transition-all duration-200 bg-gray-800 border border-gray-600"
                       title="Back to hives"
                     >
                       <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -324,25 +333,34 @@ export function ChatArea({ groupId, onBack }: ChatAreaProps) {
                       </svg>
                     </button>
                   )}
-                  {group?.profileImage && (
-                    <img
-                      src={getImageUrl(group.profileImage, 'group')}
-                      alt={group.name}
-                      className="w-6 h-6 rounded-full object-cover"
-                    />
+                  {group?.profileImage ? (
+                    <div className="w-8 h-8 rounded-full overflow-hidden bg-gradient-to-br from-blue-400 to-purple-500 p-0.5">
+                      <img
+                        src={getImageUrl(group.profileImage, 'group')}
+                        alt={group.name}
+                        className="w-full h-full rounded-full object-cover bg-gray-800"
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                      <Hash className="w-4 h-4 text-white" />
+                    </div>
                   )}
-                  <h2 className="text-sm font-semibold text-white">{group?.name}</h2>
+                  <div>
+                    <h2 className="text-base font-bold text-white">{group?.name}</h2>
+                    <p className="text-xs text-gray-300">{group?.memberCount} members</p>
+                  </div>
                 </div>
                 
-                <div className="flex items-center space-x-1">
+                <div className="flex items-center space-x-2">
                   {/* AI Summary Button */}
                   {(group?.isCreator || isMember) && (
                     <button
                       onClick={() => setShowAISummary(true)}
-                      className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
+                      className="p-2 hover:bg-gray-700 rounded-xl transition-all duration-200 bg-gray-800 border border-gray-600"
                       title="AI Summary"
                     >
-                      <Sparkles className="w-4 h-4 text-white" />
+                      <Sparkles className="w-4 h-4 text-blue-400" />
                     </button>
                   )}
                   
@@ -350,10 +368,10 @@ export function ChatArea({ groupId, onBack }: ChatAreaProps) {
                   {(group?.isCreator || isMember) && (
                     <button
                       onClick={() => setShowGroupSettings(true)}
-                      className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
+                      className="p-2 hover:bg-gray-700 rounded-xl transition-all duration-200 bg-gray-800 border border-gray-600"
                       title="Group Settings"
                     >
-                      <MoreVertical className="w-4 h-4 text-gray-400" />
+                      <MoreVertical className="w-4 h-4 text-gray-300" />
                     </button>
                   )}
                 </div>
@@ -361,7 +379,7 @@ export function ChatArea({ groupId, onBack }: ChatAreaProps) {
 
         {/* Messages */}
         <div className="flex-1 flex flex-col bg-black w-full">
-          <MessageList 
+          <FigmaChatList 
             messages={messages} 
             currentUserId={session?.user?.id}
             currentUserImage={session?.user?.image}
@@ -371,30 +389,36 @@ export function ChatArea({ groupId, onBack }: ChatAreaProps) {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Message Input - Fixed at bottom */}
-        <div className="flex-shrink-0 border-t border-gray-800 bg-black w-full" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
-          <div className="p-3 sm:p-4">
-            <form onSubmit={handleSendMessage} className="flex space-x-2 sm:space-x-3 items-center">
-            <input
-              type="text"
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              placeholder={`Message ${group.name}`}
-              className="flex-1 px-4 py-3 bg-gray-900 border border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-white focus:border-white text-base resize-none"
-              disabled={isSending}
-              maxLength={1000}
-            />
-            <button
-              type="submit"
-              disabled={!newMessage.trim() || isSending}
-              className="w-12 h-12 bg-white hover:bg-gray-200 disabled:bg-gray-600 disabled:cursor-not-allowed text-black disabled:text-white transition-colors duration-200 flex items-center justify-center flex-shrink-0 font-bold"
-            >
-              {isSending ? (
-                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-              ) : (
-                <Send className="w-5 h-5" />
-              )}
-            </button>
+        {/* Enhanced Message Input - Figma Style */}
+        <div className="flex-shrink-0 bg-gradient-to-t from-gray-900 to-gray-800 w-full border-t border-gray-700" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+          <div className="p-4 sm:p-6">
+            <form onSubmit={handleSendMessage} className="flex space-x-4 items-end">
+              <div className="flex-1 relative">
+                <input
+                  type="text"
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  placeholder={`Type your message...`}
+                  className="w-full px-6 py-4 bg-gray-800 border-2 border-gray-600 rounded-2xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base transition-all duration-200 shadow-lg"
+                  disabled={isSending}
+                  maxLength={1000}
+                />
+                {/* Character count */}
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-xs text-gray-500">
+                  {newMessage.length}/1000
+                </div>
+              </div>
+              <button
+                type="submit"
+                disabled={!newMessage.trim() || isSending}
+                className="w-14 h-14 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white transition-all duration-200 flex items-center justify-center rounded-2xl shadow-lg transform hover:scale-105 active:scale-95"
+              >
+                {isSending ? (
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <Send className="w-6 h-6" />
+                )}
+              </button>
             </form>
           </div>
         </div>
