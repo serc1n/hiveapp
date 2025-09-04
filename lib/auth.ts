@@ -52,15 +52,14 @@ export const authOptions: NextAuthOptions = {
           const twitterProfile = profile as any
           console.log('Twitter profile:', twitterProfile) // Debug log
           
-          // Handle both v1.1 and v2.0 API response formats
-          const profileData = twitterProfile.data || twitterProfile
-          const userId = profileData.id || profileData.id_str
-          const username = profileData.username || profileData.screen_name
-          const displayName = profileData.name
-          const profileImageUrl = profileData.profile_image_url || profileData.profile_image_url_https
+          // Handle Twitter OAuth 1.0a response format (more stable)
+          const userId = twitterProfile.id_str || twitterProfile.id || twitterProfile.sub
+          const username = twitterProfile.screen_name || twitterProfile.username
+          const displayName = twitterProfile.name
+          const profileImageUrl = twitterProfile.profile_image_url_https || twitterProfile.profile_image_url
           
           if (!userId || !username) {
-            console.error('Missing required profile data:', { userId, username, profileData })
+            console.error('Missing required profile data:', { userId, username, twitterProfile })
             return false
           }
           
@@ -113,12 +112,14 @@ export const authOptions: NextAuthOptions = {
       }
       return session
     },
-    async jwt({ token, account, profile }) {
+    async jwt({ token, account, profile, user }) {
       if (account?.provider === 'twitter' && profile) {
         const twitterProfile = profile as any
-        const profileData = twitterProfile.data || twitterProfile
-        const userId = profileData.id || profileData.id_str
+        const userId = twitterProfile.id_str || twitterProfile.id || twitterProfile.sub
         token.sub = userId
+      } else if (account?.provider === 'demo' && user) {
+        // For demo login, set the token.sub to the demo user's twitterId
+        token.sub = 'demo-user'
       }
       return token
     },

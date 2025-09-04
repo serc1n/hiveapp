@@ -22,10 +22,12 @@ model User {
   updatedAt       DateTime  @updatedAt
   
   // Relations
-  createdGroups   Group[]   @relation("GroupCreator")
-  groupMembers    GroupMember[]
-  messages        Message[]
-  announcements   Announcement[]
+  createdGroups     Group[]   @relation("GroupCreator")
+  groupMembers      GroupMember[]
+  messages          Message[]
+  announcements     Announcement[]
+  pushSubscriptions PushSubscription[]
+  joinRequests      JoinRequest[]
   
   @@map("users")
 }
@@ -36,6 +38,7 @@ model Group {
   profileImage    String?
   contractAddress String?   // Token gating contract
   creatorId       String
+  requiresApproval Boolean  @default(false) @map("requires_approval")
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
   
@@ -44,6 +47,7 @@ model Group {
   members         GroupMember[]
   messages        Message[]
   announcements   Announcement[]
+  joinRequests    JoinRequest[]
   
   @@map("groups")
 }
@@ -99,6 +103,27 @@ model PushSubscription {
   auth        String
   createdAt   DateTime @default(now())
   
+  // Relations
+  user        User     @relation(fields: [userId], references: [id])
+  
   @@unique([userId, endpoint])
   @@map("push_subscriptions")
 }
+
+model JoinRequest {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  groupId   String   @map("group_id")
+  status    String   @default("pending") // pending, approved, rejected
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  user      User     @relation(fields: [userId], references: [id])
+  group     Group    @relation(fields: [groupId], references: [id])
+  
+  @@unique([userId, groupId])
+  @@map("join_requests")
+}
+
+

@@ -20,43 +20,57 @@ export async function GET() {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
-    // Get all groups with member count
+    // Only get groups where user is a member or creator
     const groups = await prisma.group.findMany({
+      where: {
+        OR: [
+          { creatorId: session.user.id },
+          {
+            members: {
+              some: {
+                userId: session.user.id
+              }
+            }
+          }
+        ]
+      },
       include: {
         _count: {
           select: { members: true }
         },
-        members: {
-          where: { userId: session.user.id }
+        messages: {
+          take: 1,
+          orderBy: { createdAt: 'desc' },
+          include: {
+            user: {
+              select: {
+                name: true,
+                twitterHandle: true
+              }
+            }
+          }
         }
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { updatedAt: 'desc' }
     })
 
-    // Check access for each group
-    const groupsWithAccess = await Promise.all(
-      groups.map(async (group) => {
-        let hasAccess = true
+    const groupsWithCreatorFlag = groups.map(group => ({
+      id: group.id,
+      name: group.name,
+      profileImage: group.profileImage,
+      contractAddress: group.contractAddress,
+      memberCount: group._count.members,
+      isCreator: group.creatorId === session.user.id,
+      hasAccess: true, // User is already a member
+      lastMessage: group.messages.length > 0 ? {
+        content: group.messages[0].content,
+        createdAt: group.messages[0].createdAt,
+        user: group.messages[0].user
+      } : null,
+      updatedAt: group.updatedAt
+    }))
 
-        // If user is not a member and group has contract address, check NFT ownership
-        if (group.members.length === 0 && group.contractAddress && user.walletAddress) {
-          hasAccess = await checkNFTOwnership(user.walletAddress, group.contractAddress)
-        } else if (group.members.length === 0 && group.contractAddress) {
-          hasAccess = false // No wallet connected
-        }
-
-        return {
-          id: group.id,
-          name: group.name,
-          profileImage: group.profileImage,
-          contractAddress: group.contractAddress,
-          memberCount: group._count.members,
-          hasAccess
-        }
-      })
-    )
-
-    return NextResponse.json({ groups: groupsWithAccess })
+    return NextResponse.json({ groups: groupsWithCreatorFlag })
   } catch (error) {
     console.error('Error fetching groups:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
@@ -73,6 +87,7 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData()
     const name = formData.get('name') as string
     const contractAddress = formData.get('contractAddress') as string
+    const requiresApproval = formData.get('requiresApproval') === 'true'
     const profileImage = formData.get('profileImage') as File | null
 
     if (!name?.trim()) {
@@ -101,6 +116,7 @@ export async function POST(request: NextRequest) {
         name: name.trim(),
         profileImage: imageUrl,
         contractAddress: contractAddress?.trim() || null,
+        requiresApproval,
         creatorId: session.user.id
       }
     })

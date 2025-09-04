@@ -2,17 +2,27 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  :root {
-    --foreground-rgb: 0, 0, 0;
-    --background-start-rgb: 214, 219, 220;
-    --background-end-rgb: 255, 255, 255;
+/* Safe area padding for mobile devices */
+  .safe-area-pb {
+    padding-bottom: env(safe-area-inset-bottom);
   }
 
-  [data-theme="dark"] {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
+  .safe-area-bottom-space {
+    padding-bottom: calc(env(safe-area-inset-bottom) + 1rem);
+  }
+
+@layer base {
+  :root {
+    /* Monochrome theme - Pure black and white */
+    --bg-primary: #000000;
+    --bg-secondary: #ffffff;
+    --bg-tertiary: #f8f8f8;
+    --text-primary: #ffffff;
+    --text-secondary: #000000;
+    --text-muted: #666666;
+    --border-color: #e0e0e0;
+    --accent-color: #000000;
+    --hover-color: #f0f0f0;
   }
 
   * {
@@ -33,13 +43,8 @@
   }
 
   body {
-    color: rgb(var(--foreground-rgb));
-    background: linear-gradient(
-        to bottom,
-        transparent,
-        rgb(var(--background-end-rgb))
-      )
-      rgb(var(--background-start-rgb));
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
   }
 
   a {
@@ -103,4 +108,65 @@
 
 ::-webkit-scrollbar-thumb:hover {
   background: #4b5563;
+}
+
+/* Minimalist geometric patterns inspired by Silhouettes */
+.geometric-bg {
+  background-image: 
+    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.card-minimal {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 0;
+  box-shadow: none;
+  transition: all 0.2s ease;
+}
+
+.card-minimal:hover {
+  border-color: var(--accent-color);
+}
+
+.button-minimal {
+  background: transparent;
+  border: 1px solid var(--accent-color);
+  color: var(--accent-color);
+  border-radius: 0;
+  padding: 10px 20px;
+  font-weight: 400;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.button-minimal:hover {
+  background: var(--accent-color);
+  color: var(--bg-secondary);
+}
+
+.button-minimal:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.input-minimal {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 0;
+  padding: 12px;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.input-minimal:focus {
+  outline: none;
+  border-color: var(--accent-color);
+}
+
+.text-minimal {
+  font-weight: 300;
+  letter-spacing: 0.5px;
 }

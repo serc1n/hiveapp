@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/lib/auth'
-import { subscribeToPushNotifications } from '@/lib/notifications'
+import { savePushSubscription } from '@/lib/notifications'
 import { prisma } from '@/lib/prisma'
 
 export async function POST(request: NextRequest) {
@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid subscription data' }, { status: 400 })
     }
 
-    await subscribeToPushNotifications(session.user.id, subscription)
+    await savePushSubscription(session.user.id, subscription)
 
     return NextResponse.json({ success: true })
   } catch (error) {

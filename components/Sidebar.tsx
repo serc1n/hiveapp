@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { useSession, signOut } from 'next-auth/react'
-import { Plus, Settings, User, Wallet, LogOut, Hash, Bell } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { Plus, Settings, User, Wallet, LogOut, Hash, Bell, Search } from 'lucide-react'
 import { CreateGroupModal } from './CreateGroupModal'
 import { UserProfile } from './UserProfile'
 
@@ -23,6 +24,7 @@ interface SidebarProps {
 
 export function Sidebar({ selectedGroupId, onSelectGroup, onShowWalletModal }: SidebarProps) {
   const { data: session } = useSession()
+  const router = useRouter()
   const [groups, setGroups] = useState<Group[]>([])
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showProfile, setShowProfile] = useState(false)
@@ -56,8 +58,15 @@ export function Sidebar({ selectedGroupId, onSelectGroup, onShowWalletModal }: S
       <div className="flex flex-col h-full">
         {/* Header */}
         <div className="p-4 border-b border-dark-700">
-          <div className="flex items-center justify-between">
-            <h1 className="text-xl font-bold text-white">HiveApp</h1>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center space-x-2">
+              <img 
+                src="/hive.png" 
+                alt="HiveApp Logo" 
+                className="w-6 h-6"
+              />
+              <h1 className="text-xl font-bold text-white">HiveApp</h1>
+            </div>
             <button
               onClick={() => setShowCreateModal(true)}
               className="p-2 hover:bg-dark-700 rounded-lg transition-colors"
@@ -66,6 +75,13 @@ export function Sidebar({ selectedGroupId, onSelectGroup, onShowWalletModal }: S
               <Plus className="w-5 h-5 text-dark-400" />
             </button>
           </div>
+          <button
+            onClick={() => router.push('/browse')}
+            className="w-full flex items-center space-x-2 p-2 hover:bg-dark-700 rounded-lg transition-colors text-dark-400 hover:text-white"
+          >
+            <Search className="w-4 h-4" />
+            <span className="text-sm">Browse Groups</span>
+          </button>
         </div>
 
         {/* Groups List */}

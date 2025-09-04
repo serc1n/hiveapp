@@ -27,11 +27,13 @@ export async function GET(
       return NextResponse.json({ error: 'Group not found' }, { status: 404 })
     }
 
-    // For now, allow access if user is a member or if group has no token gating
-    // In a full implementation, you'd check NFT ownership for token-gated groups
-    if (group.members.length === 0 && group.contractAddress) {
-      // This is where you'd check NFT ownership
-      // For now, we'll allow access
+    // Check if user has access to this group
+    const isCreator = group.creatorId === session.user.id
+    const isMember = group.members.length > 0
+    
+    // CRITICAL: Only creators and approved members can access messages
+    if (!isCreator && !isMember) {
+      return NextResponse.json({ error: 'You must be a member of this group to view messages' }, { status: 403 })
     }
 
     const messages = await prisma.message.findMany({
@@ -88,6 +90,15 @@ export async function POST(
 
     if (!group) {
       return NextResponse.json({ error: 'Group not found' }, { status: 404 })
+    }
+
+    // Check if user has access to send messages
+    const isCreator = group.creatorId === session.user.id
+    const isMember = group.members.length > 0
+    
+    // CRITICAL: Only creators and approved members can send messages
+    if (!isCreator && !isMember) {
+      return NextResponse.json({ error: 'You must be a member of this group to send messages' }, { status: 403 })
     }
 
     // Create the message

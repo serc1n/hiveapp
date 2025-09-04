@@ -65,9 +65,10 @@ export function NotificationPermission() {
 
     try {
       const registration = await navigator.serviceWorker.ready
+      const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || 'BF1e3Ti7SKuuDlFZa3AX2fqfgXzW0jagGMXkwGr5vwklnonuqygCqXvmCqNQOCFQPlatQ-39F7jYi_aWiSSZmP4'
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '')
+        applicationServerKey: urlBase64ToUint8Array(vapidKey)
       })
 
       // Send subscription to server
@@ -138,21 +139,21 @@ export function NotificationPermission() {
   // Notification permission prompt
   if (showPrompt && permission === 'default') {
     return (
-      <div className="fixed top-4 left-4 right-4 md:left-auto md:w-80 bg-dark-800 border border-dark-600 rounded-lg p-4 shadow-lg z-50">
+      <div className="fixed top-4 left-4 right-4 md:left-auto md:w-80 bg-gray-900 border border-gray-700 rounded-lg p-4 shadow-xl z-50">
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center">
-            <Bell className="w-5 h-5 text-primary-500 mr-2" />
+            <Bell className="w-5 h-5 text-blue-500 mr-2" />
             <h4 className="font-semibold text-white">Enable Notifications</h4>
           </div>
           <button
             onClick={() => setShowPrompt(false)}
-            className="text-dark-400 hover:text-white"
+            className="text-gray-400 hover:text-white"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
         
-        <p className="text-sm text-dark-300 mb-4">
+        <p className="text-sm text-gray-300 mb-4">
           Get notified when group announcements are made, even when the app is closed.
         </p>
         
@@ -160,13 +161,13 @@ export function NotificationPermission() {
           <button
             onClick={requestPermission}
             disabled={isLoading}
-            className="flex-1 btn-primary text-sm"
+            className="flex-1 px-4 py-2 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-600 text-white rounded-lg font-medium text-sm transition-colors"
           >
             {isLoading ? 'Enabling...' : 'Enable'}
           </button>
           <button
             onClick={() => setShowPrompt(false)}
-            className="btn-secondary text-sm"
+            className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-medium text-sm transition-colors"
           >
             Later
           </button>
@@ -175,15 +176,15 @@ export function NotificationPermission() {
     )
   }
 
-  // Notification status indicator (top bar)
+  // Notification status indicator (top bar) - Hidden on mobile to avoid clutter
   return (
-    <div className="fixed top-4 right-4 z-40">
+    <div className="hidden md:block fixed bottom-4 left-4 z-40">
       <button
         onClick={permission === 'granted' ? (isSubscribed ? unsubscribe : subscribeToPush) : requestPermission}
         className={`p-2 rounded-lg transition-colors ${
           permission === 'granted' && isSubscribed
             ? 'bg-green-600 hover:bg-green-700 text-white'
-            : 'bg-dark-700 hover:bg-dark-600 text-dark-300'
+            : 'bg-gray-800 hover:bg-gray-700 text-gray-300'
         }`}
         title={
           permission === 'granted' && isSubscribed

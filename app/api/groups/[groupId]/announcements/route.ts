@@ -110,8 +110,8 @@ export async function POST(
     try {
       await sendNotificationToGroupMembers(
         params.groupId,
-        `📢 New announcement in ${group.name}`,
-        message.content.slice(0, 100) + (message.content.length > 100 ? '...' : ''),
+        `🐝 New HiveApp Announcement`,
+        `New announcement in ${group.name}: ${message.content.slice(0, 100) + (message.content.length > 100 ? '...' : '')}`,
         session.user.id // Exclude the creator from notifications
       )
     } catch (notificationError) {

@@ -1,7 +1,17 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { X, Upload, Hash, Save, Trash2, Users } from 'lucide-react'
+import { X, Upload, Hash, Save, Trash2, Users, Settings, UserMinus } from 'lucide-react'
+import { AdminPanelModal } from './AdminPanelModal'
+import { MembersListModal } from './MembersListModal'
+
+interface Member {
+  id: string
+  name: string
+  twitterHandle: string
+  profileImage: string | null
+  joinedAt: string
+}
 
 interface Group {
   id: string
@@ -10,6 +20,7 @@ interface Group {
   contractAddress: string | null
   memberCount: number
   isCreator?: boolean
+  members?: Member[]
 }
 
 interface GroupSettingsModalProps {
@@ -27,6 +38,9 @@ export function GroupSettingsModal({ group, onClose, onGroupUpdated }: GroupSett
   const [previewUrl, setPreviewUrl] = useState<string | null>(group.profileImage)
   const [isLoading, setIsLoading] = useState(false)
   const [activeTab, setActiveTab] = useState<'general' | 'members'>('general')
+  const [showAdminPanel, setShowAdminPanel] = useState(false)
+  const [showMembersList, setShowMembersList] = useState(false)
+  const [isLeavingGroup, setIsLeavingGroup] = useState(false)
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -67,6 +81,34 @@ export function GroupSettingsModal({ group, onClose, onGroupUpdated }: GroupSett
       alert('Failed to update group')
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const handleLeaveGroup = async () => {
+    if (!confirm('Are you sure you want to leave this group? You may need to request to join again.')) {
+      return
+    }
+
+    setIsLeavingGroup(true)
+    try {
+      const response = await fetch(`/api/groups/${group.id}/leave`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      })
+
+      if (response.ok) {
+        alert('You have left the group successfully.')
+        onGroupUpdated() // Refresh the group list
+        onClose() // Close the modal
+      } else {
+        const error = await response.json()
+        alert(error.error || 'Failed to leave group')
+      }
+    } catch (error) {
+      console.error('Failed to leave group:', error)
+      alert('Failed to leave group. Please try again.')
+    } finally {
+      setIsLeavingGroup(false)
     }
   }
 
@@ -230,12 +272,74 @@ export function GroupSettingsModal({ group, onClose, onGroupUpdated }: GroupSett
             </form>
           ) : (
             /* Members Tab */
-            <div className="space-y-4">
-              <div className="text-center py-8">
-                <Users className="w-12 h-12 text-dark-600 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-white mb-2">Group Members</h3>
-                <p className="text-dark-400">Member management coming soon</p>
-              </div>
+            <div className="space-y-6">
+              {group.isCreator ? (
+                <div>
+                  <div className="bg-gray-800 rounded-lg p-6 text-center">
+                    <Settings className="w-12 h-12 text-blue-500 mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold text-white mb-2">Admin Panel</h3>
+                    <p className="text-gray-400 mb-4">
+                      Manage join requests and group members
+                    </p>
+                    <div className="bg-yellow-900 border border-yellow-600 rounded-lg p-3 mb-4">
+                      <p className="text-yellow-200 text-sm">
+                        💡 <strong>Tip:</strong> Check for pending join requests that need your approval!
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setShowAdminPanel(true)}
+                      className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+                    >
+                      Open Admin Panel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                /* Regular Member Options */
+                <div className="space-y-4">
+                  {/* View Members */}
+                  <div className="bg-dark-700 rounded-lg p-6">
+                    <div className="flex items-center space-x-3 mb-4">
+                      <Users className="w-6 h-6 text-blue-500" />
+                      <div>
+                        <h3 className="text-lg font-semibold text-white">Group Members</h3>
+                        <p className="text-dark-300 text-sm">{group.memberCount} members in this group</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setShowMembersList(true)}
+                      className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+                    >
+                      View All Members
+                    </button>
+                  </div>
+
+                  {/* Leave Group */}
+                  <div className="bg-red-900/20 border border-red-800 rounded-lg p-6">
+                    <div className="flex items-center space-x-3 mb-4">
+                      <UserMinus className="w-6 h-6 text-red-400" />
+                      <div>
+                        <h3 className="text-lg font-semibold text-white">Leave Group</h3>
+                        <p className="text-dark-300 text-sm">You can rejoin anytime if it's a public group</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleLeaveGroup()}
+                      disabled={isLeavingGroup}
+                      className="w-full px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                    >
+                      {isLeavingGroup ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                          Leaving...
+                        </>
+                      ) : (
+                        'Leave Group'
+                      )}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -249,6 +353,24 @@ export function GroupSettingsModal({ group, onClose, onGroupUpdated }: GroupSett
           </div>
         )}
       </div>
+      
+      {/* Admin Panel Modal */}
+      {showAdminPanel && (
+        <AdminPanelModal
+          groupId={group.id}
+          groupName={group.name}
+          onClose={() => setShowAdminPanel(false)}
+        />
+      )}
+
+      {/* Members List Modal */}
+      {showMembersList && group.members && (
+        <MembersListModal
+          members={group.members}
+          groupName={group.name}
+          onClose={() => setShowMembersList(false)}
+        />
+      )}
     </div>
   )
 }

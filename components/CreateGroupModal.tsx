@@ -12,7 +12,8 @@ export function CreateGroupModal({ onClose, onGroupCreated }: CreateGroupModalPr
   const [formData, setFormData] = useState({
     name: '',
     contractAddress: '',
-    profileImage: null as File | null
+    profileImage: null as File | null,
+    requiresApproval: false
   })
   const [isLoading, setIsLoading] = useState(false)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
@@ -35,6 +36,7 @@ export function CreateGroupModal({ onClose, onGroupCreated }: CreateGroupModalPr
       const submitData = new FormData()
       submitData.append('name', formData.name.trim())
       submitData.append('contractAddress', formData.contractAddress.trim())
+      submitData.append('requiresApproval', formData.requiresApproval.toString())
       if (formData.profileImage) {
         submitData.append('profileImage', formData.profileImage)
       }
@@ -128,6 +130,25 @@ export function CreateGroupModal({ onClose, onGroupCreated }: CreateGroupModalPr
             <p className="text-xs text-dark-400 mt-1">
               Add a contract address to make this a token-gated group
             </p>
+          </div>
+
+          {/* Requires Approval */}
+          {/* Join Approval Setting */}
+          <div>
+            <label className="flex items-center space-x-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={formData.requiresApproval}
+                onChange={(e) => setFormData(prev => ({ ...prev, requiresApproval: e.target.checked }))}
+                className="w-4 h-4 text-blue-600 bg-gray-800 border-gray-600 rounded focus:ring-blue-500 focus:ring-2"
+              />
+              <div>
+                <span className="text-sm font-medium text-white">Require Join Approval</span>
+                <p className="text-xs text-gray-400">
+                  Users will need to request to join and wait for your approval
+                </p>
+              </div>
+            </label>
           </div>
 
           {/* Action Buttons */}

@@ -19,12 +19,45 @@ export async function GET(
       include: {
         _count: {
           select: { members: true }
+        },
+        members: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                twitterHandle: true,
+                profileImage: true
+              }
+            }
+          }
         }
       }
     })
 
     if (!group) {
       return NextResponse.json({ error: 'Group not found' }, { status: 404 })
+    }
+
+    // Check if user has access to this group
+    const isCreator = group.creatorId === session.user.id
+    const isMember = group.members.some(member => member.userId === session.user.id)
+    
+    if (!isCreator && !isMember) {
+      // CRITICAL: Non-members can only see basic group info, not member details
+      return NextResponse.json({
+        group: {
+          id: group.id,
+          name: group.name,
+          profileImage: group.profileImage,
+          contractAddress: group.contractAddress,
+          requiresApproval: group.requiresApproval,
+          memberCount: group._count.members,
+          isCreator: false,
+          members: [], // Don't show member details to non-members
+          requiresJoin: true
+        }
+      })
     }
 
     return NextResponse.json({
@@ -34,7 +67,14 @@ export async function GET(
         profileImage: group.profileImage,
         contractAddress: group.contractAddress,
         memberCount: group._count.members,
-        isCreator: group.creatorId === session.user.id
+        isCreator: group.creatorId === session.user.id,
+        members: group.members.map(member => ({
+          id: member.user.id,
+          name: member.user.name,
+          twitterHandle: member.user.twitterHandle,
+          profileImage: member.user.profileImage,
+          joinedAt: member.joinedAt
+        }))
       }
     })
   } catch (error) {

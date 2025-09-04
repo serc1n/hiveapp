@@ -1,12 +1,14 @@
 import webpush from 'web-push'
 import { prisma } from './prisma'
 
-// Configure web-push
-webpush.setVapidDetails(
-  `mailto:${process.env.VAPID_EMAIL}`,
-  process.env.VAPID_PUBLIC_KEY || '',
-  process.env.VAPID_PRIVATE_KEY || ''
-)
+// Configure web-push with VAPID keys
+if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY && process.env.VAPID_EMAIL) {
+  webpush.setVapidDetails(
+    `mailto:${process.env.VAPID_EMAIL}`,
+    process.env.VAPID_PUBLIC_KEY,
+    process.env.VAPID_PRIVATE_KEY
+  )
+}
 
 export async function sendNotificationToGroupMembers(
   groupId: string,
@@ -19,114 +21,90 @@ export async function sendNotificationToGroupMembers(
     const members = await prisma.groupMember.findMany({
       where: {
         groupId,
-        userId: excludeUserId ? { not: excludeUserId } : undefined
+        userId: excludeUserId ? { not: excludeUserId } : undefined,
       },
       include: {
-        user: true
-      }
-    })
-
-    // Get push subscriptions for these users
-    const subscriptions = await prisma.pushSubscription.findMany({
-      where: {
-        userId: {
-          in: members.map(member => member.userId)
+        user: {
+          include: {
+            pushSubscriptions: true
+          }
         }
       }
     })
 
-    const payload = JSON.stringify({
-      title,
-      body,
-      icon: '/icon-192x192.png',
-      badge: '/icon-192x192.png',
-      data: {
-        groupId,
-        url: '/'
-      }
-    })
+    const notifications = []
 
-    // Send notifications to all subscriptions
-    const notifications = subscriptions.map(async (subscription) => {
-      try {
-        await webpush.sendNotification(
-          {
+    for (const member of members) {
+      for (const subscription of member.user.pushSubscriptions) {
+        try {
+          const pushSubscription = {
             endpoint: subscription.endpoint,
             keys: {
               p256dh: subscription.p256dh,
               auth: subscription.auth
             }
-          },
-          payload
-        )
-      } catch (error: any) {
-        console.error('Error sending notification to subscription:', error)
-        // Remove invalid subscription
-        if (error?.statusCode === 410) {
-          await prisma.pushSubscription.delete({
-            where: { id: subscription.id }
+          }
+
+          const payload = JSON.stringify({
+            title,
+            body,
+            icon: '/icon-192x192.png',
+            badge: '/icon-192x192.png',
+            tag: `group-${groupId}`,
+            data: {
+              groupId,
+              url: `/?groupId=${groupId}`
+            }
           })
+
+          notifications.push(
+            webpush.sendNotification(pushSubscription, payload)
+              .catch(error => {
+                console.error('Failed to send notification to:', subscription.id, error)
+                // Remove invalid subscriptions
+                if (error.statusCode === 410) {
+                  prisma.pushSubscription.delete({ 
+                    where: { id: subscription.id } 
+                  }).catch(console.error)
+                }
+              })
+          )
+        } catch (error) {
+          console.error('Error preparing notification:', error)
         }
       }
-    })
+    }
 
     await Promise.allSettled(notifications)
+    console.log(`Sent ${notifications.length} notifications for group ${groupId}`)
   } catch (error) {
-    console.error('Error sending group notifications:', error)
-    throw error
+    console.error('Error sending notifications:', error)
   }
 }
 
-export async function subscribeToPushNotifications(
-  userId: string,
-  subscription: {
-    endpoint: string
-    keys: {
-      p256dh: string
-      auth: string
-    }
-  }
-) {
+export async function savePushSubscription(userId: string, subscription: any) {
   try {
-    await prisma.pushSubscription.upsert({
+    // Remove existing subscription for this user and endpoint
+    await prisma.pushSubscription.deleteMany({
       where: {
-        userId_endpoint: {
-          userId,
-          endpoint: subscription.endpoint
-        }
-      },
-      update: {
-        p256dh: subscription.keys.p256dh,
-        auth: subscription.keys.auth
-      },
-      create: {
+        userId,
+        endpoint: subscription.endpoint
+      }
+    })
+
+    // Save new subscription
+    await prisma.pushSubscription.create({
+      data: {
         userId,
         endpoint: subscription.endpoint,
         p256dh: subscription.keys.p256dh,
         auth: subscription.keys.auth
       }
     })
+
+    console.log('Push subscription saved for user:', userId)
   } catch (error) {
     console.error('Error saving push subscription:', error)
-    throw error
-  }
-}
-
-export async function unsubscribeFromPushNotifications(
-  userId: string,
-  endpoint: string
-) {
-  try {
-    await prisma.pushSubscription.delete({
-      where: {
-        userId_endpoint: {
-          userId,
-          endpoint
-        }
-      }
-    })
-  } catch (error) {
-    console.error('Error removing push subscription:', error)
     throw error
   }
 }
