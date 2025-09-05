@@ -122,7 +122,7 @@ export function ModernSidebar({
         // Cache the result with aggressive error handling
         try {
           const cacheData = JSON.stringify({
-            groups: groups.slice(0, 5).map(group => ({ // Only cache 5 groups with minimal data
+            groups: groups.slice(0, 5).map((group: any) => ({ // Only cache 5 groups with minimal data
               id: group.id,
               name: group.name,
               profileImage: group.profileImage,
@@ -209,7 +209,7 @@ export function ModernSidebar({
         // Cache the result with aggressive error handling
         try {
           const cacheData = JSON.stringify({
-            groups: groups.slice(0, 5).map(group => ({ // Only cache 5 groups with minimal data
+            groups: groups.slice(0, 5).map((group: any) => ({ // Only cache 5 groups with minimal data
               id: group.id,
               name: group.name,
               profileImage: group.profileImage,
