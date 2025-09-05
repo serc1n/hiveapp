@@ -25,6 +25,10 @@ interface Group {
   profileImage: string | null
   memberCount: number
   isCreator?: boolean
+  contractAddress: string | null
+  requiresApproval?: boolean
+  createdAt?: string
+  updatedAt?: string
 }
 
 interface ModernChatViewProps {
