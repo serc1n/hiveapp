@@ -197,17 +197,16 @@ export function ModernSidebar({
 
   // Debug logging
   if (activeTab === 'explore') {
-    console.log('🔍 EXPLORE DEBUG:', {
-      activeTab,
-      exploreGroupsCount: exploreGroups.length,
-      filteredGroupsCount: filteredGroups.length,
-      exploreGroups: exploreGroups.map((g: any) => ({ 
-        id: g.id, 
-        name: g.name, 
-        hasAccess: g.hasAccess,
-        isMember: g.isMember 
-      })),
-      loading
+    console.log('🔍 EXPLORE GROUPS COUNT:', exploreGroups.length)
+    console.log('🔍 FILTERED GROUPS COUNT:', filteredGroups.length)
+    console.log('🔍 LOADING:', loading)
+    exploreGroups.forEach((group: any, index) => {
+      console.log(`🔍 Group ${index}:`, {
+        id: group.id,
+        name: group.name,
+        hasAccess: group.hasAccess,
+        isMember: group.isMember
+      })
     })
   }
 
