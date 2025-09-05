@@ -352,19 +352,17 @@ export function ModernSidebar({
                         )}
                       </div>
                       {activeTab === 'explore' && !group.hasAccess ? (
-                        <>
-                          {console.log('🎯 RENDERING JOIN BUTTON for:', group.id, group.name, 'hasAccess:', group.hasAccess)}
-                          <button
-                            onClick={(e) => {
-                              console.log('🖱️ Join button clicked for group:', group.id, group.name)
-                              handleJoinGroup(group.id, e)
-                            }}
-                            disabled={joiningGroups.has(group.id)}
-                            className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white text-xs rounded-lg font-medium transition-colors flex-shrink-0"
-                          >
-                            {joiningGroups.has(group.id) ? 'Joining...' : 'Join'}
-                          </button>
-                        </>)
+                        <button
+                          onClick={(e) => {
+                            console.log('🎯 RENDERING JOIN BUTTON for:', group.id, group.name, 'hasAccess:', group.hasAccess)
+                            console.log('🖱️ Join button clicked for group:', group.id, group.name)
+                            handleJoinGroup(group.id, e)
+                          }}
+                          disabled={joiningGroups.has(group.id)}
+                          className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white text-xs rounded-lg font-medium transition-colors flex-shrink-0"
+                        >
+                          {joiningGroups.has(group.id) ? 'Joining...' : 'Join'}
+                        </button>
                       ) : (
                         <span className="text-xs text-gray-500 flex-shrink-0 ml-2">
                           {group.lastMessage 
