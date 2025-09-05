@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
-import { Search, Plus, Hash, Users, Settings, Bell, BellOff, User, Lock, Crown } from 'lucide-react'
+import { Search, Plus, Hash, Users, User, Lock, Crown } from 'lucide-react'
 import Image from 'next/image'
 import { CreateGroupModal } from './CreateGroupModal'
 import { HiveLogo } from './HiveLogo'
@@ -46,8 +46,6 @@ export function ModernSidebar({
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [showCreateModal, setShowCreateModal] = useState(false)
-  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default')
-  const [isSubscribed, setIsSubscribed] = useState(false)
   const [joiningGroups, setJoiningGroups] = useState<Set<string>>(new Set())
 
   useEffect(() => {
@@ -93,27 +91,6 @@ export function ModernSidebar({
     }
   }, [session, activeTab])
 
-  useEffect(() => {
-    // Check notification permission and subscription status
-    if (typeof window !== 'undefined') {
-      if ('Notification' in window) {
-        setNotificationPermission(Notification.permission)
-      }
-      checkSubscription()
-    }
-  }, [])
-
-  const checkSubscription = async () => {
-    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-      try {
-        const registration = await navigator.serviceWorker.ready
-        const subscription = await registration.pushManager.getSubscription()
-        setIsSubscribed(!!subscription)
-      } catch (error) {
-        console.error('Error checking subscription:', error)
-      }
-    }
-  }
 
   const fetchMyGroups = async () => {
     try {
@@ -162,54 +139,6 @@ export function ModernSidebar({
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
   }
 
-  const handleToggleNotifications = async () => {
-    if (notificationPermission === 'granted' && isSubscribed) {
-      // Unsubscribe
-      try {
-        const registration = await navigator.serviceWorker.ready
-        const subscription = await registration.pushManager.getSubscription()
-        if (subscription) {
-          await subscription.unsubscribe()
-          setIsSubscribed(false)
-        }
-      } catch (error) {
-        console.error('Error unsubscribing:', error)
-        alert('Error disabling notifications. Please try again.')
-      }
-    } else {
-      // Subscribe
-      try {
-        const permission = await Notification.requestPermission()
-        setNotificationPermission(permission)
-        
-        if (permission === 'granted') {
-          const registration = await navigator.serviceWorker.ready
-          const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
-          
-          if (vapidPublicKey) {
-            const subscription = await registration.pushManager.subscribe({
-              userVisibleOnly: true,
-              applicationServerKey: vapidPublicKey
-            })
-
-            // Save subscription to server
-            await fetch('/api/notifications/subscribe', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(subscription)
-            })
-
-            setIsSubscribed(true)
-          } else {
-            alert('Notifications are not configured for this app.')
-          }
-        }
-      } catch (error) {
-        console.error('Error enabling notifications:', error)
-        alert('Error enabling notifications. Please try again.')
-      }
-    }
-  }
 
   const handleJoinGroup = async (groupId: string, event: React.MouseEvent) => {
     event.stopPropagation() // Prevent group selection
@@ -334,48 +263,7 @@ export function ModernSidebar({
               <p className="text-gray-600">@{session?.user?.name?.toLowerCase().replace(/\s+/g, '') || 'user'}</p>
             </div>
             
-            <div className="space-y-3">
-              <button 
-                onClick={() => {
-                  // For now, switch to the profile tab which has the actual settings
-                  onTabChange('profile');
-                }}
-                className="w-full flex items-center space-x-3 p-4 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors"
-              >
-                <Settings className="w-5 h-5 text-gray-600" />
-                <span className="text-gray-900 font-medium">Settings</span>
-              </button>
-              <button 
-                onClick={handleToggleNotifications}
-                className={`w-full flex items-center justify-between p-4 rounded-2xl hover:bg-gray-100 transition-colors ${
-                  notificationPermission === 'granted' && isSubscribed 
-                    ? 'bg-green-50 border border-green-200' 
-                    : 'bg-gray-50'
-                }`}
-              >
-                <div className="flex items-center space-x-3">
-                  {notificationPermission === 'granted' && isSubscribed ? (
-                    <Bell className="w-5 h-5 text-green-600" />
-                  ) : (
-                    <BellOff className="w-5 h-5 text-gray-600" />
-                  )}
-                  <span className={`font-medium ${
-                    notificationPermission === 'granted' && isSubscribed 
-                      ? 'text-green-900' 
-                      : 'text-gray-900'
-                  }`}>
-                    Notifications
-                  </span>
-                </div>
-                <span className={`text-xs font-medium px-2 py-1 rounded-full ${
-                  notificationPermission === 'granted' && isSubscribed
-                    ? 'bg-green-100 text-green-700'
-                    : 'bg-gray-100 text-gray-600'
-                }`}>
-                  {notificationPermission === 'granted' && isSubscribed ? 'ON' : 'OFF'}
-                </span>
-              </button>
-            </div>
+            {/* Profile settings are now handled in ProfileTab component */}
           </div>
         ) : loading ? (
           <div className="flex items-center justify-center p-8">

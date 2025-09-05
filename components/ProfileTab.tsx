@@ -243,7 +243,7 @@ export function ProfileTab() {
 
         {/* Profile Actions */}
         <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Profile Actions</h3>
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Actions</h3>
           <div className="space-y-3">
             {/* Edit Profile Button */}
             <button
