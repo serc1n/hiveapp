@@ -44,22 +44,7 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
     if (!session?.user) return
 
     console.log('🔌 Setting up Supabase Realtime connection')
-    
-    // Listen for connection status
-    supabase.realtime.onOpen(() => {
-      console.log('🔌 Supabase Realtime connected')
-      setIsConnected(true)
-    })
-
-    supabase.realtime.onClose(() => {
-      console.log('🔌 Supabase Realtime disconnected')
-      setIsConnected(false)
-    })
-
-    supabase.realtime.onError((error) => {
-      console.error('🔌 Supabase Realtime error:', error)
-      setIsConnected(false)
-    })
+    setIsConnected(true) // Assume connected for now, will be validated when subscribing
 
     return () => {
       console.log('🔌 Cleaning up Supabase Realtime connection')
@@ -68,7 +53,7 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
       })
       setChannels([])
     }
-  }, [session])
+  }, [session, channels])
 
   const joinGroups = useCallback((groupIds: string[]) => {
     if (!session?.user) return
@@ -130,6 +115,11 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
         )
         .subscribe((status) => {
           console.log(`🔌 Channel ${groupId} subscription status:`, status)
+          if (status === 'SUBSCRIBED') {
+            setIsConnected(true)
+          } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+            setIsConnected(false)
+          }
         })
 
       return channel
