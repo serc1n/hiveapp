@@ -114,12 +114,12 @@ export function ModernSidebar({
 
   // Join groups for real-time updates when groups are loaded
   useEffect(() => {
-    if (isConnected && groups.length > 0 && activeTab === 'chats') {
-      console.log('🔌 Joining groups for real-time updates:', groups.map(g => g.name))
+    if (groups.length > 0 && activeTab === 'chats') {
+      console.log('🔌 Joining groups for real-time updates')
       const groupIds = groups.map(group => group.id)
       joinSocketGroups(groupIds)
     }
-  }, [isConnected, groups, activeTab, joinSocketGroups])
+  }, [groups, activeTab])
 
 
   const fetchMyGroups = async () => {

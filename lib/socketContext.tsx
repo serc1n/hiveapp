@@ -39,113 +39,78 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
   const [channels, setChannels] = useState<RealtimeChannel[]>([])
   const { data: session } = useSession()
 
-  // Supabase Realtime connection
+  // Supabase Realtime connection cleanup
   useEffect(() => {
-    if (!session?.user) return
-
-    console.log('🔌 Setting up Supabase Realtime connection')
-    setIsConnected(true) // Assume connected for now, will be validated when subscribing
-
     return () => {
       console.log('🔌 Cleaning up Supabase Realtime connection')
-      channels.forEach(channel => {
-        supabase.removeChannel(channel)
+      // Clean up all channels on unmount
+      setChannels(prevChannels => {
+        prevChannels.forEach(channel => {
+          supabase.removeChannel(channel)
+        })
+        return []
       })
-      setChannels([])
     }
-  }, [session, channels])
+  }, [])
 
   const joinGroups = useCallback((groupIds: string[]) => {
-    if (!session?.user) {
-      console.log('🔌 No session, skipping group join')
+    if (!session?.user || !messageCallback) {
       return
     }
 
-    console.log('🔌 Joining groups via Supabase Realtime:', groupIds)
+    console.log('🔌 Setting up single Realtime channel for all messages')
 
     // Remove existing channels
     channels.forEach(channel => {
-      console.log('🔌 Removing existing channel')
       supabase.removeChannel(channel)
     })
 
-    // Create new channels for each group
-    const newChannels = groupIds.map(groupId => {
-      console.log(`🔌 Creating channel for group: ${groupId}`)
-      const channel = supabase
-        .channel(`messages_${groupId}`) // Simpler channel name
-        .on(
-          'postgres_changes',
-          {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'messages', // Using the actual table name from @@map
-            filter: `groupId=eq.${groupId}`
-          },
-          async (payload: any) => {
-            console.log('🔌 RAW Supabase Realtime payload:', JSON.stringify(payload, null, 2))
-            
-            if (messageCallback && payload.new && payload.new.userId !== session.user.id) {
-              console.log('🔌 Processing message from user:', payload.new.userId, 'current user:', session.user.id)
+    // Create a single channel for all messages
+    const channel = supabase
+      .channel('all_messages')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages'
+        },
+        async (payload: any) => {
+          console.log('🔌 New message received:', payload.new)
+          
+          // Only process if user is not the sender and groupId is in our groups
+          if (payload.new && payload.new.userId !== session.user.id && groupIds.includes(payload.new.groupId)) {
+            try {
+              const userResponse = await fetch(`/api/users/${payload.new.userId}`)
+              const user = userResponse.ok ? await userResponse.json() : null
               
-              // Fetch user data for the message
-              try {
-                const userResponse = await fetch(`/api/users/${payload.new.userId}`)
-                const user = userResponse.ok ? await userResponse.json() : null
-                
-                console.log('🔌 Fetched user data:', user)
-                
-                const messageData = {
-                  groupId: payload.new.groupId,
-                  message: {
-                    id: payload.new.id,
-                    content: payload.new.content,
-                    userId: payload.new.userId,
-                    createdAt: payload.new.createdAt,
-                    user
-                  }
+              messageCallback({
+                groupId: payload.new.groupId,
+                message: {
+                  id: payload.new.id,
+                  content: payload.new.content,
+                  userId: payload.new.userId,
+                  createdAt: payload.new.createdAt,
+                  user
                 }
-                
-                console.log('🔌 Calling messageCallback with:', messageData)
-                messageCallback(messageData)
-              } catch (error) {
-                console.error('🔌 Error fetching user data for message:', error)
-                // Still send the message without user data
-                const messageData = {
-                  groupId: payload.new.groupId,
-                  message: {
-                    id: payload.new.id,
-                    content: payload.new.content,
-                    userId: payload.new.userId,
-                    createdAt: payload.new.createdAt,
-                    user: null
-                  }
-                }
-                console.log('🔌 Calling messageCallback with fallback data:', messageData)
-                messageCallback(messageData)
-              }
-            } else {
-              console.log('🔌 Message ignored - no callback, no payload.new, or from current user')
+              })
+            } catch (error) {
+              console.error('Error fetching user data:', error)
             }
           }
-        )
-        .subscribe((status) => {
-          console.log(`🔌 Channel ${groupId} subscription status:`, status)
-          if (status === 'SUBSCRIBED') {
-            console.log(`✅ Successfully subscribed to group ${groupId}`)
-            setIsConnected(true)
-          } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-            console.log(`❌ Channel error for group ${groupId}:`, status)
-            setIsConnected(false)
-          }
-        })
+        }
+      )
+      .subscribe((status) => {
+        console.log('🔌 Realtime channel status:', status)
+        if (status === 'SUBSCRIBED') {
+          setIsConnected(true)
+        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          setIsConnected(false)
+        }
+      })
 
-      return channel
-    })
-
-    setChannels(newChannels)
-    console.log(`🔌 Created ${newChannels.length} channels`)
-  }, [session, messageCallback, channels])
+    setChannels([channel])
+  }, [session, messageCallback])
 
   const leaveGroups = useCallback((groupIds: string[]) => {
     console.log('🔌 Leaving groups:', groupIds)
