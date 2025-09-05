@@ -42,15 +42,15 @@ export function ModernSidebar({
 }: ModernSidebarProps) {
   const { data: session } = useSession()
   const [groups, setGroups] = useState<Group[]>([])
-  const [exploreGroups, setExploreGroupsInternal] = useState<Group[]>([])
+  const [exploreGroups, setExploreGroupsRaw] = useState<Group[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [joiningGroups, setJoiningGroups] = useState<Set<string>>(new Set())
   
   const setExploreGroups = (groups: Group[]) => {
-    console.log('🔄 Setting explore groups state:', groups.length)
-    setExploreGroupsInternal(groups)
+    console.log('🔄 Setting explore groups state:', groups.length, groups.map((g: any) => g.name))
+    setExploreGroupsRaw(groups)
   }
 
   useEffect(() => {
@@ -191,7 +191,7 @@ export function ModernSidebar({
     }
   }
 
-  const filteredGroups = (activeTab === 'chats' ? groups : exploreGroupsInternal).filter(group =>
+  const filteredGroups = (activeTab === 'chats' ? groups : exploreGroups).filter(group =>
     group.name.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
@@ -199,9 +199,9 @@ export function ModernSidebar({
   if (activeTab === 'explore') {
     console.log('🔍 EXPLORE DEBUG:', {
       activeTab,
-      exploreGroupsCount: exploreGroupsInternal.length,
+      exploreGroupsCount: exploreGroups.length,
       filteredGroupsCount: filteredGroups.length,
-      exploreGroups: exploreGroupsInternal.map((g: any) => ({ 
+      exploreGroups: exploreGroups.map((g: any) => ({ 
         id: g.id, 
         name: g.name, 
         hasAccess: g.hasAccess,
