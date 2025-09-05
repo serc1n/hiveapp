@@ -26,6 +26,24 @@ export function ProfileTab() {
         setRegistration(reg)
       })
     }
+    
+    // Set initial version if not set
+    const initializeVersion = async () => {
+      if (!localStorage.getItem('app_version')) {
+        try {
+          const response = await fetch('/api/version')
+          if (response.ok) {
+            const data = await response.json()
+            localStorage.setItem('app_version', data.version)
+            console.log('📝 Set initial app version:', data.version)
+          }
+        } catch (error) {
+          console.error('Error setting initial version:', error)
+        }
+      }
+    }
+    
+    initializeVersion()
   }, [session])
 
   const fetchUserProfile = async () => {
@@ -76,31 +94,84 @@ export function ProfileTab() {
   }
 
   const handleCheckUpdate = async () => {
-    if (!registration) {
-      alert('Service Worker not available. Please refresh the page and try again.')
-      return
-    }
-    
     setIsCheckingUpdate(true)
+    console.log('🔄 Checking for app updates...')
+    
     try {
-      const newRegistration = await registration.update()
-      if (newRegistration.waiting) {
-        setIsCheckingUpdate(false)
-        const shouldReload = confirm('A new version is available! Click OK to reload and update the app.')
-        if (shouldReload) {
-          newRegistration.waiting.postMessage({ type: 'SKIP_WAITING' })
-          window.location.reload()
-        }
-      } else {
-        setTimeout(() => {
+      // Method 1: Force service worker update
+      if (registration) {
+        console.log('📡 Forcing service worker update...')
+        await registration.update()
+        
+        if (registration.waiting) {
+          console.log('✅ New version found via service worker!')
           setIsCheckingUpdate(false)
-          alert('✅ You have the latest version!')
-        }, 1000)
+          const shouldReload = confirm('🎉 A new version is available! Click OK to reload and update the app.')
+          if (shouldReload) {
+            registration.waiting.postMessage({ type: 'SKIP_WAITING' })
+            window.location.reload()
+          }
+          return
+        }
       }
+      
+      // Method 2: Check build timestamp from server
+      console.log('📡 Checking server for new version...')
+      const response = await fetch('/api/version?' + new Date().getTime(), {
+        cache: 'no-cache',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache'
+        }
+      })
+      
+      if (response.ok) {
+        const serverVersion = await response.json()
+        const currentVersion = localStorage.getItem('app_version') || '0'
+        
+        console.log('📊 Version check:', { current: currentVersion, server: serverVersion.version })
+        
+        if (serverVersion.version !== currentVersion) {
+          console.log('🆕 New version detected!')
+          setIsCheckingUpdate(false)
+          const shouldReload = confirm(`🎉 New version available!\n\nCurrent: ${currentVersion}\nNew: ${serverVersion.version}\n\nClick OK to update now!`)
+          if (shouldReload) {
+            localStorage.setItem('app_version', serverVersion.version)
+            // Clear all caches
+            if ('caches' in window) {
+              const cacheNames = await caches.keys()
+              await Promise.all(cacheNames.map(name => caches.delete(name)))
+            }
+            window.location.reload(true)
+          }
+          return
+        }
+      }
+      
+      // Method 3: Force cache refresh
+      console.log('🔄 Forcing cache refresh...')
+      if ('caches' in window) {
+        const cacheNames = await caches.keys()
+        console.log('🗑️ Clearing caches:', cacheNames)
+        await Promise.all(cacheNames.map(name => caches.delete(name)))
+      }
+      
+      // Final check with hard reload option
+      setTimeout(() => {
+        setIsCheckingUpdate(false)
+        const forceReload = confirm('✅ You appear to have the latest version.\n\nIf you\'re still seeing old content, click OK to force a complete refresh.')
+        if (forceReload) {
+          window.location.reload(true)
+        }
+      }, 1000)
+      
     } catch (error) {
-      console.error('Error checking for updates:', error)
+      console.error('💥 Error checking for updates:', error)
       setIsCheckingUpdate(false)
-      alert('Error checking for updates. Please try again.')
+      const forceReload = confirm('❌ Error checking for updates.\n\nClick OK to force refresh the app, or Cancel to try again later.')
+      if (forceReload) {
+        window.location.reload(true)
+      }
     }
   }
 
