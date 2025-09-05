@@ -58,6 +58,7 @@ export function ProfileTab() {
   }
 
   const handleEditBio = () => {
+    console.log('Edit bio button clicked!')
     setTempBio(bio)
     setIsEditing(true)
   }
