@@ -68,7 +68,7 @@ export function ModernSidebar({
     }
   }, [session, activeTab])
 
-  // WebSocket setup for real-time messaging
+  // WebSocket setup for real-time messaging - stable version
   useEffect(() => {
     if (session?.user && activeTab === 'chats') {
       console.log('🔌 Setting up WebSocket listeners for My Hives')
@@ -110,16 +110,16 @@ export function ModernSidebar({
         offMessageReceived()
       }
     }
-  }, [session, activeTab, selectedGroupId, onMessageReceived, offMessageReceived])
+  }, [session?.user?.id, activeTab]) // Only depend on user ID and activeTab
 
-  // Join groups for real-time updates when groups are loaded
+  // Join groups for real-time updates when groups are loaded - stable version
   useEffect(() => {
-    if (groups.length > 0 && activeTab === 'chats') {
-      console.log('🔌 Joining groups for real-time updates')
+    if (groups.length > 0 && activeTab === 'chats' && session?.user) {
+      console.log('🔌 Joining groups for real-time updates:', groups.length, 'groups')
       const groupIds = groups.map(group => group.id)
       joinSocketGroups(groupIds)
     }
-  }, [groups, activeTab])
+  }, [groups.length, activeTab, session?.user?.id]) // Only depend on groups.length, not the full array
 
 
   const fetchMyGroups = async () => {

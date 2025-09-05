@@ -54,13 +54,12 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
   }, [])
 
   const joinGroups = useCallback((groupIds: string[]) => {
-    if (!session?.user || !messageCallback) {
-      console.log('🔌 Cannot join groups - no session or messageCallback')
+    if (!session?.user) {
+      console.log('🔌 Cannot join groups - no session')
       return
     }
 
     console.log('🔌 Setting up Supabase Realtime channel')
-    console.log('🔌 Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL)
     console.log('🔌 Groups to monitor:', groupIds)
 
     // Remove existing channels
@@ -71,12 +70,7 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
 
     // Create a single channel for all messages
     const channel = supabase
-      .channel('hive_messages', {
-        config: {
-          broadcast: { self: false },
-          presence: { key: session.user.id }
-        }
-      })
+      .channel('hive_messages')
       .on(
         'postgres_changes',
         {
@@ -85,12 +79,7 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
           table: 'messages'
         },
         async (payload: any) => {
-          console.log('🔌 Realtime payload received:', {
-            event: payload.eventType,
-            table: payload.table,
-            new: payload.new,
-            old: payload.old
-          })
+          console.log('🔌 Realtime payload received:', payload.new)
           
           // Only process if user is not the sender and groupId is in our groups
           if (payload.new && payload.new.userId !== session.user.id && groupIds.includes(payload.new.groupId)) {
@@ -111,16 +100,15 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
               }
               
               console.log('🔌 Calling messageCallback with:', messageData)
-              messageCallback(messageData)
+              // Use the current messageCallback from state
+              if (messageCallback) {
+                messageCallback(messageData)
+              }
             } catch (error) {
               console.error('🔌 Error processing message:', error)
             }
           } else {
-            console.log('🔌 Message ignored:', {
-              hasNew: !!payload.new,
-              isFromSelf: payload.new?.userId === session.user.id,
-              isInGroups: payload.new ? groupIds.includes(payload.new.groupId) : false
-            })
+            console.log('🔌 Message ignored - not for current user groups')
           }
         }
       )
@@ -141,7 +129,7 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
 
     setChannels([channel])
     console.log('🔌 Channel created and subscribed')
-  }, [session, messageCallback])
+  }, [session?.user?.id]) // Only depend on user ID
 
   const leaveGroups = useCallback((groupIds: string[]) => {
     console.log('🔌 Leaving groups:', groupIds)
