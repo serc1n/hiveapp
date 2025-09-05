@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useSession } from 'next-auth/react'
-import { ArrowLeft, Send, MoreVertical, Hash, Users, Sparkles, Phone, Video } from 'lucide-react'
+import { ArrowLeft, Send, MoreVertical, Hash, Users, Sparkles } from 'lucide-react'
 import { ModernMessageList } from './ModernMessageList'
 import { GroupSettingsModal } from './GroupSettingsModal'
 import { AISummaryModal } from './AISummaryModal'
@@ -220,17 +220,6 @@ export function ModernChatView({ groupId, onBack, isMobile = false }: ModernChat
         </div>
         
         <div className="flex items-center space-x-2">
-          {/* Action buttons */}
-          {!isMobile && (
-            <>
-              <button className="p-2 hover:bg-gray-100 rounded-xl transition-colors" title="Voice call">
-                <Phone className="w-5 h-5 text-gray-600" />
-              </button>
-              <button className="p-2 hover:bg-gray-100 rounded-xl transition-colors" title="Video call">
-                <Video className="w-5 h-5 text-gray-600" />
-              </button>
-            </>
-          )}
           
           {(group.isCreator || isMember) && (
             <>

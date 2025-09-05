@@ -114,37 +114,37 @@ export function GroupSettingsModal({ group, onClose, onGroupUpdated }: GroupSett
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-dark-800 rounded-xl w-full max-w-lg max-h-[90vh] overflow-hidden">
+      <div className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-hidden shadow-modern">
         {/* Header */}
-        <div className="p-6 border-b border-dark-700">
+        <div className="p-6 border-b border-gray-200">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold text-white">Group Settings</h2>
+            <h2 className="text-xl font-bold text-gray-900">Group Settings</h2>
             <button
               onClick={onClose}
-              className="p-1 hover:bg-dark-700 rounded-lg transition-colors"
+              className="p-1 hover:bg-gray-100 rounded-xl transition-colors"
             >
-              <X className="w-5 h-5 text-dark-400" />
+              <X className="w-5 h-5 text-gray-500" />
             </button>
           </div>
 
           {/* Tabs */}
-          <div className="flex mt-4 space-x-1 bg-dark-700 rounded-lg p-1">
+          <div className="flex mt-4 space-x-1 bg-gray-100 rounded-xl p-1">
             <button
               onClick={() => setActiveTab('general')}
-              className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors ${
+              className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
                 activeTab === 'general'
-                  ? 'bg-primary-600 text-white'
-                  : 'text-dark-300 hover:text-white hover:bg-dark-600'
+                  ? 'bg-indigo-600 text-white'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
               }`}
             >
               General
             </button>
             <button
               onClick={() => setActiveTab('members')}
-              className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors ${
+              className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
                 activeTab === 'members'
-                  ? 'bg-primary-600 text-white'
-                  : 'text-dark-300 hover:text-white hover:bg-dark-600'
+                  ? 'bg-indigo-600 text-white'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
               }`}
             >
               Members ({group.memberCount})

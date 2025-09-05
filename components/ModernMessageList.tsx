@@ -3,6 +3,30 @@
 import { useState } from 'react'
 import { MoreHorizontal, Megaphone, User } from 'lucide-react'
 
+// Helper function to detect and make links clickable
+const linkifyText = (text: string) => {
+  const urlRegex = /(https?:\/\/[^\s]+)/g
+  const parts = text.split(urlRegex)
+  
+  return parts.map((part, index) => {
+    if (part.match(urlRegex)) {
+      return (
+        <a
+          key={index}
+          href={part}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-600 hover:text-blue-800 underline"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {part}
+        </a>
+      )
+    }
+    return part
+  })
+}
+
 interface Message {
   id: string
   content: string
@@ -164,8 +188,8 @@ export function ModernMessageList({
                         >
                           {/* Message text with inline timestamp */}
                           <div className="text-sm leading-normal break-words whitespace-pre-wrap text-black">
-                            {message.content}
-                            <span className="text-xs text-gray-500 font-normal ml-2 select-none">
+                            {linkifyText(message.content)}
+                            <span className="text-xs text-gray-400 font-normal ml-2 select-none" style={{ fontSize: '10px' }}>
                               {formatTime(message.createdAt)}
                             </span>
                           </div>

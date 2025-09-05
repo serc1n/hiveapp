@@ -62,21 +62,21 @@ export function CreateGroupModal({ onClose, onGroupCreated }: CreateGroupModalPr
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-dark-800 rounded-xl p-6 w-full max-w-md">
+      <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-modern">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-white">Create Group</h2>
+          <h2 className="text-xl font-bold text-gray-900">Create Group</h2>
           <button
             onClick={onClose}
-            className="p-1 hover:bg-dark-700 rounded-lg transition-colors"
+            className="p-1 hover:bg-gray-100 rounded-xl transition-colors"
           >
-            <X className="w-5 h-5 text-dark-400" />
+            <X className="w-5 h-5 text-gray-500" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Group Image */}
           <div className="text-center">
-            <div className="w-20 h-20 bg-dark-700 rounded-xl mx-auto mb-3 flex items-center justify-center overflow-hidden">
+            <div className="w-20 h-20 bg-gray-100 rounded-2xl mx-auto mb-3 flex items-center justify-center overflow-hidden">
               {previewUrl ? (
                 <img
                   src={previewUrl}
@@ -84,10 +84,10 @@ export function CreateGroupModal({ onClose, onGroupCreated }: CreateGroupModalPr
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <Hash className="w-8 h-8 text-dark-400" />
+                <Hash className="w-8 h-8 text-gray-400" />
               )}
             </div>
-            <label className="cursor-pointer inline-flex items-center text-primary-500 hover:text-primary-400 text-sm">
+            <label className="cursor-pointer inline-flex items-center text-indigo-600 hover:text-indigo-700 text-sm font-medium transition-colors">
               <Upload className="w-4 h-4 mr-1" />
               Upload Image
               <input
@@ -101,7 +101,7 @@ export function CreateGroupModal({ onClose, onGroupCreated }: CreateGroupModalPr
 
           {/* Group Name */}
           <div>
-            <label className="block text-sm font-medium text-dark-300 mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               Group Name *
             </label>
             <input
@@ -109,7 +109,7 @@ export function CreateGroupModal({ onClose, onGroupCreated }: CreateGroupModalPr
               value={formData.name}
               onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
               placeholder="Enter group name"
-              className="input-field"
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
               required
               maxLength={50}
             />
@@ -117,7 +117,7 @@ export function CreateGroupModal({ onClose, onGroupCreated }: CreateGroupModalPr
 
           {/* Contract Address */}
           <div>
-            <label className="block text-sm font-medium text-dark-300 mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               Token Contract Address (Optional)
             </label>
             <input
@@ -125,14 +125,13 @@ export function CreateGroupModal({ onClose, onGroupCreated }: CreateGroupModalPr
               value={formData.contractAddress}
               onChange={(e) => setFormData(prev => ({ ...prev, contractAddress: e.target.value }))}
               placeholder="0x..."
-              className="input-field"
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
             />
-            <p className="text-xs text-dark-400 mt-1">
+            <p className="text-xs text-gray-600 mt-1">
               Add a contract address to make this a token-gated group
             </p>
           </div>
 
-          {/* Requires Approval */}
           {/* Join Approval Setting */}
           <div>
             <label className="flex items-center space-x-3 cursor-pointer">
@@ -140,11 +139,11 @@ export function CreateGroupModal({ onClose, onGroupCreated }: CreateGroupModalPr
                 type="checkbox"
                 checked={formData.requiresApproval}
                 onChange={(e) => setFormData(prev => ({ ...prev, requiresApproval: e.target.checked }))}
-                className="w-4 h-4 text-blue-600 bg-gray-800 border-gray-600 rounded focus:ring-blue-500 focus:ring-2"
+                className="w-4 h-4 text-indigo-600 bg-white border-gray-300 rounded focus:ring-indigo-500 focus:ring-2"
               />
               <div>
-                <span className="text-sm font-medium text-white">Require Join Approval</span>
-                <p className="text-xs text-gray-400">
+                <span className="text-sm font-medium text-gray-900">Require Join Approval</span>
+                <p className="text-xs text-gray-600">
                   Users will need to request to join and wait for your approval
                 </p>
               </div>
