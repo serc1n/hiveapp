@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
-import { supabase, RealtimePayload } from './supabase'
+import { supabase } from './supabase'
 import { RealtimeChannel } from '@supabase/supabase-js'
 
 interface SocketContextType {
