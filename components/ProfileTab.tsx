@@ -170,7 +170,7 @@ export function ProfileTab() {
       setIsCheckingUpdate(false)
       const forceReload = confirm('❌ Error checking for updates.\n\nClick OK to force refresh the app, or Cancel to try again later.')
       if (forceReload) {
-        window.location.reload(true)
+        window.location.reload()
       }
     }
   }
