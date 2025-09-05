@@ -141,30 +141,40 @@ export function ModernSidebar({
 
 
   const handleJoinGroup = async (groupId: string, event: React.MouseEvent) => {
+    console.log('🔥 JOIN BUTTON CLICKED:', groupId)
     event.stopPropagation() // Prevent group selection
     
     setJoiningGroups(prev => new Set(Array.from(prev).concat(groupId)))
+    console.log('🔄 Setting joining state for:', groupId)
     
     try {
+      console.log('📡 Sending join request to:', `/api/groups/${groupId}/join`)
       const response = await fetch(`/api/groups/${groupId}/join`, {
         method: 'POST'
       })
       
+      console.log('📥 Join response status:', response.status)
+      
       if (response.ok) {
+        console.log('✅ Successfully joined group:', groupId)
         // Refresh explore groups to update join status
         if (activeTab === 'explore') {
+          console.log('🔄 Refreshing explore groups...')
           fetchExploreGroups()
         }
         // Also refresh my groups as user now has access
+        console.log('🔄 Refreshing my groups...')
         fetchMyGroups()
       } else {
         const error = await response.json()
+        console.log('❌ Join failed:', error)
         alert(error.error || 'Failed to join group')
       }
     } catch (error) {
-      console.error('Error joining group:', error)
+      console.error('💥 Error joining group:', error)
       alert('Failed to join group')
     } finally {
+      console.log('🧹 Cleaning up joining state for:', groupId)
       setJoiningGroups(prev => {
         const newArray = Array.from(prev).filter(id => id !== groupId)
         return new Set(newArray)
@@ -334,7 +344,10 @@ export function ModernSidebar({
                       </div>
                       {activeTab === 'explore' && !group.hasAccess ? (
                         <button
-                          onClick={(e) => handleJoinGroup(group.id, e)}
+                          onClick={(e) => {
+                            console.log('🖱️ Join button clicked for group:', group.id, group.name)
+                            handleJoinGroup(group.id, e)
+                          }}
                           disabled={joiningGroups.has(group.id)}
                           className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white text-xs rounded-lg font-medium transition-colors flex-shrink-0"
                         >
