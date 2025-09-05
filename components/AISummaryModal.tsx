@@ -87,31 +87,31 @@ function AISummaryContent({ summary, selectedPeriod }: { summary: string, select
   return (
     <div className="space-y-4">
       {/* Statistics Box */}
-      <div className="bg-gray-900 border border-gray-600 rounded-lg p-4">
-        <h3 className="text-white font-semibold mb-3 flex items-center">
+      <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4">
+        <h3 className="text-gray-900 font-semibold mb-3 flex items-center">
           <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
           Statistics
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div className="text-center p-3 bg-gray-800 rounded-lg">
-            <div className="text-2xl font-bold text-white">{stats.messages || 0}</div>
-            <div className="text-xs text-gray-400">Messages sent</div>
+          <div className="text-center p-3 bg-white rounded-xl border border-gray-200">
+            <div className="text-2xl font-bold text-gray-900">{stats.messages || 0}</div>
+            <div className="text-xs text-gray-600">Messages sent</div>
           </div>
-          <div className="text-center p-3 bg-gray-800 rounded-lg">
-            <div className="text-2xl font-bold text-white">{stats.participants || 0}</div>
-            <div className="text-xs text-gray-400">Active participants</div>
+          <div className="text-center p-3 bg-white rounded-xl border border-gray-200">
+            <div className="text-2xl font-bold text-gray-900">{stats.participants || 0}</div>
+            <div className="text-xs text-gray-600">Active participants</div>
           </div>
-          <div className="text-center p-3 bg-gray-800 rounded-lg">
-            <div className="text-lg font-bold text-white">{periodLabel}</div>
-            <div className="text-xs text-gray-400">Summary period</div>
+          <div className="text-center p-3 bg-white rounded-xl border border-gray-200">
+            <div className="text-lg font-bold text-gray-900">{periodLabel}</div>
+            <div className="text-xs text-gray-600">Summary period</div>
           </div>
         </div>
       </div>
 
       {/* Topics Box */}
       {topics.length > 0 && (
-        <div className="bg-gray-900 border border-gray-600 rounded-lg p-4">
-          <h3 className="text-white font-semibold mb-3 flex items-center">
+        <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4">
+          <h3 className="text-gray-900 font-semibold mb-3 flex items-center">
             <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
             Topics
           </h3>
@@ -121,11 +121,11 @@ function AISummaryContent({ summary, selectedPeriod }: { summary: string, select
                 <div className="w-6 h-6 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-medium mr-3 mt-0.5 flex-shrink-0">
                   {index + 1}
                 </div>
-                <span className="text-gray-200">{topic}</span>
+                <span className="text-gray-700">{topic}</span>
               </div>
             ))}
             {topics.length === 0 && (
-              <div className="text-gray-400 text-sm italic">No specific topics identified</div>
+              <div className="text-gray-500 text-sm italic">No specific topics identified</div>
             )}
           </div>
         </div>
@@ -133,8 +133,8 @@ function AISummaryContent({ summary, selectedPeriod }: { summary: string, select
 
       {/* Important Highlights Box */}
       {highlights.length > 0 && (
-        <div className="bg-gray-900 border border-gray-600 rounded-lg p-4">
-          <h3 className="text-white font-semibold mb-3 flex items-center">
+        <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4">
+          <h3 className="text-gray-900 font-semibold mb-3 flex items-center">
             <div className="w-2 h-2 bg-yellow-500 rounded-full mr-2"></div>
             Important Highlights
           </h3>
@@ -142,11 +142,11 @@ function AISummaryContent({ summary, selectedPeriod }: { summary: string, select
             {highlights.map((highlight, index) => (
               <div key={index} className="flex items-start">
                 <div className="w-2 h-2 bg-yellow-400 rounded-full mt-2 mr-3 flex-shrink-0"></div>
-                <span className="text-gray-200">{highlight}</span>
+                <span className="text-gray-700">{highlight}</span>
               </div>
             ))}
             {highlights.length === 0 && (
-              <div className="text-gray-400 text-sm italic">No specific highlights identified</div>
+              <div className="text-gray-500 text-sm italic">No specific highlights identified</div>
             )}
           </div>
         </div>
@@ -154,18 +154,18 @@ function AISummaryContent({ summary, selectedPeriod }: { summary: string, select
 
       {/* Overall Sentiment Box */}
       {sentiment && (
-        <div className="bg-gray-900 border border-gray-600 rounded-lg p-4">
-          <h3 className="text-white font-semibold mb-3 flex items-center">
+        <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4">
+          <h3 className="text-gray-900 font-semibold mb-3 flex items-center">
             <div className="w-2 h-2 bg-purple-500 rounded-full mr-2"></div>
             Overall Sentiment
           </h3>
-          <div className="bg-gray-800 rounded-lg p-3">
-            <p className="text-gray-200">{sentiment}</p>
+          <div className="bg-white border border-gray-200 rounded-xl p-3">
+            <p className="text-gray-700">{sentiment}</p>
           </div>
           {activityLevel && (
-            <div className="mt-3 pt-3 border-t border-gray-700">
-              <div className="text-sm text-gray-400 mb-1">Activity Level</div>
-              <p className="text-gray-200">{activityLevel}</p>
+            <div className="mt-3 pt-3 border-t border-gray-200">
+              <div className="text-sm text-gray-600 mb-1">Activity Level</div>
+              <p className="text-gray-700">{activityLevel}</p>
             </div>
           )}
         </div>
@@ -173,15 +173,15 @@ function AISummaryContent({ summary, selectedPeriod }: { summary: string, select
 
       {/* Fallback for unstructured content */}
       {!stats.messages && !topics.length && !highlights.length && !sentiment && (
-        <div className="bg-gray-900 border border-gray-600 rounded-lg p-4">
-          <div className="text-gray-300 leading-relaxed whitespace-pre-wrap">
+        <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4">
+          <div className="text-gray-700 leading-relaxed whitespace-pre-wrap">
             {summary}
           </div>
         </div>
       )}
 
       {/* Footer */}
-      <div className="text-center text-xs text-gray-500 pt-2 border-t border-gray-700">
+      <div className="text-center text-xs text-gray-500 pt-2 border-t border-gray-200">
         ✨ AI Summary powered by GPT-4o-mini
       </div>
     </div>

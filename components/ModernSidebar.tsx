@@ -108,7 +108,7 @@ export function ModernSidebar({
       <div className="p-6 border-b border-gray-100">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold text-gray-900">
-            {activeTab === 'chats' ? 'Chats' : activeTab === 'explore' ? 'Explore' : 'Profile'}
+            {activeTab === 'chats' ? 'Hives' : activeTab === 'explore' ? 'Explore' : 'Profile'}
           </h1>
           {activeTab === 'chats' && (
             <button

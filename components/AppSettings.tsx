@@ -108,9 +108,9 @@ export function AppSettings() {
   return (
     <div className="space-y-4">
       {/* App Settings Section */}
-      <div className="bg-dark-700 rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
-          <RefreshCw className="w-5 h-5 mr-2" />
+      <div className="bg-gray-50 border border-gray-200 rounded-2xl p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+          <RefreshCw className="w-5 h-5 mr-2 text-indigo-600" />
           App Settings
         </h3>
         
@@ -119,7 +119,7 @@ export function AppSettings() {
           <button
             onClick={handleCheckUpdate}
             disabled={isCheckingUpdate || !registration}
-            className="w-full flex items-center justify-center px-4 py-3 bg-white text-black hover:bg-gray-200 disabled:bg-gray-600 disabled:text-white font-bold transition-colors"
+            className="w-full flex items-center justify-center px-4 py-3 bg-white text-gray-900 hover:bg-gray-100 disabled:bg-gray-300 disabled:text-gray-500 font-medium border border-gray-200 rounded-xl transition-colors"
           >
             <RefreshCw className={`w-4 h-4 mr-2 ${isCheckingUpdate ? 'animate-spin' : ''}`} />
             {isCheckingUpdate ? 'Checking for Updates...' : 'Check for Updates'}
@@ -128,10 +128,10 @@ export function AppSettings() {
           {/* Notification Toggle Button */}
           <button
             onClick={handleToggleNotifications}
-            className={`w-full flex items-center justify-center px-4 py-3 rounded-lg font-medium transition-colors ${
+            className={`w-full flex items-center justify-center px-4 py-3 rounded-xl font-medium transition-colors ${
               notificationPermission === 'granted' && isSubscribed
                 ? 'bg-green-600 hover:bg-green-700 text-white'
-                : 'bg-gray-600 hover:bg-gray-700 text-white'
+                : 'bg-indigo-600 hover:bg-indigo-700 text-white'
             }`}
           >
             {notificationPermission === 'granted' && isSubscribed ? (
@@ -148,7 +148,7 @@ export function AppSettings() {
           </button>
         </div>
         
-        <div className="mt-4 text-xs text-gray-400">
+        <div className="mt-4 text-xs text-gray-600">
           <p>• Check for app updates manually</p>
           <p>• Manage push notification preferences</p>
         </div>

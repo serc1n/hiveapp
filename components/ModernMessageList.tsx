@@ -3,6 +3,40 @@
 import { useState } from 'react'
 import { MoreHorizontal, Megaphone, User, MessageCircle } from 'lucide-react'
 
+// Helper function to detect Twitter/X URLs and extract tweet ID
+const extractTweetId = (url: string) => {
+  const twitterRegex = /(?:twitter\.com|x\.com)\/\w+\/status\/(\d+)/
+  const match = url.match(twitterRegex)
+  return match ? match[1] : null
+}
+
+// Helper component for Twitter embed
+const TwitterEmbed = ({ tweetId, url }: { tweetId: string, url: string }) => {
+  return (
+    <div className="my-2 p-3 border border-gray-200 rounded-xl bg-gray-50 max-w-lg">
+      <div className="flex items-center space-x-2 mb-2">
+        <div className="w-5 h-5 bg-black rounded-sm flex items-center justify-center">
+          <span className="text-white text-xs font-bold">𝕏</span>
+        </div>
+        <span className="text-sm font-medium text-gray-700">Twitter Post</span>
+      </div>
+      <p className="text-sm text-gray-600 mb-3">
+        View this post on X (formerly Twitter)
+      </p>
+      <a
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex items-center space-x-1 px-3 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <span>𝕏</span>
+        <span>View Post</span>
+      </a>
+    </div>
+  )
+}
+
 // Helper function to detect and make links clickable with previews
 const linkifyText = (text: string) => {
   const urlRegex = /(https?:\/\/[^\s]+)/g
@@ -11,7 +45,11 @@ const linkifyText = (text: string) => {
   return parts.map((part, index) => {
     if (part.match(urlRegex)) {
       // Check if it's a Twitter/X link
-      const isTwitterLink = part.includes('twitter.com') || part.includes('x.com')
+      const tweetId = extractTweetId(part)
+      if (tweetId) {
+        return <TwitterEmbed key={index} tweetId={tweetId} url={part} />
+      }
+      
       const isInstagramLink = part.includes('instagram.com')
       const isTikTokLink = part.includes('tiktok.com')
       
@@ -19,11 +57,7 @@ const linkifyText = (text: string) => {
       let linkClass = "text-blue-600 hover:text-blue-800 underline break-all"
       let emoji = "🔗"
       
-      if (isTwitterLink) {
-        displayText = "𝕏 Post"
-        linkClass = "inline-flex items-center space-x-1 px-2 py-1 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium no-underline"
-        emoji = "𝕏"
-      } else if (isInstagramLink) {
+      if (isInstagramLink) {
         displayText = "📷 Instagram"
         linkClass = "inline-flex items-center space-x-1 px-2 py-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-colors text-sm font-medium no-underline"
         emoji = "📷"
@@ -70,6 +104,7 @@ interface ModernMessageListProps {
   currentUserImage?: string
   onMakeAnnouncement: (messageId: string) => void
   isGroupOwner?: boolean
+  groupCreatorId?: string
 }
 
 export function ModernMessageList({ 
@@ -77,7 +112,8 @@ export function ModernMessageList({
   currentUserId, 
   currentUserImage, 
   onMakeAnnouncement, 
-  isGroupOwner 
+  isGroupOwner,
+  groupCreatorId 
 }: ModernMessageListProps) {
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
 
@@ -204,6 +240,8 @@ export function ModernMessageList({
                           className={`px-2 py-1 rounded-lg relative ${
                             isOwn
                               ? 'bg-green-500 text-black rounded-br-sm'
+                              : groupCreatorId && message.userId === groupCreatorId
+                              ? 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white border border-purple-300 rounded-bl-sm shadow-sm'
                               : 'bg-white text-black border border-gray-200 rounded-bl-sm shadow-sm'
                           }`}
                           style={{ 
@@ -212,9 +250,13 @@ export function ModernMessageList({
                           }}
                         >
                           {/* Message text with inline timestamp */}
-                          <div className="text-sm leading-normal break-words whitespace-pre-wrap text-black">
+                          <div className={`text-sm leading-normal break-words whitespace-pre-wrap ${
+                            groupCreatorId && message.userId === groupCreatorId ? 'text-white' : 'text-black'
+                          }`}>
                             {linkifyText(message.content)}
-                            <span className="text-xs text-gray-400 font-normal ml-2 select-none" style={{ fontSize: '10px' }}>
+                            <span className={`text-xs font-normal ml-2 select-none ${
+                              groupCreatorId && message.userId === groupCreatorId ? 'text-purple-100' : 'text-gray-400'
+                            }`} style={{ fontSize: '10px' }}>
                               {formatTime(message.createdAt)}
                             </span>
                           </div>

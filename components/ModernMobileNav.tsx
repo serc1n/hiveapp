@@ -1,6 +1,7 @@
 'use client'
 
 import { Hash, Users, User } from 'lucide-react'
+import Image from 'next/image'
 
 interface ModernMobileNavProps {
   activeTab: 'chats' | 'explore' | 'profile'
@@ -9,7 +10,7 @@ interface ModernMobileNavProps {
 
 export function ModernMobileNav({ activeTab, onTabChange }: ModernMobileNavProps) {
   const tabs = [
-    { id: 'chats', label: 'Chats', icon: Hash },
+    { id: 'chats', label: 'Hives', icon: Hash, useCustomIcon: true },
     { id: 'explore', label: 'Explore', icon: Users },
     { id: 'profile', label: 'Profile', icon: User }
   ]
@@ -34,7 +35,17 @@ export function ModernMobileNav({ activeTab, onTabChange }: ModernMobileNavProps
               <div className={`p-2 rounded-xl transition-all duration-200 ${
                 isActive ? 'bg-indigo-100' : 'hover:bg-gray-100'
               }`}>
-                <Icon className="w-5 h-5" />
+                {tab.useCustomIcon && tab.id === 'chats' ? (
+                  <Image 
+                    src="/hive.png" 
+                    alt="Hives" 
+                    width={20} 
+                    height={20} 
+                    className="w-5 h-5"
+                  />
+                ) : (
+                  <Icon className="w-5 h-5" />
+                )}
               </div>
               <span className={`text-xs font-medium mt-1 ${
                 isActive ? 'text-indigo-600' : 'text-gray-600'
