@@ -2,9 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { useSession, signOut } from 'next-auth/react'
-import { User, Wallet, Edit3, Save, X, LogOut } from 'lucide-react'
+import { User, Wallet, Edit3, Save, X, LogOut, RefreshCw } from 'lucide-react'
 import { WalletConnection } from './WalletConnection'
-import { AppSettings } from './AppSettings'
 
 export function ProfileTab() {
   const { data: session } = useSession()
@@ -13,10 +12,19 @@ export function ProfileTab() {
   const [tempBio, setTempBio] = useState('')
   const [showWalletModal, setShowWalletModal] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [isCheckingUpdate, setIsCheckingUpdate] = useState(false)
+  const [registration, setRegistration] = useState<ServiceWorkerRegistration | null>(null)
 
   useEffect(() => {
     if (session?.user) {
       fetchUserProfile()
+    }
+
+    // Get service worker registration for updates
+    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+      navigator.serviceWorker.ready.then((reg) => {
+        setRegistration(reg)
+      })
     }
   }, [session])
 
@@ -58,7 +66,6 @@ export function ProfileTab() {
   }
 
   const handleEditBio = () => {
-    console.log('Edit bio button clicked!')
     setTempBio(bio)
     setIsEditing(true)
   }
@@ -66,6 +73,35 @@ export function ProfileTab() {
   const handleCancelEdit = () => {
     setTempBio('')
     setIsEditing(false)
+  }
+
+  const handleCheckUpdate = async () => {
+    if (!registration) {
+      alert('Service Worker not available. Please refresh the page and try again.')
+      return
+    }
+    
+    setIsCheckingUpdate(true)
+    try {
+      const newRegistration = await registration.update()
+      if (newRegistration.waiting) {
+        setIsCheckingUpdate(false)
+        const shouldReload = confirm('A new version is available! Click OK to reload and update the app.')
+        if (shouldReload) {
+          newRegistration.waiting.postMessage({ type: 'SKIP_WAITING' })
+          window.location.reload()
+        }
+      } else {
+        setTimeout(() => {
+          setIsCheckingUpdate(false)
+          alert('✅ You have the latest version!')
+        }, 1000)
+      }
+    } catch (error) {
+      console.error('Error checking for updates:', error)
+      setIsCheckingUpdate(false)
+      alert('Error checking for updates. Please try again.')
+    }
   }
 
   if (!session) {
@@ -205,20 +241,51 @@ export function ProfileTab() {
           </div>
         </div>
 
-        {/* App Settings */}
-        <AppSettings />
-
-        {/* Account Actions */}
+        {/* Profile Actions */}
         <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Account</h3>
-          
-          <button
-            onClick={() => signOut()}
-            className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-red-600 hover:bg-red-700 text-white transition-colors font-medium rounded-lg"
-          >
-            <LogOut className="w-4 h-4" />
-            <span>Sign Out</span>
-          </button>
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Profile Actions</h3>
+          <div className="space-y-3">
+            {/* Edit Profile Button */}
+            <button
+              onClick={handleEditBio}
+              className="w-full flex items-center px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition-colors"
+            >
+              <User className="w-4 h-4 mr-3" />
+              Edit Profile
+            </button>
+
+            {/* Check Updates Button */}
+            <button
+              onClick={handleCheckUpdate}
+              disabled={isCheckingUpdate}
+              className="w-full flex items-center px-4 py-3 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white font-medium rounded-xl transition-colors"
+            >
+              {isCheckingUpdate ? (
+                <div className="w-4 h-4 border border-white border-t-transparent rounded-full animate-spin mr-3" />
+              ) : (
+                <RefreshCw className="w-4 h-4 mr-3" />
+              )}
+              {isCheckingUpdate ? 'Checking...' : 'Check Updates'}
+            </button>
+
+            {/* Connect Wallet Button */}
+            <button
+              onClick={() => setShowWalletModal(true)}
+              className="w-full flex items-center px-4 py-3 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-xl transition-colors"
+            >
+              <Wallet className="w-4 h-4 mr-3" />
+              {session.user.walletAddress ? 'Manage Wallet' : 'Connect Wallet'}
+            </button>
+
+            {/* Sign Out Button */}
+            <button
+              onClick={() => signOut()}
+              className="w-full flex items-center px-4 py-3 bg-red-600 hover:bg-red-700 text-white font-medium rounded-xl transition-colors"
+            >
+              <LogOut className="w-4 h-4 mr-3" />
+              Sign Out
+            </button>
+          </div>
         </div>
       </div>
 

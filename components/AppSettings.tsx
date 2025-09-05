@@ -41,7 +41,6 @@ export function AppSettings() {
   }
 
   const handleCheckUpdate = async () => {
-    console.log('Check update button clicked!')
     if (!registration) {
       alert('Service Worker not available. Please refresh the page and try again.')
       return
@@ -76,7 +75,6 @@ export function AppSettings() {
   }
 
   const handleToggleNotifications = async () => {
-    console.log('Toggle notifications button clicked!')
     if (notificationPermission === 'granted' && isSubscribed) {
       // Unsubscribe
       try {
