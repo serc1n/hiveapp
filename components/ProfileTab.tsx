@@ -161,7 +161,7 @@ export function ProfileTab() {
         setIsCheckingUpdate(false)
         const forceReload = confirm('✅ You appear to have the latest version.\n\nIf you\'re still seeing old content, click OK to force a complete refresh.')
         if (forceReload) {
-          window.location.reload(true)
+          window.location.reload()
         }
       }, 1000)
       
