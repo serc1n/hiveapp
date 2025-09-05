@@ -118,21 +118,21 @@ export function ModernMessageList({
                   key={message.id}
                   className={`flex group ${isOwn ? 'justify-end' : 'justify-start'} animate-fade-in`}
                 >
-                  <div className={`flex items-end space-x-3 max-w-[75%] ${isOwn ? 'flex-row-reverse space-x-reverse' : ''}`}>
+                  <div className={`flex items-start space-x-2 max-w-[75%] ${isOwn ? 'flex-row-reverse space-x-reverse' : ''}`}>
                     {/* Avatar for others */}
                     {!isOwn && (
-                      <div className={`w-8 h-8 ${showAvatar ? 'visible' : 'invisible'}`}>
+                      <div className={`w-6 h-6 mt-1 ${showAvatar ? 'visible' : 'invisible'}`}>
                         {showAvatar && (
-                          <div className="w-8 h-8 rounded-full overflow-hidden bg-gradient-primary">
+                          <div className="w-6 h-6 rounded-full overflow-hidden bg-gradient-primary">
                             {message.user.profileImage ? (
                               <img
                                 src={message.user.profileImage}
                                 alt={message.user.name}
-                                className="w-8 h-8 object-cover"
+                                className="w-6 h-6 object-cover"
                               />
                             ) : (
-                              <div className="w-8 h-8 flex items-center justify-center">
-                                <User className="w-4 h-4 text-white" />
+                              <div className="w-6 h-6 flex items-center justify-center">
+                                <User className="w-3 h-3 text-white" />
                               </div>
                             )}
                           </div>
@@ -144,7 +144,7 @@ export function ModernMessageList({
                     <div className={`flex flex-col ${isOwn ? 'items-end' : 'items-start'}`}>
                       {/* Sender name */}
                       {showName && (
-                        <div className="text-xs font-medium text-gray-600 mb-1 px-1">
+                        <div className="text-xs font-medium text-gray-600 mb-1">
                           {message.user.name}
                         </div>
                       )}
@@ -152,24 +152,22 @@ export function ModernMessageList({
                       {/* Message bubble */}
                       <div className="relative">
                         <div
-                          className={`px-3 py-2 rounded-2xl relative ${
+                          className={`px-2 py-1 rounded-lg relative ${
                             isOwn
-                              ? 'bg-green-500 text-black rounded-br-md'
-                              : 'bg-white text-black border border-gray-200 rounded-bl-md shadow-sm'
+                              ? 'bg-green-500 text-black rounded-br-sm'
+                              : 'bg-white text-black border border-gray-200 rounded-bl-sm shadow-sm'
                           }`}
                           style={{ 
                             maxWidth: 'fit-content',
-                            minWidth: '50px'
+                            minWidth: '40px'
                           }}
                         >
-                          {/* Message text */}
+                          {/* Message text with inline timestamp */}
                           <div className="text-sm leading-normal break-words whitespace-pre-wrap text-black">
                             {message.content}
-                          </div>
-                          
-                          {/* Time stamp */}
-                          <div className="text-xs mt-1 text-gray-500 text-right font-normal">
-                            {formatTime(message.createdAt)}
+                            <span className="text-xs text-gray-500 font-normal ml-2 select-none">
+                              {formatTime(message.createdAt)}
+                            </span>
                           </div>
                         </div>
 

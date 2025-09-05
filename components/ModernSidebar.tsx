@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
-import { Search, Plus, Hash, Users, Settings, Bell, User } from 'lucide-react'
+import { Search, Plus, Hash, Users, Settings, Bell, User, Lock, Crown } from 'lucide-react'
 import { CreateGroupModal } from './CreateGroupModal'
 
 interface Group {
@@ -10,6 +10,8 @@ interface Group {
   name: string
   profileImage: string | null
   memberCount: number
+  contractAddress: string | null
+  isCreator?: boolean
   lastMessage?: {
     content: string
     createdAt: string
@@ -246,10 +248,18 @@ export function ModernSidebar({
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1">
-                      <h3 className="font-semibold text-gray-900 truncate text-sm">
-                        {group.name}
-                      </h3>
-                      <span className="text-xs text-gray-500 flex-shrink-0">
+                      <div className="flex items-center space-x-1 flex-1 min-w-0">
+                        <h3 className="font-semibold text-gray-900 truncate text-sm">
+                          {group.name}
+                        </h3>
+                        {group.contractAddress && (
+                          <Lock className="w-3 h-3 text-yellow-600 flex-shrink-0" title="Token-gated" />
+                        )}
+                        {group.isCreator && (
+                          <Crown className="w-3 h-3 text-purple-600 flex-shrink-0" title="You own this group" />
+                        )}
+                      </div>
+                      <span className="text-xs text-gray-500 flex-shrink-0 ml-2">
                         {group.lastMessage 
                           ? formatTime(group.lastMessage.createdAt)
                           : formatTime(group.updatedAt)

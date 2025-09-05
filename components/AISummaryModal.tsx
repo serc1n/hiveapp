@@ -227,24 +227,24 @@ export function AISummaryModal({ groupId, groupName, onClose }: AISummaryModalPr
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50">
-      <div className="bg-gray-900 rounded-xl w-full max-w-2xl max-h-[80vh] flex flex-col border border-gray-700">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[80vh] flex flex-col shadow-modern">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-700">
+        <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div className="flex items-center space-x-3">
-            <div className="p-2 bg-purple-600 rounded-lg">
+            <div className="p-2 bg-gradient-primary rounded-xl">
               <Sparkles className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-white">AI Summary</h2>
-              <p className="text-gray-400 text-sm">{groupName}</p>
+              <h2 className="text-xl font-bold text-gray-900">AI Summary</h2>
+              <p className="text-gray-600 text-sm">{groupName}</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
+            className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
           >
-            <X className="w-5 h-5 text-gray-400" />
+            <X className="w-5 h-5 text-gray-500" />
           </button>
         </div>
 
@@ -253,16 +253,16 @@ export function AISummaryModal({ groupId, groupName, onClose }: AISummaryModalPr
           {!summary && !isLoading && (
             <>
               <div className="mb-6">
-                <h3 className="text-lg font-semibold text-white mb-3">Select Time Period</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">Select Time Period</h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {TIME_PERIODS.map((period) => (
                     <button
                       key={period.value}
                       onClick={() => setSelectedPeriod(period.value)}
-                      className={`p-3 rounded-lg border transition-colors flex items-center space-x-2 ${
+                      className={`p-3 rounded-xl border transition-colors flex items-center space-x-2 ${
                         selectedPeriod === period.value
-                          ? 'border-purple-500 bg-purple-500 bg-opacity-20 text-white'
-                          : 'border-gray-600 hover:border-gray-500 text-gray-300'
+                          ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                          : 'border-gray-200 hover:border-gray-300 text-gray-700 hover:bg-gray-50'
                       }`}
                     >
                       <Clock className="w-4 h-4" />
@@ -276,7 +276,7 @@ export function AISummaryModal({ groupId, groupName, onClose }: AISummaryModalPr
                 <button
                   onClick={handleGenerateSummary}
                   disabled={isLoading}
-                  className="px-6 py-3 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 text-white rounded-lg font-medium transition-colors flex items-center space-x-2 mx-auto"
+                  className="px-6 py-3 bg-gradient-primary hover:shadow-lg disabled:bg-gray-400 text-white rounded-xl font-medium transition-all duration-200 flex items-center space-x-2 mx-auto transform hover:scale-105"
                 >
                   <Sparkles className="w-4 h-4" />
                   <span>Generate Summary</span>
@@ -288,10 +288,10 @@ export function AISummaryModal({ groupId, groupName, onClose }: AISummaryModalPr
           {isLoading && (
             <div className="text-center py-12">
               <div className="flex items-center justify-center space-x-3 mb-4">
-                <Loader className="w-6 h-6 text-purple-500 animate-spin" />
-                <span className="text-white font-medium">Analyzing messages...</span>
+                <Loader className="w-6 h-6 text-indigo-500 animate-spin" />
+                <span className="text-gray-900 font-medium">Analyzing messages...</span>
               </div>
-              <p className="text-gray-400 text-sm">
+              <p className="text-gray-600 text-sm">
                 AI is summarizing the last {TIME_PERIODS.find(p => p.value === selectedPeriod)?.label.toLowerCase()} of conversation
               </p>
             </div>
@@ -299,15 +299,15 @@ export function AISummaryModal({ groupId, groupName, onClose }: AISummaryModalPr
 
           {error && (
             <div className="text-center py-8">
-              <div className="bg-red-900 bg-opacity-50 border border-red-700 rounded-lg p-4">
-                <p className="text-red-300 font-medium mb-2">Error generating summary</p>
-                <p className="text-red-400 text-sm">{error}</p>
+              <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                <p className="text-red-800 font-medium mb-2">Error generating summary</p>
+                <p className="text-red-600 text-sm">{error}</p>
                 <button
                   onClick={() => {
                     setError('')
                     handleGenerateSummary()
                   }}
-                  className="mt-3 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm transition-colors"
+                  className="mt-3 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-xl text-sm transition-colors"
                 >
                   Try Again
                 </button>
@@ -318,7 +318,7 @@ export function AISummaryModal({ groupId, groupName, onClose }: AISummaryModalPr
           {summary && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-white">
+                <h3 className="text-lg font-semibold text-gray-900">
                   Summary - Last {TIME_PERIODS.find(p => p.value === selectedPeriod)?.label}
                 </h3>
                 <button
@@ -326,13 +326,13 @@ export function AISummaryModal({ groupId, groupName, onClose }: AISummaryModalPr
                     setSummary('')
                     setError('')
                   }}
-                  className="px-3 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded text-sm transition-colors"
+                  className="px-3 py-1 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-xl text-sm transition-colors font-medium"
                 >
                   New Summary
                 </button>
               </div>
               
-              <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+              <div className="bg-gray-50 rounded-xl p-6 border border-gray-200">
                 <AISummaryContent summary={summary} selectedPeriod={selectedPeriod} />
               </div>
 

@@ -72,6 +72,10 @@ body {
   background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
 }
 
+.bg-gradient-primary {
+  background: linear-gradient(135deg, #7678ed 0%, #5a5cd1 100%);
+}
+
 .gradient-secondary {
   background: linear-gradient(135deg, var(--secondary) 0%, #ff6b47 100%);
 }
