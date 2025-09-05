@@ -129,7 +129,7 @@ export function ModernSidebar({
         } catch (error) {
           console.warn('Failed to cache my groups:', error)
           // Clear old cache if quota exceeded
-          if (error.name === 'QuotaExceededError') {
+          if (error instanceof Error && error.name === 'QuotaExceededError') {
             try {
               localStorage.removeItem(cacheKey)
             } catch (e) {
@@ -192,7 +192,7 @@ export function ModernSidebar({
         } catch (error) {
           console.warn('Failed to cache explore groups:', error)
           // Clear old cache if quota exceeded
-          if (error.name === 'QuotaExceededError') {
+          if (error instanceof Error && error.name === 'QuotaExceededError') {
             try {
               localStorage.removeItem(cacheKey)
             } catch (e) {
