@@ -6,6 +6,7 @@ import { ArrowLeft, Send, MoreVertical, Hash, Users, Sparkles } from 'lucide-rea
 import { ModernMessageList } from './ModernMessageList'
 import { GroupSettingsModal } from './GroupSettingsModal'
 import { AISummaryModal } from './AISummaryModal'
+import { AnnouncementModal } from './AnnouncementModal'
 
 interface Message {
   id: string
@@ -47,6 +48,8 @@ export function ModernChatView({ groupId, onBack, isMobile = false }: ModernChat
   const [isSending, setIsSending] = useState(false)
   const [showGroupSettings, setShowGroupSettings] = useState(false)
   const [showAISummary, setShowAISummary] = useState(false)
+  const [showAnnouncementModal, setShowAnnouncementModal] = useState(false)
+  const [selectedMessageForAnnouncement, setSelectedMessageForAnnouncement] = useState<string | null>(null)
   const [isMember, setIsMember] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
@@ -158,6 +161,18 @@ export function ModernChatView({ groupId, onBack, isMobile = false }: ModernChat
     }
   }
 
+  const handleMakeAnnouncement = (messageId: string) => {
+    setSelectedMessageForAnnouncement(messageId)
+    setShowAnnouncementModal(true)
+  }
+
+  const handleAnnouncementCreated = () => {
+    setShowAnnouncementModal(false)
+    setSelectedMessageForAnnouncement(null)
+    // Refresh messages to show announcement status
+    fetchMessages(false)
+  }
+
   if (isLoading) {
     return (
       <div className="flex-1 flex items-center justify-center bg-white">
@@ -250,7 +265,7 @@ export function ModernChatView({ groupId, onBack, isMobile = false }: ModernChat
           messages={messages}
           currentUserId={session?.user?.id}
           currentUserImage={session?.user?.image}
-          onMakeAnnouncement={() => {}}
+          onMakeAnnouncement={handleMakeAnnouncement}
           isGroupOwner={group.isCreator}
           groupCreatorId={group.creatorId}
         />
@@ -314,6 +329,18 @@ export function ModernChatView({ groupId, onBack, isMobile = false }: ModernChat
           groupId={group.id}
           groupName={group.name}
           onClose={() => setShowAISummary(false)}
+        />
+      )}
+
+      {showAnnouncementModal && selectedMessageForAnnouncement && (
+        <AnnouncementModal
+          messageId={selectedMessageForAnnouncement}
+          groupId={groupId}
+          onClose={() => {
+            setShowAnnouncementModal(false)
+            setSelectedMessageForAnnouncement(null)
+          }}
+          onAnnouncementCreated={handleAnnouncementCreated}
         />
       )}
     </div>

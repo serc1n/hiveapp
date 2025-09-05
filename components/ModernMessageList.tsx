@@ -239,21 +239,22 @@ export function ModernMessageList({
                         <div
                           className={`px-2 py-1 rounded-lg relative ${
                             isOwn
-                              ? 'bg-purple-600 text-white rounded-br-sm'
+                              ? 'rounded-br-sm'
                               : 'bg-white text-black border border-gray-200 rounded-bl-sm shadow-sm'
                           }`}
                           style={{ 
                             maxWidth: 'fit-content',
-                            minWidth: '40px'
+                            minWidth: '40px',
+                            backgroundColor: isOwn ? '#dddddd' : undefined
                           }}
                         >
                           {/* Message text with inline timestamp */}
                           <div className={`text-sm leading-normal break-words whitespace-pre-wrap ${
-                            isOwn ? 'text-white' : 'text-black'
+                            isOwn ? 'text-black' : 'text-black'
                           }`}>
                             {linkifyText(message.content)}
                             <span className={`text-xs font-normal ml-2 select-none ${
-                              isOwn ? 'text-purple-100' : 'text-gray-400'
+                              isOwn ? 'text-gray-600' : 'text-gray-400'
                             }`} style={{ fontSize: '10px' }}>
                               {formatTime(message.createdAt)}
                             </span>

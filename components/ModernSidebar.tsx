@@ -143,7 +143,7 @@ export function ModernSidebar({
                 >
                   {tab.useCustomIcon && tab.id === 'chats' ? (
                     <Image 
-                      src="/hiveblack.png"
+                      src="/black.png"
                       alt="My Hives" 
                       width={16} 
                       height={16} 
@@ -197,11 +197,23 @@ export function ModernSidebar({
             </div>
             
             <div className="space-y-3">
-              <button className="w-full flex items-center space-x-3 p-4 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors">
+              <button 
+                onClick={() => {
+                  // For now, switch to the profile tab which has the actual settings
+                  onTabChange('profile');
+                }}
+                className="w-full flex items-center space-x-3 p-4 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors"
+              >
                 <Settings className="w-5 h-5 text-gray-600" />
                 <span className="text-gray-900 font-medium">Settings</span>
               </button>
-              <button className="w-full flex items-center space-x-3 p-4 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors">
+              <button 
+                onClick={() => {
+                  // For now, show an alert - in a real app this would open notifications settings
+                  alert('Notifications settings - feature coming soon!');
+                }}
+                className="w-full flex items-center space-x-3 p-4 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors"
+              >
                 <Bell className="w-5 h-5 text-gray-600" />
                 <span className="text-gray-900 font-medium">Notifications</span>
               </button>
