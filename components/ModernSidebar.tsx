@@ -119,21 +119,45 @@ export function ModernSidebar({
         const groups = data.groups || []
         setGroups(groups)
         
-        // Cache the result with error handling
+        // Cache the result with aggressive error handling
         try {
           const cacheData = JSON.stringify({
-            groups: groups.slice(0, 20), // Limit cache to 20 groups to prevent quota issues
+            groups: groups.slice(0, 5).map(group => ({ // Only cache 5 groups with minimal data
+              id: group.id,
+              name: group.name,
+              profileImage: group.profileImage,
+              memberCount: group.memberCount,
+              hasAccess: group.hasAccess,
+              lastMessage: group.lastMessage ? {
+                content: group.lastMessage.content.slice(0, 50), // Truncate message content
+                createdAt: group.lastMessage.createdAt
+              } : null,
+              updatedAt: group.updatedAt
+            })),
             timestamp: Date.now()
           })
           localStorage.setItem(cacheKey, cacheData)
         } catch (error) {
           console.warn('Failed to cache my groups:', error)
-          // Clear old cache if quota exceeded
+          // Clear localStorage aggressively if quota exceeded
           if (error instanceof Error && error.name === 'QuotaExceededError') {
             try {
-              localStorage.removeItem(cacheKey)
+              // Clear all app-related cache
+              const keysToRemove = []
+              for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i)
+                if (key && (key.includes('Groups_') || key.includes('groups_'))) {
+                  keysToRemove.push(key)
+                }
+              }
+              keysToRemove.forEach(key => localStorage.removeItem(key))
             } catch (e) {
-              // Ignore cleanup errors
+              // If all else fails, clear all localStorage
+              try {
+                localStorage.clear()
+              } catch (clearError) {
+                // Ignore cleanup errors
+              }
             }
           }
         }
@@ -182,21 +206,45 @@ export function ModernSidebar({
         const groups = data.groups || []
         setExploreGroups(groups)
         
-        // Cache the result with error handling
+        // Cache the result with aggressive error handling
         try {
           const cacheData = JSON.stringify({
-            groups: groups.slice(0, 20), // Limit cache to 20 groups to prevent quota issues
+            groups: groups.slice(0, 5).map(group => ({ // Only cache 5 groups with minimal data
+              id: group.id,
+              name: group.name,
+              profileImage: group.profileImage,
+              memberCount: group.memberCount,
+              hasAccess: group.hasAccess,
+              lastMessage: group.lastMessage ? {
+                content: group.lastMessage.content.slice(0, 50), // Truncate message content
+                createdAt: group.lastMessage.createdAt
+              } : null,
+              updatedAt: group.updatedAt
+            })),
             timestamp: Date.now()
           })
           localStorage.setItem(cacheKey, cacheData)
         } catch (error) {
           console.warn('Failed to cache explore groups:', error)
-          // Clear old cache if quota exceeded
+          // Clear localStorage aggressively if quota exceeded
           if (error instanceof Error && error.name === 'QuotaExceededError') {
             try {
-              localStorage.removeItem(cacheKey)
+              // Clear all app-related cache
+              const keysToRemove = []
+              for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i)
+                if (key && (key.includes('Groups_') || key.includes('groups_'))) {
+                  keysToRemove.push(key)
+                }
+              }
+              keysToRemove.forEach(key => localStorage.removeItem(key))
             } catch (e) {
-              // Ignore cleanup errors
+              // If all else fails, clear all localStorage
+              try {
+                localStorage.clear()
+              } catch (clearError) {
+                // Ignore cleanup errors
+              }
             }
           }
         }
