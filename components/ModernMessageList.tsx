@@ -241,7 +241,7 @@ export function ModernMessageList({
                             isOwn
                               ? 'bg-green-500 text-black rounded-br-sm'
                               : groupCreatorId && message.userId === groupCreatorId
-                              ? 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white border border-purple-300 rounded-bl-sm shadow-sm'
+                              ? 'bg-purple-600 text-white border border-purple-300 rounded-bl-sm shadow-sm'
                               : 'bg-white text-black border border-gray-200 rounded-bl-sm shadow-sm'
                           }`}
                           style={{ 
