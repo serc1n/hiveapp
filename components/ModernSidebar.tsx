@@ -253,10 +253,14 @@ export function ModernSidebar({
                           {group.name}
                         </h3>
                         {group.contractAddress && (
-                          <Lock className="w-3 h-3 text-yellow-600 flex-shrink-0" title="Token-gated" />
+                          <div title="Token-gated">
+                            <Lock className="w-3 h-3 text-yellow-600 flex-shrink-0" />
+                          </div>
                         )}
                         {group.isCreator && (
-                          <Crown className="w-3 h-3 text-purple-600 flex-shrink-0" title="You own this group" />
+                          <div title="You own this group">
+                            <Crown className="w-3 h-3 text-purple-600 flex-shrink-0" />
+                          </div>
                         )}
                       </div>
                       <span className="text-xs text-gray-500 flex-shrink-0 ml-2">
