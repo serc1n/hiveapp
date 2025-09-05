@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react'
 import { ModernSidebar } from './ModernSidebar'
 import { ModernChatView } from './ModernChatView'
 import { ModernMobileNav } from './ModernMobileNav'
+import { ProfileTab } from './ProfileTab'
 import { NotificationPermission } from './NotificationPermission'
 import { PWAInstaller } from './PWAInstaller'
 
@@ -78,13 +79,17 @@ export function ModernApp() {
             />
           </div>
           
-          {/* Main Chat Area */}
+          {/* Main Content Area */}
           <div className="flex-1 flex flex-col">
             {selectedGroupId ? (
               <ModernChatView 
                 groupId={selectedGroupId} 
                 onBack={handleBackToList}
               />
+            ) : activeTab === 'profile' ? (
+              <div className="flex-1 overflow-y-auto bg-gray-50">
+                <ProfileTab />
+              </div>
             ) : (
               <div className="flex-1 flex items-center justify-center bg-gradient-to-br from-indigo-50 to-purple-50">
                 <div className="text-center max-w-md">
@@ -113,6 +118,10 @@ export function ModernApp() {
               onBack={handleBackToList}
               isMobile={true}
             />
+          ) : activeTab === 'profile' ? (
+            <div className="flex-1 overflow-y-auto bg-gray-50 pb-20">
+              <ProfileTab />
+            </div>
           ) : (
             <div className="flex-1 overflow-hidden">
               <ModernSidebar
