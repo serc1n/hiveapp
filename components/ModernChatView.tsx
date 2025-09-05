@@ -273,7 +273,7 @@ export function ModernChatView({ groupId, onBack, isMobile = false }: ModernChat
       </div>
 
       {/* Message Input */}
-      <div className="border-t border-gray-200 bg-white safe-area-pb">
+      <div className="sticky bottom-0 border-t border-gray-200 bg-white safe-area-pb z-10">
         <div className="p-4">
           <form onSubmit={handleSendMessage} className="flex items-end space-x-3">
             <div className="flex-1 relative">

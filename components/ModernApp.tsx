@@ -114,21 +114,23 @@ export function ModernApp() {
               isMobile={true}
             />
           ) : (
-            <>
-              <div className="flex-1 overflow-hidden">
-                <ModernSidebar
-                  activeTab={activeTab}
-                  onTabChange={setActiveTab}
-                  selectedGroupId={selectedGroupId}
-                  onSelectGroup={handleSelectGroup}
-                  isMobile={true}
-                />
-              </div>
+            <div className="flex-1 overflow-hidden">
+              <ModernSidebar
+                activeTab={activeTab}
+                onTabChange={setActiveTab}
+                selectedGroupId={selectedGroupId}
+                onSelectGroup={handleSelectGroup}
+                isMobile={true}
+              />
+            </div>
+          )}
+          {!selectedGroupId && (
+            <div className="fixed bottom-0 left-0 right-0 z-50">
               <ModernMobileNav
                 activeTab={activeTab}
                 onTabChange={setActiveTab}
               />
-            </>
+            </div>
           )}
         </div>
       )}

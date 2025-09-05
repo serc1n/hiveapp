@@ -175,7 +175,7 @@ export function ModernSidebar({
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto">
+      <div className={`flex-1 overflow-y-auto ${isMobile ? 'pb-20' : ''}`}>
         {activeTab === 'profile' ? (
           <div className="p-6">
             <div className="text-center mb-8">
