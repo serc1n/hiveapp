@@ -122,7 +122,7 @@ export function ModernSidebar({
       if (response.ok) {
         const data = await response.json()
         const groups = data.groups || []
-        console.log('📥 Received explore groups:', groups.length, groups.map(g => ({ id: g.id, name: g.name, hasAccess: g.hasAccess })))
+        console.log('📥 Received explore groups:', groups.length, groups.map((g: any) => ({ id: g.id, name: g.name, hasAccess: g.hasAccess })))
         setExploreGroups(groups)
       } else {
         console.log('❌ Failed to fetch explore groups:', response.status)
@@ -201,7 +201,7 @@ export function ModernSidebar({
       activeTab,
       exploreGroupsCount: exploreGroupsInternal.length,
       filteredGroupsCount: filteredGroups.length,
-      exploreGroups: exploreGroupsInternal.map(g => ({ 
+      exploreGroups: exploreGroupsInternal.map((g: any) => ({ 
         id: g.id, 
         name: g.name, 
         hasAccess: g.hasAccess,
