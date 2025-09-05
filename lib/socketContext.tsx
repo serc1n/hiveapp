@@ -1,23 +1,24 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState } from 'react'
-import { io, Socket } from 'socket.io-client'
+import { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
+import { supabase, RealtimePayload } from './supabase'
+import { RealtimeChannel } from '@supabase/supabase-js'
 
 interface SocketContextType {
-  socket: Socket | null
   isConnected: boolean
   joinGroups: (groupIds: string[]) => void
   leaveGroups: (groupIds: string[]) => void
-  emitNewMessage: (data: any) => void
+  onMessageReceived: (callback: (data: any) => void) => void
+  offMessageReceived: () => void
 }
 
 const SocketContext = createContext<SocketContextType>({
-  socket: null,
   isConnected: false,
   joinGroups: () => {},
   leaveGroups: () => {},
-  emitNewMessage: () => {},
+  onMessageReceived: () => {},
+  offMessageReceived: () => {},
 })
 
 export const useSocket = () => {
@@ -33,71 +34,137 @@ interface SocketProviderProps {
 }
 
 export const SocketProvider = ({ children }: SocketProviderProps) => {
-  const [socket, setSocket] = useState<Socket | null>(null)
   const [isConnected, setIsConnected] = useState(false)
+  const [messageCallback, setMessageCallback] = useState<((data: any) => void) | null>(null)
+  const [channels, setChannels] = useState<RealtimeChannel[]>([])
   const { data: session } = useSession()
 
+  // Supabase Realtime connection
   useEffect(() => {
-    if (session?.user) {
-      // Initialize socket connection
-      const socketInstance = io(process.env.NODE_ENV === 'production' ? undefined : 'http://localhost:3000', {
-        path: '/api/socket',
-        addTrailingSlash: false,
+    if (!session?.user) return
+
+    console.log('🔌 Setting up Supabase Realtime connection')
+    
+    // Listen for connection status
+    supabase.realtime.onOpen(() => {
+      console.log('🔌 Supabase Realtime connected')
+      setIsConnected(true)
+    })
+
+    supabase.realtime.onClose(() => {
+      console.log('🔌 Supabase Realtime disconnected')
+      setIsConnected(false)
+    })
+
+    supabase.realtime.onError((error) => {
+      console.error('🔌 Supabase Realtime error:', error)
+      setIsConnected(false)
+    })
+
+    return () => {
+      console.log('🔌 Cleaning up Supabase Realtime connection')
+      channels.forEach(channel => {
+        supabase.removeChannel(channel)
       })
-
-      socketInstance.on('connect', () => {
-        console.log('🔌 WebSocket connected:', socketInstance.id)
-        setIsConnected(true)
-      })
-
-      socketInstance.on('disconnect', () => {
-        console.log('🔌 WebSocket disconnected')
-        setIsConnected(false)
-      })
-
-      socketInstance.on('connect_error', (error) => {
-        console.error('🔌 WebSocket connection error:', error)
-        setIsConnected(false)
-      })
-
-      setSocket(socketInstance)
-
-      return () => {
-        console.log('🔌 Cleaning up WebSocket connection')
-        socketInstance.disconnect()
-      }
+      setChannels([])
     }
   }, [session])
 
-  const joinGroups = (groupIds: string[]) => {
-    if (socket && isConnected) {
-      socket.emit('join-groups', groupIds)
-      console.log('🔌 Joined groups:', groupIds)
-    }
-  }
+  const joinGroups = useCallback((groupIds: string[]) => {
+    if (!session?.user) return
 
-  const leaveGroups = (groupIds: string[]) => {
-    if (socket && isConnected) {
-      socket.emit('leave-groups', groupIds)
-      console.log('🔌 Left groups:', groupIds)
-    }
-  }
+    console.log('🔌 Joining groups via Supabase Realtime:', groupIds)
 
-  const emitNewMessage = (data: any) => {
-    if (socket && isConnected) {
-      socket.emit('new-message', data)
-      console.log('🔌 Emitted new message:', data)
-    }
-  }
+    // Remove existing channels
+    channels.forEach(channel => {
+      supabase.removeChannel(channel)
+    })
+
+    // Create new channels for each group
+    const newChannels = groupIds.map(groupId => {
+      const channel = supabase
+        .channel(`messages:groupId=eq.${groupId}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'messages', // Using the actual table name from @@map
+            filter: `groupId=eq.${groupId}`
+          },
+          async (payload: any) => {
+            console.log('🔌 Received new message via Supabase Realtime:', payload)
+            
+            if (messageCallback && payload.new && payload.new.userId !== session.user.id) {
+              // Fetch user data for the message
+              try {
+                const userResponse = await fetch(`/api/users/${payload.new.userId}`)
+                const user = userResponse.ok ? await userResponse.json() : null
+                
+                messageCallback({
+                  groupId: payload.new.groupId,
+                  message: {
+                    id: payload.new.id,
+                    content: payload.new.content,
+                    userId: payload.new.userId,
+                    createdAt: payload.new.createdAt,
+                    user
+                  }
+                })
+              } catch (error) {
+                console.error('🔌 Error fetching user data for message:', error)
+                // Still send the message without user data
+                messageCallback({
+                  groupId: payload.new.groupId,
+                  message: {
+                    id: payload.new.id,
+                    content: payload.new.content,
+                    userId: payload.new.userId,
+                    createdAt: payload.new.createdAt,
+                    user: null
+                  }
+                })
+              }
+            }
+          }
+        )
+        .subscribe((status) => {
+          console.log(`🔌 Channel ${groupId} subscription status:`, status)
+        })
+
+      return channel
+    })
+
+    setChannels(newChannels)
+  }, [session, messageCallback])
+
+  const leaveGroups = useCallback((groupIds: string[]) => {
+    console.log('🔌 Leaving groups:', groupIds)
+    
+    channels.forEach(channel => {
+      supabase.removeChannel(channel)
+    })
+    setChannels([])
+  }, [channels])
+
+  const onMessageReceived = useCallback((callback: (data: any) => void) => {
+    console.log('🔌 Setting message callback')
+    setMessageCallback(() => callback)
+  }, [])
+
+  const offMessageReceived = useCallback(() => {
+    console.log('🔌 Removing message callback')
+    setMessageCallback(null)
+  }, [])
 
   return (
     <SocketContext.Provider
       value={{
-        socket,
         isConnected,
         joinGroups,
         leaveGroups,
-        emitNewMessage,
+        onMessageReceived,
+        offMessageReceived,
       }}
     >
       {children}

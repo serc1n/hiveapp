@@ -42,7 +42,7 @@ export function ModernSidebar({
   isMobile = false 
 }: ModernSidebarProps) {
   const { data: session } = useSession()
-  const { socket, isConnected, joinGroups: joinSocketGroups } = useSocket()
+  const { isConnected, joinGroups: joinSocketGroups, onMessageReceived, offMessageReceived } = useSocket()
   const [groups, setGroups] = useState<Group[]>([])
   const [exploreGroups, setExploreGroupsRaw] = useState<Group[]>([])
   const [loading, setLoading] = useState(true)
@@ -70,7 +70,7 @@ export function ModernSidebar({
 
   // WebSocket setup for real-time messaging
   useEffect(() => {
-    if (socket && isConnected && groups.length > 0) {
+    if (isConnected && groups.length > 0) {
       console.log('🔌 Setting up WebSocket listeners')
       
       // Join all user's groups for real-time updates
@@ -99,14 +99,14 @@ export function ModernSidebar({
         )
       }
 
-      socket.on('message-received', handleMessageReceived)
+      onMessageReceived(handleMessageReceived)
 
       return () => {
         console.log('🔌 Cleaning up WebSocket listeners')
-        socket.off('message-received', handleMessageReceived)
+        offMessageReceived()
       }
     }
-  }, [socket, isConnected, groups, selectedGroupId, joinSocketGroups])
+  }, [isConnected, groups, selectedGroupId, joinSocketGroups, onMessageReceived, offMessageReceived])
 
 
   const fetchMyGroups = async () => {

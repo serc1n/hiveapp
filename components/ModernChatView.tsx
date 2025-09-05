@@ -42,7 +42,7 @@ interface ModernChatViewProps {
 
 export function ModernChatView({ groupId, onBack, isMobile = false }: ModernChatViewProps) {
   const { data: session } = useSession()
-  const { socket, emitNewMessage } = useSocket()
+  // Supabase Realtime handles message broadcasting automatically
   const [messages, setMessages] = useState<Message[]>([])
   const [newMessage, setNewMessage] = useState('')
   const [group, setGroup] = useState<Group | null>(null)
@@ -190,11 +190,7 @@ export function ModernChatView({ groupId, onBack, isMobile = false }: ModernChat
           msg.id === tempMessage.id ? data.message : msg
         ))
         
-        // Emit WebSocket event for real-time updates
-        emitNewMessage({
-          groupId,
-          message: data.message
-        })
+        // Supabase Realtime will automatically broadcast this message to subscribers
       } else {
         // Remove temporary message on failure
         setMessages(prev => prev.filter(msg => msg.id !== tempMessage.id))

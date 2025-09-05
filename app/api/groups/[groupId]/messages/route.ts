@@ -124,6 +124,7 @@ export async function POST(
       include: {
         user: {
           select: {
+            id: true,
             name: true,
             twitterHandle: true,
             profileImage: true
@@ -132,6 +133,7 @@ export async function POST(
       }
     })
 
+    // Supabase Realtime will automatically broadcast this message to subscribers
     return NextResponse.json({ message })
   } catch (error) {
     console.error('Error creating message:', error)
