@@ -205,19 +205,35 @@ export function ModernSidebar({
       console.log('📥 Join response status:', response.status)
       
       if (response.ok) {
-        console.log('✅ Successfully joined group:', groupId)
-        // Refresh explore groups to update join status
-        if (activeTab === 'explore') {
-          console.log('🔄 Refreshing explore groups...')
-          fetchExploreGroups()
-        }
-        // Also refresh my groups as user now has access
-        console.log('🔄 Refreshing my groups...')
-        fetchMyGroups()
+        const result = await response.json()
+        console.log('✅ Join response:', result)
         
-        // Auto-open the joined group
-        console.log('🚀 Auto-opening joined group:', groupId)
-        onSelectGroup(groupId)
+        if (result.requiresApproval) {
+          // Join request sent, waiting for approval
+          alert(result.message || 'Join request sent! Waiting for approval from group creator.')
+          
+          // Refresh explore groups to update join status
+          if (activeTab === 'explore') {
+            console.log('🔄 Refreshing explore groups...')
+            fetchExploreGroups()
+          }
+        } else {
+          // Direct join successful
+          alert(result.message || 'Successfully joined the group!')
+          
+          // Refresh explore groups to update join status
+          if (activeTab === 'explore') {
+            console.log('🔄 Refreshing explore groups...')
+            fetchExploreGroups()
+          }
+          // Also refresh my groups as user now has access
+          console.log('🔄 Refreshing my groups...')
+          fetchMyGroups()
+          
+          // Auto-open the joined group
+          console.log('🚀 Auto-opening joined group:', groupId)
+          onSelectGroup(groupId)
+        }
       } else {
         const error = await response.json()
         console.log('❌ Join failed:', error)

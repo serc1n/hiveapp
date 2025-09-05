@@ -18,6 +18,9 @@ export async function POST(
       include: {
         members: {
           where: { userId: session.user.id }
+        },
+        joinRequests: {
+          where: { userId: session.user.id }
         }
       }
     })
@@ -31,15 +34,48 @@ export async function POST(
       return NextResponse.json({ error: 'Already a member of this group' }, { status: 400 })
     }
 
-    // Add user to the group
-    await prisma.groupMember.create({
-      data: {
-        userId: session.user.id,
-        groupId: params.groupId
+    // Check if user already has a pending join request
+    if (group.joinRequests.length > 0) {
+      const existingRequest = group.joinRequests[0]
+      if (existingRequest.status === 'pending') {
+        return NextResponse.json({ error: 'Join request already pending approval' }, { status: 400 })
       }
-    })
+      if (existingRequest.status === 'rejected') {
+        return NextResponse.json({ error: 'Your join request was rejected' }, { status: 403 })
+      }
+    }
 
-    return NextResponse.json({ success: true, message: 'Successfully joined the group' })
+    // Check if group requires approval
+    if (group.requiresApproval) {
+      // Create a join request instead of directly adding to group
+      await prisma.joinRequest.create({
+        data: {
+          userId: session.user.id,
+          groupId: params.groupId,
+          status: 'pending'
+        }
+      })
+
+      return NextResponse.json({ 
+        success: true, 
+        message: 'Join request sent! Waiting for approval from group creator.',
+        requiresApproval: true 
+      })
+    } else {
+      // Direct join for groups that don't require approval
+      await prisma.groupMember.create({
+        data: {
+          userId: session.user.id,
+          groupId: params.groupId
+        }
+      })
+
+      return NextResponse.json({ 
+        success: true, 
+        message: 'Successfully joined the group',
+        requiresApproval: false 
+      })
+    }
   } catch (error) {
     console.error('Error joining group:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
