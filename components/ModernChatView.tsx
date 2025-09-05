@@ -51,17 +51,20 @@ export function ModernChatView({ groupId, onBack, isMobile = false }: ModernChat
   const [showAnnouncementModal, setShowAnnouncementModal] = useState(false)
   const [selectedMessageForAnnouncement, setSelectedMessageForAnnouncement] = useState<string | null>(null)
   const [isMember, setIsMember] = useState(false)
+  const [onlineCount, setOnlineCount] = useState(0)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (groupId) {
       fetchGroupData()
       fetchMessages(true)
+      updateOnlineStatus() // Initial online status update
       
-      // Set up polling for new messages
+      // Set up polling for new messages and online status
       const messageInterval = setInterval(() => {
         if (!document.hidden) {
           fetchMessages(false)
+          updateOnlineStatus()
         }
       }, 3000)
       
@@ -209,6 +212,32 @@ export function ModernChatView({ groupId, onBack, isMobile = false }: ModernChat
     fetchMessages(false)
   }
 
+  const updateOnlineStatus = async () => {
+    try {
+      const response = await fetch(`/api/groups/${groupId}/online`, {
+        method: 'POST'
+      })
+      if (response.ok) {
+        const data = await response.json()
+        setOnlineCount(data.onlineCount)
+      }
+    } catch (error) {
+      console.error('Error updating online status:', error)
+    }
+  }
+
+  const fetchOnlineCount = async () => {
+    try {
+      const response = await fetch(`/api/groups/${groupId}/online`)
+      if (response.ok) {
+        const data = await response.json()
+        setOnlineCount(data.onlineCount)
+      }
+    } catch (error) {
+      console.error('Error fetching online count:', error)
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="flex-1 flex items-center justify-center bg-white">
@@ -265,6 +294,12 @@ export function ModernChatView({ groupId, onBack, isMobile = false }: ModernChat
               <h2 className="text-lg font-semibold text-gray-900">{group.name}</h2>
               <p className="text-sm text-gray-600 flex items-center">
                 <Users className="w-3 h-3 mr-1" />
+                {onlineCount > 0 && (
+                  <>
+                    <span className="text-green-600 font-medium">{onlineCount} online</span>
+                    <span className="mx-1">•</span>
+                  </>
+                )}
                 {group.memberCount} members
               </p>
             </div>
