@@ -94,7 +94,7 @@ export function ModernMessageList({
   const messageGroups = groupMessagesByDate(messages)
 
   return (
-    <div className="p-6 space-y-8">
+    <div className="p-4 space-y-6">
       {Object.entries(messageGroups).map(([dateKey, dateMessages]) => (
         <div key={dateKey} className="animate-slide-in">
           {/* Date separator */}
@@ -107,7 +107,7 @@ export function ModernMessageList({
           </div>
 
           {/* Messages for this date */}
-          <div className="space-y-4">
+          <div className="space-y-2">
             {dateMessages.map((message, index) => {
               const isOwn = message.userId === currentUserId
               const showAvatar = index === 0 || dateMessages[index - 1].userId !== message.userId
@@ -144,7 +144,7 @@ export function ModernMessageList({
                     <div className={`flex flex-col ${isOwn ? 'items-end' : 'items-start'}`}>
                       {/* Sender name */}
                       {showName && (
-                        <div className="text-sm font-medium text-gray-700 mb-1 px-1">
+                        <div className="text-xs font-medium text-gray-600 mb-1 px-1">
                           {message.user.name}
                         </div>
                       )}
@@ -152,25 +152,23 @@ export function ModernMessageList({
                       {/* Message bubble */}
                       <div className="relative">
                         <div
-                          className={`px-4 py-3 rounded-2xl shadow-card relative ${
+                          className={`px-3 py-2 rounded-2xl relative ${
                             isOwn
-                              ? 'bg-gradient-primary text-white rounded-br-md'
-                              : 'bg-white text-gray-900 border border-gray-200 rounded-bl-md'
+                              ? 'bg-green-500 text-black rounded-br-md'
+                              : 'bg-white text-black border border-gray-200 rounded-bl-md shadow-sm'
                           }`}
                           style={{ 
                             maxWidth: 'fit-content',
-                            minWidth: '60px'
+                            minWidth: '50px'
                           }}
                         >
                           {/* Message text */}
-                          <div className="text-sm leading-relaxed break-words whitespace-pre-wrap">
+                          <div className="text-sm leading-normal break-words whitespace-pre-wrap text-black">
                             {message.content}
                           </div>
                           
                           {/* Time stamp */}
-                          <div className={`text-xs mt-1 ${
-                            isOwn ? 'text-indigo-200' : 'text-gray-500'
-                          } text-right`}>
+                          <div className="text-xs mt-1 text-gray-500 text-right font-normal">
                             {formatTime(message.createdAt)}
                           </div>
                         </div>
