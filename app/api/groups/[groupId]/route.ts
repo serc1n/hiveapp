@@ -162,3 +162,61 @@ export async function PUT(
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { groupId: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const group = await prisma.group.findUnique({
+      where: { id: params.groupId }
+    })
+
+    if (!group) {
+      return NextResponse.json({ error: 'Group not found' }, { status: 404 })
+    }
+
+    // Only the creator can delete the group
+    if (group.creatorId !== session.user.id) {
+      return NextResponse.json({ error: 'Only the group creator can delete this group' }, { status: 403 })
+    }
+
+    // Delete all related data in the correct order (due to foreign key constraints)
+    await prisma.$transaction(async (tx) => {
+      // Delete announcements
+      await tx.announcement.deleteMany({
+        where: { groupId: params.groupId }
+      })
+      
+      // Delete messages
+      await tx.message.deleteMany({
+        where: { groupId: params.groupId }
+      })
+      
+      // Delete join requests
+      await tx.joinRequest.deleteMany({
+        where: { groupId: params.groupId }
+      })
+      
+      // Delete group members
+      await tx.groupMember.deleteMany({
+        where: { groupId: params.groupId }
+      })
+      
+      // Finally delete the group itself
+      await tx.group.delete({
+        where: { id: params.groupId }
+      })
+    })
+
+    return NextResponse.json({ success: true, message: 'Group deleted successfully' })
+  } catch (error) {
+    console.error('Error deleting group:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}

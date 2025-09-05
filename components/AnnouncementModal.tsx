@@ -44,35 +44,35 @@ export function AnnouncementModal({
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-dark-800 rounded-xl p-6 w-full max-w-md">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center p-4 z-50 overflow-y-auto">
+      <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl mt-8 mb-8">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-white flex items-center">
-            <Megaphone className="w-6 h-6 mr-2 text-primary-500" />
+          <h2 className="text-xl font-bold text-gray-900 flex items-center">
+            <Megaphone className="w-6 h-6 mr-2 text-indigo-600" />
             Create Announcement
           </h2>
           <button
             onClick={onClose}
-            className="p-1 hover:bg-dark-700 rounded-lg transition-colors"
+            className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
           >
-            <X className="w-5 h-5 text-dark-400" />
+            <X className="w-5 h-5 text-gray-400" />
           </button>
         </div>
 
         <div className="space-y-4">
-          <div className="p-4 bg-dark-700 rounded-lg border-l-4 border-primary-500">
-            <p className="text-sm text-dark-300 mb-2">
+          <div className="p-4 bg-indigo-50 rounded-lg border-l-4 border-indigo-500">
+            <p className="text-sm text-gray-700 mb-2">
               This will create an announcement from the selected message and notify all group members.
             </p>
-            <div className="flex items-center space-x-2 text-xs text-dark-400">
+            <div className="flex items-center space-x-2 text-xs text-gray-600">
               <Megaphone className="w-4 h-4" />
               <span>Announcement will appear in the group's announcements tab</span>
             </div>
           </div>
 
-          <div className="bg-dark-700 rounded-lg p-3">
-            <h4 className="text-sm font-medium text-white mb-2">Features:</h4>
-            <ul className="text-xs text-dark-300 space-y-1">
+          <div className="bg-gray-50 rounded-lg p-3">
+            <h4 className="text-sm font-medium text-gray-900 mb-2">Features:</h4>
+            <ul className="text-xs text-gray-600 space-y-1">
               <li>• Push notifications to all group members</li>
               <li>• Message saved to announcements tab</li>
               <li>• Highlighted in chat with announcement badge</li>
@@ -82,14 +82,14 @@ export function AnnouncementModal({
           <div className="flex space-x-3 pt-4">
             <button
               onClick={onClose}
-              className="flex-1 btn-secondary"
+              className="flex-1 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors"
               disabled={isLoading}
             >
               Cancel
             </button>
             <button
               onClick={handleCreateAnnouncement}
-              className="flex-1 btn-primary flex items-center justify-center"
+              className="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors flex items-center justify-center"
               disabled={isLoading}
             >
               {isLoading ? (

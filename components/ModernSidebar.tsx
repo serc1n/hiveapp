@@ -302,7 +302,7 @@ export function ModernSidebar({
                 <button
                   key={tab.id}
                   onClick={() => onTabChange(tab.id as any)}
-                  className={`flex-1 flex items-center justify-center space-x-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
+                  className={`flex-1 flex items-center justify-center space-x-1.5 px-2 py-2.5 rounded-xl text-xs font-medium transition-all duration-200 whitespace-nowrap ${
                     activeTab === tab.id
                       ? 'bg-white text-gray-900 shadow-card'
                       : 'text-gray-600 hover:text-gray-900'
@@ -313,7 +313,7 @@ export function ModernSidebar({
                   ) : (
                     <Icon className="w-4 h-4" />
                   )}
-                  <span>{tab.label}</span>
+                  <span className="truncate">{tab.label}</span>
                 </button>
               )
             })}

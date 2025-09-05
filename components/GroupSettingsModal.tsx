@@ -112,6 +112,39 @@ export function GroupSettingsModal({ group, onClose, onGroupUpdated }: GroupSett
     }
   }
 
+  const handleDeleteGroup = async () => {
+    if (!confirm('Are you ABSOLUTELY sure you want to delete this Hive?\n\nThis will:\n- Delete all messages permanently\n- Remove all members\n- Cannot be undone\n\nType "DELETE" to confirm this action.')) {
+      return
+    }
+
+    const confirmation = prompt('Type "DELETE" to confirm deletion:')
+    if (confirmation !== 'DELETE') {
+      alert('Deletion cancelled. You must type "DELETE" exactly to confirm.')
+      return
+    }
+
+    setIsLoading(true)
+    try {
+      const response = await fetch(`/api/groups/${group.id}`, {
+        method: 'DELETE',
+      })
+
+      if (response.ok) {
+        alert('Hive deleted successfully.')
+        onGroupUpdated() // Refresh the group list
+        onClose() // Close the modal
+      } else {
+        const error = await response.json()
+        alert(error.error || 'Failed to delete Hive')
+      }
+    } catch (error) {
+      console.error('Failed to delete Hive:', error)
+      alert('Failed to delete Hive. Please try again.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-hidden shadow-modern">
@@ -314,30 +347,57 @@ export function GroupSettingsModal({ group, onClose, onGroupUpdated }: GroupSett
                     </button>
                   </div>
 
-                  {/* Leave Group */}
-                  <div className="bg-red-50 border border-red-200 rounded-2xl p-6">
-                    <div className="flex items-center space-x-3 mb-4">
-                      <UserMinus className="w-6 h-6 text-red-600" />
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-900">Leave Group</h3>
-                        <p className="text-gray-600 text-sm">You can rejoin anytime if it's a public group</p>
+                  {group.isCreator ? (
+                    /* Delete Group - Only for creators */
+                    <div className="bg-red-50 border border-red-200 rounded-2xl p-6">
+                      <div className="flex items-center space-x-3 mb-4">
+                        <Trash2 className="w-6 h-6 text-red-600" />
+                        <div>
+                          <h3 className="text-lg font-semibold text-gray-900">Delete Hive</h3>
+                          <p className="text-gray-600 text-sm">Permanently delete this Hive and all messages. This cannot be undone!</p>
+                        </div>
                       </div>
+                      <button
+                        onClick={() => handleDeleteGroup()}
+                        disabled={isLoading}
+                        className="w-full px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                      >
+                        {isLoading ? (
+                          <>
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                            Deleting...
+                          </>
+                        ) : (
+                          'Delete Hive Permanently'
+                        )}
+                      </button>
                     </div>
-                    <button
-                      onClick={() => handleLeaveGroup()}
-                      disabled={isLeavingGroup}
-                      className="w-full px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-                    >
-                      {isLeavingGroup ? (
-                        <>
-                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                          Leaving...
-                        </>
-                      ) : (
-                        'Leave Group'
-                      )}
-                    </button>
-                  </div>
+                  ) : (
+                    /* Leave Group - For non-creators */
+                    <div className="bg-red-50 border border-red-200 rounded-2xl p-6">
+                      <div className="flex items-center space-x-3 mb-4">
+                        <UserMinus className="w-6 h-6 text-red-600" />
+                        <div>
+                          <h3 className="text-lg font-semibold text-gray-900">Leave Group</h3>
+                          <p className="text-gray-600 text-sm">You can rejoin anytime if it's a public group</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => handleLeaveGroup()}
+                        disabled={isLeavingGroup}
+                        className="w-full px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                      >
+                        {isLeavingGroup ? (
+                          <>
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                            Leaving...
+                          </>
+                        ) : (
+                          'Leave Group'
+                        )}
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
