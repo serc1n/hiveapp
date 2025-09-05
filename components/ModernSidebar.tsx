@@ -247,7 +247,7 @@ export function ModernSidebar({
   const handleJoinGroup = async (groupId: string, event: React.MouseEvent) => {
     event.stopPropagation() // Prevent group selection
     
-    setJoiningGroups(prev => new Set([...prev, groupId]))
+    setJoiningGroups(prev => new Set(Array.from(prev).concat(groupId)))
     
     try {
       const response = await fetch(`/api/groups/${groupId}/join`, {
@@ -270,9 +270,8 @@ export function ModernSidebar({
       alert('Failed to join group')
     } finally {
       setJoiningGroups(prev => {
-        const newSet = new Set(prev)
-        newSet.delete(groupId)
-        return newSet
+        const newArray = Array.from(prev).filter(id => id !== groupId)
+        return new Set(newArray)
       })
     }
   }
