@@ -329,13 +329,12 @@ export function ModernSidebar({
         ) : (
           <div className="divide-y divide-gray-100">
             {filteredGroups.map((group) => (
-              <button
+              <div
                 key={group.id}
-                onClick={() => onSelectGroup(group.id)}
-                className={`w-full p-4 text-left hover:bg-gray-50 transition-colors ${
+                className={`w-full p-4 text-left hover:bg-gray-50 transition-colors cursor-pointer ${
                   selectedGroupId === group.id ? 'bg-indigo-50 border-r-2 border-indigo-500' : ''
-                }`}
-                disabled={!group.hasAccess}
+                } ${!group.hasAccess ? 'opacity-75' : ''}`}
+                onClick={() => group.hasAccess && onSelectGroup(group.id)}
               >
                 <div className="flex items-center space-x-3">
                   <div className="w-12 h-12 bg-gradient-primary rounded-2xl flex items-center justify-center flex-shrink-0">
@@ -395,7 +394,7 @@ export function ModernSidebar({
                     </p>
                   </div>
                 </div>
-              </button>
+              </div>
             ))}
           </div>
         )}
