@@ -84,8 +84,10 @@ export function ModernChatView({ groupId, onBack, isMobile = false }: ModernChat
     scrollToBottom()
   }, [messages])
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  const scrollToBottom = (instant = false) => {
+    messagesEndRef.current?.scrollIntoView({ 
+      behavior: instant ? 'instant' : 'smooth' 
+    })
   }
 
   const fetchGroupData = async () => {
@@ -107,13 +109,22 @@ export function ModernChatView({ groupId, onBack, isMobile = false }: ModernChat
       if (showLoading) {
         setIsLoading(true)
       }
-      const response = await fetch(`/api/groups/${groupId}/messages`)
+      
+      // Add timestamp to prevent caching issues
+      const response = await fetch(`/api/groups/${groupId}/messages?t=${Date.now()}`)
       if (response.ok) {
         const data = await response.json()
         setMessages(prevMessages => {
+          // More efficient change detection
+          if (data.messages.length === 0) return data.messages
+          if (prevMessages.length === 0) return data.messages
+          
+          // Check if there are new messages by comparing last message IDs
+          const lastNewMessage = data.messages[data.messages.length - 1]
+          const lastOldMessage = prevMessages[prevMessages.length - 1]
+          
           if (prevMessages.length !== data.messages.length || 
-              (data.messages.length > 0 && prevMessages.length > 0 && 
-               data.messages[data.messages.length - 1].id !== prevMessages[prevMessages.length - 1].id)) {
+              lastNewMessage.id !== lastOldMessage.id) {
             return data.messages
           }
           return prevMessages
@@ -136,6 +147,24 @@ export function ModernChatView({ groupId, onBack, isMobile = false }: ModernChat
     setNewMessage('')
     setIsSending(true)
 
+    // Optimistic update - add message immediately
+    const tempMessage = {
+      id: `temp-${Date.now()}`,
+      content: messageContent,
+      userId: session?.user?.id || '',
+      user: {
+        name: session?.user?.name || '',
+        twitterHandle: session?.user?.name || '',
+        profileImage: session?.user?.image || null
+      },
+      createdAt: new Date().toISOString()
+    }
+    
+    setMessages(prev => [...prev, tempMessage])
+    
+    // Instant scroll for user's own message
+    setTimeout(() => scrollToBottom(true), 0)
+
     try {
       const response = await fetch(`/api/groups/${groupId}/messages`, {
         method: 'POST',
@@ -147,13 +176,20 @@ export function ModernChatView({ groupId, onBack, isMobile = false }: ModernChat
 
       if (response.ok) {
         const data = await response.json()
-        setMessages(prev => [...prev, data.message])
+        // Replace temporary message with real one
+        setMessages(prev => prev.map(msg => 
+          msg.id === tempMessage.id ? data.message : msg
+        ))
       } else {
+        // Remove temporary message on failure
+        setMessages(prev => prev.filter(msg => msg.id !== tempMessage.id))
         setNewMessage(messageContent)
         alert('Failed to send message')
       }
     } catch (error) {
       console.error('Error sending message:', error)
+      // Remove temporary message on failure
+      setMessages(prev => prev.filter(msg => msg.id !== tempMessage.id))
       setNewMessage(messageContent)
       alert('Failed to send message')
     } finally {
