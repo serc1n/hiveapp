@@ -120,7 +120,11 @@ export function ModernChatView({ groupId, onBack, isMobile = false }: ModernChat
         setMessages(prevMessages => {
           // More efficient change detection
           if (data.messages.length === 0) return data.messages
-          if (prevMessages.length === 0) return data.messages
+          if (prevMessages.length === 0) {
+            // First time loading messages - scroll to bottom immediately
+            setTimeout(() => scrollToBottom(true), 100)
+            return data.messages
+          }
           
           // Check if there are new messages by comparing last message IDs
           const lastNewMessage = data.messages[data.messages.length - 1]

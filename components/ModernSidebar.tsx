@@ -119,11 +119,24 @@ export function ModernSidebar({
         const groups = data.groups || []
         setGroups(groups)
         
-        // Cache the result
-        localStorage.setItem(cacheKey, JSON.stringify({
-          groups,
-          timestamp: Date.now()
-        }))
+        // Cache the result with error handling
+        try {
+          const cacheData = JSON.stringify({
+            groups: groups.slice(0, 20), // Limit cache to 20 groups to prevent quota issues
+            timestamp: Date.now()
+          })
+          localStorage.setItem(cacheKey, cacheData)
+        } catch (error) {
+          console.warn('Failed to cache my groups:', error)
+          // Clear old cache if quota exceeded
+          if (error.name === 'QuotaExceededError') {
+            try {
+              localStorage.removeItem(cacheKey)
+            } catch (e) {
+              // Ignore cleanup errors
+            }
+          }
+        }
       }
     } catch (error) {
       console.error('Error fetching groups from API:', error)
@@ -169,11 +182,24 @@ export function ModernSidebar({
         const groups = data.groups || []
         setExploreGroups(groups)
         
-        // Cache the result
-        localStorage.setItem(cacheKey, JSON.stringify({
-          groups,
-          timestamp: Date.now()
-        }))
+        // Cache the result with error handling
+        try {
+          const cacheData = JSON.stringify({
+            groups: groups.slice(0, 20), // Limit cache to 20 groups to prevent quota issues
+            timestamp: Date.now()
+          })
+          localStorage.setItem(cacheKey, cacheData)
+        } catch (error) {
+          console.warn('Failed to cache explore groups:', error)
+          // Clear old cache if quota exceeded
+          if (error.name === 'QuotaExceededError') {
+            try {
+              localStorage.removeItem(cacheKey)
+            } catch (e) {
+              // Ignore cleanup errors
+            }
+          }
+        }
       }
     } catch (error) {
       console.error('Error fetching explore groups from API:', error)
@@ -285,7 +311,7 @@ export function ModernSidebar({
       {/* Header */}
       <div className="p-6 border-b border-gray-100">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-xl font-bold text-gray-900">
             {activeTab === 'chats' ? 'Hives' : activeTab === 'explore' ? 'Explore' : 'Profile'}
           </h1>
           {activeTab === 'chats' && (
