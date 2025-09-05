@@ -45,7 +45,10 @@ export async function GET(request: NextRequest) {
       contractAddress: group.contractAddress,
       memberCount: group._count.members,
       isCreator: false, // User is never creator in explore
-      isMember: false   // User is never member in explore
+      isMember: false,  // User is never member in explore
+      hasAccess: false, // User needs to join to get access
+      lastMessage: null, // No message preview for groups user isn't in
+      updatedAt: group.updatedAt
     }))
 
     return NextResponse.json({ groups: groupsWithMembershipStatus })
