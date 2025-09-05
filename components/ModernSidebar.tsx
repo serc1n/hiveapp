@@ -174,6 +174,10 @@ export function ModernSidebar({
         // Also refresh my groups as user now has access
         console.log('🔄 Refreshing my groups...')
         fetchMyGroups()
+        
+        // Auto-open the joined group
+        console.log('🚀 Auto-opening joined group:', groupId)
+        onSelectGroup(groupId)
       } else {
         const error = await response.json()
         console.log('❌ Join failed:', error)
