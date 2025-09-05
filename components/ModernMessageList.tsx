@@ -239,9 +239,7 @@ export function ModernMessageList({
                         <div
                           className={`px-2 py-1 rounded-lg relative ${
                             isOwn
-                              ? 'bg-green-500 text-black rounded-br-sm'
-                              : groupCreatorId && message.userId === groupCreatorId
-                              ? 'bg-purple-600 text-white border border-purple-300 rounded-bl-sm shadow-sm'
+                              ? 'bg-purple-600 text-white rounded-br-sm'
                               : 'bg-white text-black border border-gray-200 rounded-bl-sm shadow-sm'
                           }`}
                           style={{ 
@@ -251,11 +249,11 @@ export function ModernMessageList({
                         >
                           {/* Message text with inline timestamp */}
                           <div className={`text-sm leading-normal break-words whitespace-pre-wrap ${
-                            groupCreatorId && message.userId === groupCreatorId ? 'text-white' : 'text-black'
+                            isOwn ? 'text-white' : 'text-black'
                           }`}>
                             {linkifyText(message.content)}
                             <span className={`text-xs font-normal ml-2 select-none ${
-                              groupCreatorId && message.userId === groupCreatorId ? 'text-purple-100' : 'text-gray-400'
+                              isOwn ? 'text-purple-100' : 'text-gray-400'
                             }`} style={{ fontSize: '10px' }}>
                               {formatTime(message.createdAt)}
                             </span>

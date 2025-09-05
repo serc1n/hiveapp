@@ -41,7 +41,7 @@ export function ModernMobileNav({ activeTab, onTabChange }: ModernMobileNavProps
                     alt="Hives" 
                     width={20} 
                     height={20} 
-                    className="w-5 h-5"
+                    className="w-5 h-5 object-contain"
                   />
                 ) : (
                   <Icon className="w-5 h-5" />

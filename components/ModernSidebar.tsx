@@ -147,7 +147,7 @@ export function ModernSidebar({
                       alt="My Hives" 
                       width={16} 
                       height={16} 
-                      className="w-4 h-4"
+                      className="w-4 h-4 object-contain"
                     />
                   ) : (
                     <Icon className="w-4 h-4" />

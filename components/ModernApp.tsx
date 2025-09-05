@@ -69,7 +69,7 @@ export function ModernApp() {
       {!isMobile && (
         <>
           {/* Sidebar */}
-          <div className="w-80 bg-white border-r border-gray-200 flex-shrink-0">
+          <div className="w-96 bg-white border-r border-gray-200 flex-shrink-0">
             <ModernSidebar
               activeTab={activeTab}
               onTabChange={setActiveTab}
