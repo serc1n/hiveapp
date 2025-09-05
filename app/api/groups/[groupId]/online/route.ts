@@ -4,7 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 
 // Simple in-memory store for online users (in production, use Redis)
-const onlineUsers = new Map<string, { userId: string, lastSeen: Date }>()
+const onlineUsers = new Map<string, Record<string, { userId: string, lastSeen: Date }>>()
 
 // Clean up offline users (users who haven't been seen in 5 minutes)
 const cleanupOfflineUsers = (groupId: string) => {
@@ -12,9 +12,9 @@ const cleanupOfflineUsers = (groupId: string) => {
   const groupKey = `group:${groupId}`
   
   if (onlineUsers.has(groupKey)) {
-    const groupUsers = onlineUsers.get(groupKey) as any
+    const groupUsers = onlineUsers.get(groupKey)!
     for (const [userId, data] of Object.entries(groupUsers)) {
-      if ((data as any).lastSeen < fiveMinutesAgo) {
+      if (data.lastSeen < fiveMinutesAgo) {
         delete groupUsers[userId]
       }
     }
@@ -35,7 +35,7 @@ export async function GET(
     cleanupOfflineUsers(params.groupId)
     
     const groupKey = `group:${params.groupId}`
-    const groupUsers = onlineUsers.get(groupKey) as any || {}
+    const groupUsers = onlineUsers.get(groupKey) || {}
     const onlineCount = Object.keys(groupUsers).length
 
     return NextResponse.json({ onlineCount })
@@ -82,7 +82,7 @@ export async function POST(
       onlineUsers.set(groupKey, {})
     }
     
-    const groupUsers = onlineUsers.get(groupKey) as any
+    const groupUsers = onlineUsers.get(groupKey)!
     groupUsers[session.user.id] = {
       userId: session.user.id,
       lastSeen: new Date()
