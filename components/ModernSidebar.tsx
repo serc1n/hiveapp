@@ -85,9 +85,9 @@ export function ModernSidebar({
           }))
         }
 
-        // Update the last message in the groups list
-        setGroups(prevGroups => 
-          prevGroups.map(group => 
+        // Update the last message and move group to top (like WhatsApp/Telegram)
+        setGroups(prevGroups => {
+          const updatedGroups = prevGroups.map(group => 
             group.id === data.groupId 
               ? { 
                   ...group, 
@@ -100,7 +100,14 @@ export function ModernSidebar({
                 }
               : group
           )
-        )
+          
+          // Sort groups by updatedAt (newest first) - dynamic reordering
+          return updatedGroups.sort((a, b) => {
+            const aTime = new Date(a.updatedAt).getTime()
+            const bTime = new Date(b.updatedAt).getTime()
+            return bTime - aTime // Newest first
+          })
+        })
       }
 
       onMessageReceived(handleMessageReceived)
@@ -129,7 +136,15 @@ export function ModernSidebar({
       if (response.ok) {
         const data = await response.json()
         const groups = data.groups || []
-        setGroups(groups)
+        
+        // Sort groups by updatedAt (newest first) - initial load
+        const sortedGroups = groups.sort((a: Group, b: Group) => {
+          const aTime = new Date(a.updatedAt).getTime()
+          const bTime = new Date(b.updatedAt).getTime()
+          return bTime - aTime // Newest first
+        })
+        
+        setGroups(sortedGroups)
       }
     } catch (error) {
       console.error('Error fetching groups:', error)
