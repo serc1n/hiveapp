@@ -63,28 +63,33 @@ export function WalletConnection({ onClose }: WalletConnectionProps) {
       const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
       
       if (isMobile) {
-        // On mobile, try to open MetaMask app or suggest alternatives
+        // On mobile, try multiple methods to connect to MetaMask
         const metamaskAppUrl = `https://metamask.app.link/dapp/${window.location.host}`
+        const metamaskDeepLink = `metamask://dapp/${window.location.host}`
         
         const userChoice = confirm(
-          'To connect your wallet on mobile:\n\n' +
-          '1. Open MetaMask app and browse to this site, OR\n' +
-          '2. Use WalletConnect, OR\n' +
-          '3. Enter your wallet address manually\n\n' +
-          'Click OK to open MetaMask app, or Cancel to enter address manually.'
+          '🦊 Connect MetaMask Wallet\n\n' +
+          'To securely connect your wallet:\n\n' +
+          '1. Open MetaMask app first\n' +
+          '2. Click OK to connect via MetaMask\n' +
+          '3. If MetaMask doesn\'t open, try opening the app manually\n\n' +
+          '⚠️ For security, manual wallet entry is not allowed'
         )
         
         if (userChoice) {
-          window.open(metamaskAppUrl, '_blank')
-        } else {
-          // Allow manual address entry
-          const manualAddress = prompt('Enter your Ethereum wallet address:')
-          if (manualAddress && manualAddress.match(/^0x[a-fA-F0-9]{40}$/)) {
-            setAddress(manualAddress)
-            setIsConnected(true)
-          } else if (manualAddress) {
-            alert('Please enter a valid Ethereum address (0x...)')
+          // Try deep link first (works if MetaMask is installed)
+          try {
+            window.location.href = metamaskDeepLink
+            // Fallback to app link after a short delay
+            setTimeout(() => {
+              window.open(metamaskAppUrl, '_self')
+            }, 1000)
+          } catch (error) {
+            // If deep link fails, use app link
+            window.open(metamaskAppUrl, '_self')
           }
+        } else {
+          alert('🔒 For security reasons, you must connect through MetaMask or another verified wallet extension. Manual wallet entry is not permitted.')
         }
       } else {
         alert('Please install MetaMask or another Ethereum wallet extension')

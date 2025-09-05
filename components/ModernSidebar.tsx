@@ -47,6 +47,8 @@ export function ModernSidebar({
   const [searchQuery, setSearchQuery] = useState('')
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [joiningGroups, setJoiningGroups] = useState<Set<string>>(new Set())
+  const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({})
+  const [lastMessageTimes, setLastMessageTimes] = useState<Record<string, string>>({})
   
   const setExploreGroups = (groups: Group[]) => {
     console.log('🔄 Setting explore groups state:', groups.length, groups.map((g: any) => g.name))
@@ -85,12 +87,22 @@ export function ModernSidebar({
         }
       }
 
-      // Poll every 15 seconds (much more efficient than localStorage)
+      // Poll every 15 seconds for group updates
       pollInterval = setInterval(pollForUpdates, 15000)
+      
+      // Poll every 5 seconds for new messages (more frequent for real-time feel)
+      const messageInterval = setInterval(() => {
+        if (activeTab === 'chats') {
+          fetchMyGroups()
+        }
+      }, 5000)
 
       return () => {
         if (pollInterval) {
           clearInterval(pollInterval)
+        }
+        if (messageInterval) {
+          clearInterval(messageInterval)
         }
       }
     }
@@ -105,12 +117,39 @@ export function ModernSidebar({
         const data = await response.json()
         const groups = data.groups || []
         setGroups(groups)
+        
+        // Check for new messages and update unread counts
+        checkForNewMessages(groups)
       }
     } catch (error) {
       console.error('Error fetching groups:', error)
     } finally {
       setLoading(false)
     }
+  }
+  
+  const checkForNewMessages = (groupList: Group[]) => {
+    groupList.forEach((group: any) => {
+      if (group.lastMessage && group.lastMessage.createdAt) {
+        const lastMessageTime = lastMessageTimes[group.id]
+        const currentMessageTime = group.lastMessage.createdAt
+        
+        // If this is a new message (different timestamp) and it's not from current user
+        if (lastMessageTime && lastMessageTime !== currentMessageTime && group.lastMessage.user.id !== session?.user?.id) {
+          // Increment unread count
+          setUnreadCounts(prev => ({
+            ...prev,
+            [group.id]: (prev[group.id] || 0) + 1
+          }))
+        }
+        
+        // Update last message time
+        setLastMessageTimes(prev => ({
+          ...prev,
+          [group.id]: currentMessageTime
+        }))
+      }
+    })
   }
   
 
@@ -338,7 +377,16 @@ export function ModernSidebar({
                 className={`w-full p-4 text-left hover:bg-gray-50 transition-colors cursor-pointer ${
                   selectedGroupId === group.id ? 'bg-indigo-50 border-r-2 border-indigo-500' : ''
                 } ${!group.hasAccess ? 'opacity-75' : ''}`}
-                onClick={() => group.hasAccess && onSelectGroup(group.id)}
+                onClick={() => {
+                  if (group.hasAccess) {
+                    // Clear unread count for this group
+                    setUnreadCounts(prev => ({
+                      ...prev,
+                      [group.id]: 0
+                    }))
+                    onSelectGroup(group.id)
+                  }
+                }}
               >
                 <div className="flex items-center space-x-3">
                   <div className="w-12 h-12 bg-gradient-primary rounded-2xl flex items-center justify-center flex-shrink-0">
@@ -366,6 +414,12 @@ export function ModernSidebar({
                         {group.isCreator && (
                           <div title="You own this group">
                             <Crown className="w-3 h-3 text-purple-600 flex-shrink-0" />
+                          </div>
+                        )}
+                        {/* Unread message badge */}
+                        {unreadCounts[group.id] > 0 && (
+                          <div className="bg-red-500 text-white text-xs rounded-full min-w-[20px] h-5 flex items-center justify-center px-1 ml-2 flex-shrink-0">
+                            {unreadCounts[group.id] > 99 ? '99+' : unreadCounts[group.id]}
                           </div>
                         )}
                       </div>
