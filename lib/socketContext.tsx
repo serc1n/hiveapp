@@ -37,6 +37,7 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
   const [isConnected, setIsConnected] = useState(false)
   const [messageCallback, setMessageCallback] = useState<((data: any) => void) | null>(null)
   const [channels, setChannels] = useState<RealtimeChannel[]>([])
+  const [currentGroupIds, setCurrentGroupIds] = useState<string[]>([])
   const { data: session } = useSession()
 
   // Supabase Realtime connection cleanup
@@ -61,6 +62,9 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
 
     console.log('🔌 Setting up Supabase Realtime channel')
     console.log('🔌 Groups to monitor:', groupIds)
+    
+    // Store current group IDs
+    setCurrentGroupIds(groupIds)
 
     // Remove existing channels
     channels.forEach(channel => {
@@ -79,10 +83,17 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
           table: 'messages'
         },
         async (payload: any) => {
-          console.log('🔌 Realtime payload received:', payload.new)
+          console.log('🔌 ===== REALTIME MESSAGE RECEIVED =====')
+          console.log('🔌 Full payload:', JSON.stringify(payload, null, 2))
+          console.log('🔌 Message data:', payload.new)
+          console.log('🔌 Current user ID:', session.user.id)
+          console.log('🔌 Message user ID:', payload.new?.userId)
+          console.log('🔌 Message group ID:', payload.new?.groupId)
+          console.log('🔌 Current groups:', currentGroupIds)
+          console.log('🔌 Is in groups?', payload.new ? currentGroupIds.includes(payload.new.groupId) : false)
           
-          // Only process if user is not the sender and groupId is in our groups
-          if (payload.new && payload.new.userId !== session.user.id && groupIds.includes(payload.new.groupId)) {
+          // Process ALL messages for now (for debugging)
+          if (payload.new) {
             console.log('🔌 Processing message for group:', payload.new.groupId)
             try {
               const userResponse = await fetch(`/api/users/${payload.new.userId}`)
@@ -103,13 +114,16 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
               // Use the current messageCallback from state
               if (messageCallback) {
                 messageCallback(messageData)
+              } else {
+                console.log('🔌 No messageCallback available!')
               }
             } catch (error) {
               console.error('🔌 Error processing message:', error)
             }
           } else {
-            console.log('🔌 Message ignored - not for current user groups')
+            console.log('🔌 No payload.new data!')
           }
+          console.log('🔌 =====================================')
         }
       )
       .subscribe((status, err) => {
@@ -129,7 +143,7 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
 
     setChannels([channel])
     console.log('🔌 Channel created and subscribed')
-  }, [session?.user?.id]) // Only depend on user ID
+  }, [session?.user?.id, currentGroupIds, messageCallback]) // Include dependencies for proper closure
 
   const leaveGroups = useCallback((groupIds: string[]) => {
     console.log('🔌 Leaving groups:', groupIds)
