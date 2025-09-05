@@ -158,7 +158,7 @@ export function GroupSettingsModal({ group, onClose, onGroupUpdated }: GroupSett
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Group Image */}
               <div className="text-center">
-                <div className="w-20 h-20 bg-dark-700 rounded-xl mx-auto mb-3 flex items-center justify-center overflow-hidden">
+                <div className="w-20 h-20 bg-gray-100 rounded-2xl mx-auto mb-3 flex items-center justify-center overflow-hidden">
                   {previewUrl ? (
                     <img
                       src={previewUrl}
@@ -167,15 +167,15 @@ export function GroupSettingsModal({ group, onClose, onGroupUpdated }: GroupSett
                       onError={(e) => {
                         const target = e.target as HTMLImageElement
                         target.style.display = 'none'
-                        target.parentElement!.innerHTML = '<div class="w-8 h-8 text-dark-400">#</div>'
+                        target.parentElement!.innerHTML = '<div class="w-8 h-8 text-gray-400">#</div>'
                       }}
                     />
                   ) : (
-                    <Hash className="w-8 h-8 text-dark-400" />
+                    <Hash className="w-8 h-8 text-gray-400" />
                   )}
                 </div>
                 {group.isCreator && (
-                  <label className="cursor-pointer inline-flex items-center text-primary-500 hover:text-primary-400 text-sm">
+                  <label className="cursor-pointer inline-flex items-center text-indigo-600 hover:text-indigo-700 text-sm font-medium transition-colors">
                     <Upload className="w-4 h-4 mr-1" />
                     Change Photo
                     <input
@@ -190,7 +190,7 @@ export function GroupSettingsModal({ group, onClose, onGroupUpdated }: GroupSett
 
               {/* Group Name */}
               <div>
-                <label className="block text-sm font-medium text-dark-300 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Group Name
                 </label>
                 <input
@@ -198,7 +198,7 @@ export function GroupSettingsModal({ group, onClose, onGroupUpdated }: GroupSett
                   value={formData.name}
                   onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                   placeholder="Enter group name"
-                  className="input-field"
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all disabled:bg-gray-100 disabled:text-gray-500"
                   required
                   maxLength={50}
                   disabled={!group.isCreator}
@@ -207,7 +207,7 @@ export function GroupSettingsModal({ group, onClose, onGroupUpdated }: GroupSett
 
               {/* Contract Address */}
               <div>
-                <label className="block text-sm font-medium text-dark-300 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Token Contract Address
                 </label>
                 <input
@@ -215,29 +215,29 @@ export function GroupSettingsModal({ group, onClose, onGroupUpdated }: GroupSett
                   value={formData.contractAddress}
                   onChange={(e) => setFormData(prev => ({ ...prev, contractAddress: e.target.value }))}
                   placeholder="0x..."
-                  className="input-field"
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all disabled:bg-gray-100 disabled:text-gray-500"
                   disabled={!group.isCreator}
                 />
-                <p className="text-xs text-dark-400 mt-1">
+                <p className="text-xs text-gray-600 mt-1">
                   {group.contractAddress ? 'This group is token-gated' : 'No token gating applied'}
                 </p>
               </div>
 
               {/* Group Info */}
-              <div className="bg-dark-700 rounded-lg p-4">
-                <h4 className="text-sm font-medium text-white mb-2">Group Information</h4>
-                <div className="space-y-2 text-sm text-dark-300">
+              <div className="bg-gray-50 rounded-2xl p-4 border border-gray-200">
+                <h4 className="text-sm font-medium text-gray-900 mb-2">Group Information</h4>
+                <div className="space-y-2 text-sm text-gray-700">
                   <div className="flex justify-between">
                     <span>Created:</span>
-                    <span>Recently</span>
+                    <span className="text-gray-900 font-medium">Recently</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Members:</span>
-                    <span>{group.memberCount}</span>
+                    <span className="text-gray-900 font-medium">{group.memberCount}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Type:</span>
-                    <span>{group.contractAddress ? 'Token Gated' : 'Public'}</span>
+                    <span className="text-gray-900 font-medium">{group.contractAddress ? 'Token Gated' : 'Public'}</span>
                   </div>
                 </div>
               </div>
@@ -275,20 +275,20 @@ export function GroupSettingsModal({ group, onClose, onGroupUpdated }: GroupSett
             <div className="space-y-6">
               {group.isCreator ? (
                 <div>
-                  <div className="bg-gray-800 rounded-lg p-6 text-center">
-                    <Settings className="w-12 h-12 text-blue-500 mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold text-white mb-2">Admin Panel</h3>
-                    <p className="text-gray-400 mb-4">
+                  <div className="bg-gray-50 rounded-2xl p-6 text-center border border-gray-200">
+                    <Settings className="w-12 h-12 text-indigo-600 mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Admin Panel</h3>
+                    <p className="text-gray-600 mb-4">
                       Manage join requests and group members
                     </p>
-                    <div className="bg-yellow-900 border border-yellow-600 rounded-lg p-3 mb-4">
-                      <p className="text-yellow-200 text-sm">
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-3 mb-4">
+                      <p className="text-yellow-800 text-sm">
                         💡 <strong>Tip:</strong> Check for pending join requests that need your approval!
                       </p>
                     </div>
                     <button
                       onClick={() => setShowAdminPanel(true)}
-                      className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+                      className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium transition-colors"
                     >
                       Open Admin Panel
                     </button>
@@ -298,35 +298,35 @@ export function GroupSettingsModal({ group, onClose, onGroupUpdated }: GroupSett
                 /* Regular Member Options */
                 <div className="space-y-4">
                   {/* View Members */}
-                  <div className="bg-dark-700 rounded-lg p-6">
+                  <div className="bg-gray-50 rounded-2xl p-6 border border-gray-200">
                     <div className="flex items-center space-x-3 mb-4">
-                      <Users className="w-6 h-6 text-blue-500" />
+                      <Users className="w-6 h-6 text-indigo-600" />
                       <div>
-                        <h3 className="text-lg font-semibold text-white">Group Members</h3>
-                        <p className="text-dark-300 text-sm">{group.memberCount} members in this group</p>
+                        <h3 className="text-lg font-semibold text-gray-900">Group Members</h3>
+                        <p className="text-gray-600 text-sm">{group.memberCount} members in this group</p>
                       </div>
                     </div>
                     <button
                       onClick={() => setShowMembersList(true)}
-                      className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+                      className="w-full px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium transition-colors"
                     >
                       View All Members
                     </button>
                   </div>
 
                   {/* Leave Group */}
-                  <div className="bg-red-900/20 border border-red-800 rounded-lg p-6">
+                  <div className="bg-red-50 border border-red-200 rounded-2xl p-6">
                     <div className="flex items-center space-x-3 mb-4">
-                      <UserMinus className="w-6 h-6 text-red-400" />
+                      <UserMinus className="w-6 h-6 text-red-600" />
                       <div>
-                        <h3 className="text-lg font-semibold text-white">Leave Group</h3>
-                        <p className="text-dark-300 text-sm">You can rejoin anytime if it's a public group</p>
+                        <h3 className="text-lg font-semibold text-gray-900">Leave Group</h3>
+                        <p className="text-gray-600 text-sm">You can rejoin anytime if it's a public group</p>
                       </div>
                     </div>
                     <button
                       onClick={() => handleLeaveGroup()}
                       disabled={isLeavingGroup}
-                      className="w-full px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                      className="w-full px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                     >
                       {isLeavingGroup ? (
                         <>
@@ -346,8 +346,8 @@ export function GroupSettingsModal({ group, onClose, onGroupUpdated }: GroupSett
 
         {/* Footer for non-creators */}
         {!group.isCreator && activeTab === 'general' && (
-          <div className="p-6 border-t border-dark-700">
-            <p className="text-sm text-dark-400 text-center">
+          <div className="p-6 border-t border-gray-200">
+            <p className="text-sm text-gray-600 text-center">
               Only the group creator can modify these settings
             </p>
           </div>

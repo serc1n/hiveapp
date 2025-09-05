@@ -132,24 +132,24 @@ export function AdminPanelModal({ groupId, groupName, onClose }: AdminPanelModal
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50">
-      <div className="bg-gray-900 rounded-xl w-full max-w-4xl max-h-[80vh] flex flex-col border border-gray-700">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-2xl w-full max-w-4xl max-h-[80vh] flex flex-col shadow-modern">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-700">
+        <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div className="flex items-center space-x-3">
-            <div className="p-2 bg-blue-600 rounded-lg">
+            <div className="p-2 bg-indigo-600 rounded-xl">
               <Users className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-white">Admin Panel</h2>
-              <p className="text-gray-400 text-sm">{groupName}</p>
+              <h2 className="text-xl font-bold text-gray-900">Admin Panel</h2>
+              <p className="text-gray-600 text-sm">{groupName}</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
+            className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
           >
-            <X className="w-5 h-5 text-gray-400" />
+            <X className="w-5 h-5 text-gray-500" />
           </button>
         </div>
 

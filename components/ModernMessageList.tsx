@@ -1,25 +1,50 @@
 'use client'
 
 import { useState } from 'react'
-import { MoreHorizontal, Megaphone, User } from 'lucide-react'
+import { MoreHorizontal, Megaphone, User, MessageCircle } from 'lucide-react'
 
-// Helper function to detect and make links clickable
+// Helper function to detect and make links clickable with previews
 const linkifyText = (text: string) => {
   const urlRegex = /(https?:\/\/[^\s]+)/g
   const parts = text.split(urlRegex)
   
   return parts.map((part, index) => {
     if (part.match(urlRegex)) {
+      // Check if it's a Twitter/X link
+      const isTwitterLink = part.includes('twitter.com') || part.includes('x.com')
+      const isInstagramLink = part.includes('instagram.com')
+      const isTikTokLink = part.includes('tiktok.com')
+      
+      let displayText = part
+      let linkClass = "text-blue-600 hover:text-blue-800 underline break-all"
+      let emoji = "🔗"
+      
+      if (isTwitterLink) {
+        displayText = "𝕏 Post"
+        linkClass = "inline-flex items-center space-x-1 px-2 py-1 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium no-underline"
+        emoji = "𝕏"
+      } else if (isInstagramLink) {
+        displayText = "📷 Instagram"
+        linkClass = "inline-flex items-center space-x-1 px-2 py-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-colors text-sm font-medium no-underline"
+        emoji = "📷"
+      } else if (isTikTokLink) {
+        displayText = "🎵 TikTok"
+        linkClass = "inline-flex items-center space-x-1 px-2 py-1 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium no-underline"
+        emoji = "🎵"
+      }
+      
       return (
         <a
           key={index}
           href={part}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-blue-600 hover:text-blue-800 underline"
+          className={linkClass}
           onClick={(e) => e.stopPropagation()}
+          title={part}
         >
-          {part}
+          <span>{emoji}</span>
+          <span>{displayText}</span>
         </a>
       )
     }
