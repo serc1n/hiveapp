@@ -1,0 +1,224 @@
+'use client'
+
+import { useState } from 'react'
+import { MoreHorizontal, Megaphone, User } from 'lucide-react'
+
+interface Message {
+  id: string
+  content: string
+  userId: string
+  user: {
+    name: string
+    twitterHandle: string
+    profileImage: string | null
+  }
+  createdAt: string
+}
+
+interface ModernMessageListProps {
+  messages: Message[]
+  currentUserId?: string
+  currentUserImage?: string
+  onMakeAnnouncement: (messageId: string) => void
+  isGroupOwner?: boolean
+}
+
+export function ModernMessageList({ 
+  messages, 
+  currentUserId, 
+  currentUserImage, 
+  onMakeAnnouncement, 
+  isGroupOwner 
+}: ModernMessageListProps) {
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
+
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString)
+    return date.toLocaleTimeString('en-US', { 
+      hour: '2-digit', 
+      minute: '2-digit',
+      hour12: true 
+    })
+  }
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString)
+    const today = new Date()
+    const yesterday = new Date(today)
+    yesterday.setDate(yesterday.getDate() - 1)
+
+    if (date.toDateString() === today.toDateString()) {
+      return 'Today'
+    } else if (date.toDateString() === yesterday.toDateString()) {
+      return 'Yesterday'
+    } else {
+      return date.toLocaleDateString('en-US', { 
+        weekday: 'long',
+        month: 'long', 
+        day: 'numeric',
+        year: date.getFullYear() !== today.getFullYear() ? 'numeric' : undefined
+      })
+    }
+  }
+
+  const groupMessagesByDate = (messages: Message[]) => {
+    const groups: { [key: string]: Message[] } = {}
+    
+    messages.forEach(message => {
+      const dateKey = new Date(message.createdAt).toDateString()
+      if (!groups[dateKey]) {
+        groups[dateKey] = []
+      }
+      groups[dateKey].push(message)
+    })
+
+    return groups
+  }
+
+  if (messages.length === 0) {
+    return (
+      <div className="flex-1 flex items-center justify-center p-8">
+        <div className="text-center max-w-md">
+          <div className="w-20 h-20 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-3xl flex items-center justify-center mx-auto mb-6">
+            <div className="text-4xl">👋</div>
+          </div>
+          <h3 className="text-xl font-semibold text-gray-900 mb-4">Start the conversation</h3>
+          <p className="text-gray-600 leading-relaxed">
+            Send your first message to get this conversation started!
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  const messageGroups = groupMessagesByDate(messages)
+
+  return (
+    <div className="p-6 space-y-8">
+      {Object.entries(messageGroups).map(([dateKey, dateMessages]) => (
+        <div key={dateKey} className="animate-slide-in">
+          {/* Date separator */}
+          <div className="flex justify-center mb-6">
+            <div className="px-4 py-2 bg-white rounded-full shadow-card border border-gray-200">
+              <span className="text-sm font-medium text-gray-700">
+                {formatDate(dateMessages[0].createdAt)}
+              </span>
+            </div>
+          </div>
+
+          {/* Messages for this date */}
+          <div className="space-y-4">
+            {dateMessages.map((message, index) => {
+              const isOwn = message.userId === currentUserId
+              const showAvatar = index === 0 || dateMessages[index - 1].userId !== message.userId
+              const showName = !isOwn && showAvatar
+
+              return (
+                <div
+                  key={message.id}
+                  className={`flex group ${isOwn ? 'justify-end' : 'justify-start'} animate-fade-in`}
+                >
+                  <div className={`flex items-end space-x-3 max-w-[75%] ${isOwn ? 'flex-row-reverse space-x-reverse' : ''}`}>
+                    {/* Avatar for others */}
+                    {!isOwn && (
+                      <div className={`w-8 h-8 ${showAvatar ? 'visible' : 'invisible'}`}>
+                        {showAvatar && (
+                          <div className="w-8 h-8 rounded-full overflow-hidden bg-gradient-primary">
+                            {message.user.profileImage ? (
+                              <img
+                                src={message.user.profileImage}
+                                alt={message.user.name}
+                                className="w-8 h-8 object-cover"
+                              />
+                            ) : (
+                              <div className="w-8 h-8 flex items-center justify-center">
+                                <User className="w-4 h-4 text-white" />
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Message container */}
+                    <div className={`flex flex-col ${isOwn ? 'items-end' : 'items-start'}`}>
+                      {/* Sender name */}
+                      {showName && (
+                        <div className="text-sm font-medium text-gray-700 mb-1 px-1">
+                          {message.user.name}
+                        </div>
+                      )}
+
+                      {/* Message bubble */}
+                      <div className="relative">
+                        <div
+                          className={`px-4 py-3 rounded-2xl shadow-card relative ${
+                            isOwn
+                              ? 'bg-gradient-primary text-white rounded-br-md'
+                              : 'bg-white text-gray-900 border border-gray-200 rounded-bl-md'
+                          }`}
+                          style={{ 
+                            maxWidth: 'fit-content',
+                            minWidth: '60px'
+                          }}
+                        >
+                          {/* Message text */}
+                          <div className="text-sm leading-relaxed break-words whitespace-pre-wrap">
+                            {message.content}
+                          </div>
+                          
+                          {/* Time stamp */}
+                          <div className={`text-xs mt-1 ${
+                            isOwn ? 'text-indigo-200' : 'text-gray-500'
+                          } text-right`}>
+                            {formatTime(message.createdAt)}
+                          </div>
+                        </div>
+
+                        {/* Admin menu */}
+                        {isGroupOwner && (
+                          <div className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                            <div className="relative">
+                              <button
+                                onClick={() => setActiveDropdown(activeDropdown === message.id ? null : message.id)}
+                                className="w-8 h-8 bg-white hover:bg-gray-50 rounded-full flex items-center justify-center shadow-modern border border-gray-200 transition-all duration-200"
+                              >
+                                <MoreHorizontal className="w-4 h-4 text-gray-600" />
+                              </button>
+
+                              {activeDropdown === message.id && (
+                                <>
+                                  <div 
+                                    className="fixed inset-0 z-10" 
+                                    onClick={() => setActiveDropdown(null)}
+                                  />
+                                  
+                                  <div className="absolute right-0 top-10 bg-white border border-gray-200 rounded-2xl shadow-modern z-20 min-w-[180px] py-2">
+                                    <button
+                                      onClick={() => {
+                                        onMakeAnnouncement(message.id)
+                                        setActiveDropdown(null)
+                                      }}
+                                      className="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center font-medium"
+                                    >
+                                      <Megaphone className="w-4 h-4 mr-3 text-indigo-600" />
+                                      Make Announcement
+                                    </button>
+                                  </div>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}

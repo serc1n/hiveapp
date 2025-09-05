@@ -3,7 +3,7 @@
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
-import { MainApp } from '@/components/MainApp'
+import { ModernApp } from '@/components/ModernApp'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
 
 export default function Home() {
@@ -26,5 +26,5 @@ export default function Home() {
     return null
   }
 
-  return <MainApp />
+  return <ModernApp />
 }
