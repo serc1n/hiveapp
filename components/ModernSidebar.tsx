@@ -70,13 +70,9 @@ export function ModernSidebar({
 
   // WebSocket setup for real-time messaging
   useEffect(() => {
-    if (isConnected && groups.length > 0) {
-      console.log('🔌 Setting up WebSocket listeners')
+    if (session?.user && activeTab === 'chats') {
+      console.log('🔌 Setting up WebSocket listeners for My Hives')
       
-      // Join all user's groups for real-time updates
-      const groupIds = groups.map(group => group.id)
-      joinSocketGroups(groupIds)
-
       // Listen for new messages
       const handleMessageReceived = (data: any) => {
         console.log('🔌 Received new message via WebSocket:', data)
@@ -93,7 +89,15 @@ export function ModernSidebar({
         setGroups(prevGroups => 
           prevGroups.map(group => 
             group.id === data.groupId 
-              ? { ...group, lastMessage: data.message }
+              ? { 
+                  ...group, 
+                  lastMessage: {
+                    content: data.message.content,
+                    createdAt: data.message.createdAt,
+                    user: data.message.user || { name: 'Unknown User' }
+                  },
+                  updatedAt: data.message.createdAt
+                }
               : group
           )
         )
@@ -106,7 +110,16 @@ export function ModernSidebar({
         offMessageReceived()
       }
     }
-  }, [isConnected, groups, selectedGroupId, joinSocketGroups, onMessageReceived, offMessageReceived])
+  }, [session, activeTab, selectedGroupId, onMessageReceived, offMessageReceived])
+
+  // Join groups for real-time updates when groups are loaded
+  useEffect(() => {
+    if (isConnected && groups.length > 0 && activeTab === 'chats') {
+      console.log('🔌 Joining groups for real-time updates:', groups.map(g => g.name))
+      const groupIds = groups.map(group => group.id)
+      joinSocketGroups(groupIds)
+    }
+  }, [isConnected, groups, activeTab, joinSocketGroups])
 
 
   const fetchMyGroups = async () => {
