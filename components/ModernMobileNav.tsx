@@ -2,6 +2,7 @@
 
 import { Hash, Users, User } from 'lucide-react'
 import Image from 'next/image'
+import { HiveLogo } from './HiveLogo'
 
 interface ModernMobileNavProps {
   activeTab: 'chats' | 'explore' | 'profile'
@@ -36,13 +37,7 @@ export function ModernMobileNav({ activeTab, onTabChange }: ModernMobileNavProps
                 isActive ? 'bg-indigo-100' : 'hover:bg-gray-100'
               }`}>
                 {tab.useCustomIcon && tab.id === 'chats' ? (
-                  <Image 
-                    src="/black.png"
-                    alt="Hives" 
-                    width={20} 
-                    height={20} 
-                    className="w-5 h-5 object-contain"
-                  />
+                  <HiveLogo className="w-5 h-5" />
                 ) : (
                   <Icon className="w-5 h-5" />
                 )}

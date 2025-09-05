@@ -41,17 +41,32 @@ export function AppSettings() {
   }
 
   const handleCheckUpdate = async () => {
-    if (!registration) return
+    if (!registration) {
+      alert('Service Worker not available. Please refresh the page and try again.')
+      return
+    }
     
     setIsCheckingUpdate(true)
     try {
-      await registration.update()
-      // Give it a moment to check
-      setTimeout(() => {
+      const newRegistration = await registration.update()
+      
+      // Check if there's a new service worker waiting
+      if (newRegistration.waiting) {
         setIsCheckingUpdate(false)
-        // Show feedback to user
-        alert('Checked for updates! You have the latest version.')
-      }, 2000)
+        const shouldReload = confirm('A new version is available! Click OK to reload and update the app.')
+        if (shouldReload) {
+          // Tell the new service worker to skip waiting and take control
+          newRegistration.waiting.postMessage({ type: 'SKIP_WAITING' })
+          // Reload the page to get the new version
+          window.location.reload()
+        }
+      } else {
+        // No update available
+        setTimeout(() => {
+          setIsCheckingUpdate(false)
+          alert('✅ You have the latest version!')
+        }, 1000)
+      }
     } catch (error) {
       console.error('Error checking for updates:', error)
       setIsCheckingUpdate(false)

@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react'
 import { Search, Plus, Hash, Users, Settings, Bell, BellOff, User, Lock, Crown } from 'lucide-react'
 import Image from 'next/image'
 import { CreateGroupModal } from './CreateGroupModal'
+import { HiveLogo } from './HiveLogo'
 
 interface Group {
   id: string
@@ -47,6 +48,7 @@ export function ModernSidebar({
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default')
   const [isSubscribed, setIsSubscribed] = useState(false)
+  const [joiningGroups, setJoiningGroups] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     if (session?.user) {
@@ -83,13 +85,48 @@ export function ModernSidebar({
   const fetchMyGroups = async () => {
     try {
       setLoading(true)
+      
+      // Try to load from cache first
+      const cacheKey = `myGroups_${session?.user?.id}`
+      const cached = localStorage.getItem(cacheKey)
+      if (cached) {
+        try {
+          const cachedData = JSON.parse(cached)
+          if (Date.now() - cachedData.timestamp < 30000) { // 30 seconds cache
+            setGroups(cachedData.groups)
+            setLoading(false)
+            // Still fetch in background for updates
+            fetchMyGroupsFromAPI(cacheKey)
+            return
+          }
+        } catch (e) {
+          // Invalid cache, continue with API call
+        }
+      }
+      
+      await fetchMyGroupsFromAPI(cacheKey)
+    } catch (error) {
+      console.error('Error fetching groups:', error)
+      setLoading(false)
+    }
+  }
+  
+  const fetchMyGroupsFromAPI = async (cacheKey: string) => {
+    try {
       const response = await fetch('/api/groups')
       if (response.ok) {
         const data = await response.json()
-        setGroups(data.groups || [])
+        const groups = data.groups || []
+        setGroups(groups)
+        
+        // Cache the result
+        localStorage.setItem(cacheKey, JSON.stringify({
+          groups,
+          timestamp: Date.now()
+        }))
       }
     } catch (error) {
-      console.error('Error fetching groups:', error)
+      console.error('Error fetching groups from API:', error)
     } finally {
       setLoading(false)
     }
@@ -98,13 +135,48 @@ export function ModernSidebar({
   const fetchExploreGroups = async () => {
     try {
       setLoading(true)
+      
+      // Try to load from cache first
+      const cacheKey = `exploreGroups_${session?.user?.id}`
+      const cached = localStorage.getItem(cacheKey)
+      if (cached) {
+        try {
+          const cachedData = JSON.parse(cached)
+          if (Date.now() - cachedData.timestamp < 60000) { // 60 seconds cache for explore
+            setExploreGroups(cachedData.groups)
+            setLoading(false)
+            // Still fetch in background for updates
+            fetchExploreGroupsFromAPI(cacheKey)
+            return
+          }
+        } catch (e) {
+          // Invalid cache, continue with API call
+        }
+      }
+      
+      await fetchExploreGroupsFromAPI(cacheKey)
+    } catch (error) {
+      console.error('Error fetching explore groups:', error)
+      setLoading(false)
+    }
+  }
+  
+  const fetchExploreGroupsFromAPI = async (cacheKey: string) => {
+    try {
       const response = await fetch('/api/groups/browse')
       if (response.ok) {
         const data = await response.json()
-        setExploreGroups(data.groups || [])
+        const groups = data.groups || []
+        setExploreGroups(groups)
+        
+        // Cache the result
+        localStorage.setItem(cacheKey, JSON.stringify({
+          groups,
+          timestamp: Date.now()
+        }))
       }
     } catch (error) {
-      console.error('Error fetching explore groups:', error)
+      console.error('Error fetching explore groups from API:', error)
     } finally {
       setLoading(false)
     }
@@ -172,6 +244,39 @@ export function ModernSidebar({
     }
   }
 
+  const handleJoinGroup = async (groupId: string, event: React.MouseEvent) => {
+    event.stopPropagation() // Prevent group selection
+    
+    setJoiningGroups(prev => new Set([...prev, groupId]))
+    
+    try {
+      const response = await fetch(`/api/groups/${groupId}/join`, {
+        method: 'POST'
+      })
+      
+      if (response.ok) {
+        // Refresh explore groups to update join status
+        if (activeTab === 'explore') {
+          fetchExploreGroups()
+        }
+        // Also refresh my groups as user now has access
+        fetchMyGroups()
+      } else {
+        const error = await response.json()
+        alert(error.error || 'Failed to join group')
+      }
+    } catch (error) {
+      console.error('Error joining group:', error)
+      alert('Failed to join group')
+    } finally {
+      setJoiningGroups(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(groupId)
+        return newSet
+      })
+    }
+  }
+
   const filteredGroups = (activeTab === 'chats' ? groups : exploreGroups).filter(group =>
     group.name.toLowerCase().includes(searchQuery.toLowerCase())
   )
@@ -215,13 +320,7 @@ export function ModernSidebar({
                   }`}
                 >
                   {tab.useCustomIcon && tab.id === 'chats' ? (
-                    <Image 
-                      src="/black.png"
-                      alt="My Hives" 
-                      width={16} 
-                      height={16} 
-                      className="w-4 h-4 object-contain"
-                    />
+                    <HiveLogo className="w-4 h-4" />
                   ) : (
                     <Icon className="w-4 h-4" />
                   )}
@@ -379,12 +478,22 @@ export function ModernSidebar({
                           </div>
                         )}
                       </div>
-                      <span className="text-xs text-gray-500 flex-shrink-0 ml-2">
-                        {group.lastMessage 
-                          ? formatTime(group.lastMessage.createdAt)
-                          : formatTime(group.updatedAt)
-                        }
-                      </span>
+                      {activeTab === 'explore' && !group.hasAccess ? (
+                        <button
+                          onClick={(e) => handleJoinGroup(group.id, e)}
+                          disabled={joiningGroups.has(group.id)}
+                          className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white text-xs rounded-lg font-medium transition-colors flex-shrink-0"
+                        >
+                          {joiningGroups.has(group.id) ? 'Joining...' : 'Join'}
+                        </button>
+                      ) : (
+                        <span className="text-xs text-gray-500 flex-shrink-0 ml-2">
+                          {group.lastMessage 
+                            ? formatTime(group.lastMessage.createdAt)
+                            : formatTime(group.updatedAt)
+                          }
+                        </span>
+                      )}
                     </div>
                     <p className="text-gray-600 text-xs truncate">
                       {group.lastMessage 
