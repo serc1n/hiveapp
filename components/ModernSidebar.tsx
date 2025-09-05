@@ -186,6 +186,15 @@ export function ModernSidebar({
     group.name.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
+  // Debug logging
+  console.log('🔍 DEBUG INFO:', {
+    activeTab,
+    groupsCount: groups.length,
+    exploreGroupsCount: exploreGroups.length,
+    filteredGroupsCount: filteredGroups.length,
+    exploreGroups: exploreGroups.map(g => ({ id: g.id, name: g.name, hasAccess: g.hasAccess }))
+  })
+
   return (
     <div className="flex flex-col h-full bg-white">
       {/* Header */}
@@ -343,16 +352,19 @@ export function ModernSidebar({
                         )}
                       </div>
                       {activeTab === 'explore' && !group.hasAccess ? (
-                        <button
-                          onClick={(e) => {
-                            console.log('🖱️ Join button clicked for group:', group.id, group.name)
-                            handleJoinGroup(group.id, e)
-                          }}
-                          disabled={joiningGroups.has(group.id)}
-                          className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white text-xs rounded-lg font-medium transition-colors flex-shrink-0"
-                        >
-                          {joiningGroups.has(group.id) ? 'Joining...' : 'Join'}
-                        </button>
+                        <>
+                          {console.log('🎯 RENDERING JOIN BUTTON for:', group.id, group.name, 'hasAccess:', group.hasAccess)}
+                          <button
+                            onClick={(e) => {
+                              console.log('🖱️ Join button clicked for group:', group.id, group.name)
+                              handleJoinGroup(group.id, e)
+                            }}
+                            disabled={joiningGroups.has(group.id)}
+                            className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white text-xs rounded-lg font-medium transition-colors flex-shrink-0"
+                          >
+                            {joiningGroups.has(group.id) ? 'Joining...' : 'Join'}
+                          </button>
+                        </>)
                       ) : (
                         <span className="text-xs text-gray-500 flex-shrink-0 ml-2">
                           {group.lastMessage 
