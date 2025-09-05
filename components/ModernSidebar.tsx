@@ -42,11 +42,16 @@ export function ModernSidebar({
 }: ModernSidebarProps) {
   const { data: session } = useSession()
   const [groups, setGroups] = useState<Group[]>([])
-  const [exploreGroups, setExploreGroups] = useState<Group[]>([])
+  const [exploreGroups, setExploreGroupsInternal] = useState<Group[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [joiningGroups, setJoiningGroups] = useState<Set<string>>(new Set())
+  
+  const setExploreGroups = (groups: Group[]) => {
+    console.log('🔄 Setting explore groups state:', groups.length)
+    setExploreGroupsInternal(groups)
+  }
 
   useEffect(() => {
     if (session?.user) {
@@ -111,15 +116,19 @@ export function ModernSidebar({
 
   const fetchExploreGroups = async () => {
     try {
+      console.log('📡 Fetching explore groups...')
       setLoading(true)
       const response = await fetch('/api/groups/browse')
       if (response.ok) {
         const data = await response.json()
         const groups = data.groups || []
+        console.log('📥 Received explore groups:', groups.length, groups.map(g => ({ id: g.id, name: g.name, hasAccess: g.hasAccess })))
         setExploreGroups(groups)
+      } else {
+        console.log('❌ Failed to fetch explore groups:', response.status)
       }
     } catch (error) {
-      console.error('Error fetching explore groups:', error)
+      console.error('💥 Error fetching explore groups:', error)
     } finally {
       setLoading(false)
     }
@@ -182,18 +191,25 @@ export function ModernSidebar({
     }
   }
 
-  const filteredGroups = (activeTab === 'chats' ? groups : exploreGroups).filter(group =>
+  const filteredGroups = (activeTab === 'chats' ? groups : exploreGroupsInternal).filter(group =>
     group.name.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
   // Debug logging
-  console.log('🔍 DEBUG INFO:', {
-    activeTab,
-    groupsCount: groups.length,
-    exploreGroupsCount: exploreGroups.length,
-    filteredGroupsCount: filteredGroups.length,
-    exploreGroups: exploreGroups.map(g => ({ id: g.id, name: g.name, hasAccess: g.hasAccess }))
-  })
+  if (activeTab === 'explore') {
+    console.log('🔍 EXPLORE DEBUG:', {
+      activeTab,
+      exploreGroupsCount: exploreGroupsInternal.length,
+      filteredGroupsCount: filteredGroups.length,
+      exploreGroups: exploreGroupsInternal.map(g => ({ 
+        id: g.id, 
+        name: g.name, 
+        hasAccess: g.hasAccess,
+        isMember: g.isMember 
+      })),
+      loading
+    })
+  }
 
   return (
     <div className="flex flex-col h-full bg-white">
