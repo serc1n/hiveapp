@@ -57,6 +57,39 @@ export function ModernSidebar({
       } else if (activeTab === 'explore') {
         fetchExploreGroups()
       }
+
+      // Set up smart polling for updates (no localStorage needed!)
+      let pollInterval: NodeJS.Timeout
+      let lastCheck = Date.now()
+      
+      const pollForUpdates = async () => {
+        try {
+          const response = await fetch(`/api/groups/updates?lastCheck=${lastCheck}`)
+          if (response.ok) {
+            const data = await response.json()
+            if (data.hasUpdates && data.updates.includes('groups')) {
+              // Refresh groups if there are updates
+              if (activeTab === 'chats') {
+                fetchMyGroups()
+              } else if (activeTab === 'explore') {
+                fetchExploreGroups()
+              }
+            }
+            lastCheck = data.timestamp
+          }
+        } catch (error) {
+          console.error('Error polling for updates:', error)
+        }
+      }
+
+      // Poll every 15 seconds (much more efficient than localStorage)
+      pollInterval = setInterval(pollForUpdates, 15000)
+
+      return () => {
+        if (pollInterval) {
+          clearInterval(pollInterval)
+        }
+      }
     }
   }, [session, activeTab])
 
@@ -85,176 +118,36 @@ export function ModernSidebar({
   const fetchMyGroups = async () => {
     try {
       setLoading(true)
-      
-      // Try to load from cache first
-      const cacheKey = `myGroups_${session?.user?.id}`
-      const cached = localStorage.getItem(cacheKey)
-      if (cached) {
-        try {
-          const cachedData = JSON.parse(cached)
-          if (Date.now() - cachedData.timestamp < 30000) { // 30 seconds cache
-            setGroups(cachedData.groups)
-            setLoading(false)
-            // Still fetch in background for updates
-            fetchMyGroupsFromAPI(cacheKey)
-            return
-          }
-        } catch (e) {
-          // Invalid cache, continue with API call
-        }
-      }
-      
-      await fetchMyGroupsFromAPI(cacheKey)
-    } catch (error) {
-      console.error('Error fetching groups:', error)
-      setLoading(false)
-    }
-  }
-  
-  const fetchMyGroupsFromAPI = async (cacheKey: string) => {
-    try {
       const response = await fetch('/api/groups')
       if (response.ok) {
         const data = await response.json()
         const groups = data.groups || []
         setGroups(groups)
-        
-        // Cache the result with aggressive error handling
-        try {
-          const cacheData = JSON.stringify({
-            groups: groups.slice(0, 5).map((group: any) => ({ // Only cache 5 groups with minimal data
-              id: group.id,
-              name: group.name,
-              profileImage: group.profileImage,
-              memberCount: group.memberCount,
-              hasAccess: group.hasAccess,
-              lastMessage: group.lastMessage ? {
-                content: group.lastMessage.content.slice(0, 50), // Truncate message content
-                createdAt: group.lastMessage.createdAt
-              } : null,
-              updatedAt: group.updatedAt
-            })),
-            timestamp: Date.now()
-          })
-          localStorage.setItem(cacheKey, cacheData)
-        } catch (error) {
-          console.warn('Failed to cache my groups:', error)
-          // Clear localStorage aggressively if quota exceeded
-          if (error instanceof Error && error.name === 'QuotaExceededError') {
-            try {
-              // Clear all app-related cache
-              const keysToRemove = []
-              for (let i = 0; i < localStorage.length; i++) {
-                const key = localStorage.key(i)
-                if (key && (key.includes('Groups_') || key.includes('groups_'))) {
-                  keysToRemove.push(key)
-                }
-              }
-              keysToRemove.forEach(key => localStorage.removeItem(key))
-            } catch (e) {
-              // If all else fails, clear all localStorage
-              try {
-                localStorage.clear()
-              } catch (clearError) {
-                // Ignore cleanup errors
-              }
-            }
-          }
-        }
       }
     } catch (error) {
-      console.error('Error fetching groups from API:', error)
+      console.error('Error fetching groups:', error)
     } finally {
       setLoading(false)
     }
   }
+  
 
   const fetchExploreGroups = async () => {
     try {
       setLoading(true)
-      
-      // Try to load from cache first
-      const cacheKey = `exploreGroups_${session?.user?.id}`
-      const cached = localStorage.getItem(cacheKey)
-      if (cached) {
-        try {
-          const cachedData = JSON.parse(cached)
-          if (Date.now() - cachedData.timestamp < 60000) { // 60 seconds cache for explore
-            setExploreGroups(cachedData.groups)
-            setLoading(false)
-            // Still fetch in background for updates
-            fetchExploreGroupsFromAPI(cacheKey)
-            return
-          }
-        } catch (e) {
-          // Invalid cache, continue with API call
-        }
-      }
-      
-      await fetchExploreGroupsFromAPI(cacheKey)
-    } catch (error) {
-      console.error('Error fetching explore groups:', error)
-      setLoading(false)
-    }
-  }
-  
-  const fetchExploreGroupsFromAPI = async (cacheKey: string) => {
-    try {
       const response = await fetch('/api/groups/browse')
       if (response.ok) {
         const data = await response.json()
         const groups = data.groups || []
         setExploreGroups(groups)
-        
-        // Cache the result with aggressive error handling
-        try {
-          const cacheData = JSON.stringify({
-            groups: groups.slice(0, 5).map((group: any) => ({ // Only cache 5 groups with minimal data
-              id: group.id,
-              name: group.name,
-              profileImage: group.profileImage,
-              memberCount: group.memberCount,
-              hasAccess: group.hasAccess,
-              lastMessage: group.lastMessage ? {
-                content: group.lastMessage.content.slice(0, 50), // Truncate message content
-                createdAt: group.lastMessage.createdAt
-              } : null,
-              updatedAt: group.updatedAt
-            })),
-            timestamp: Date.now()
-          })
-          localStorage.setItem(cacheKey, cacheData)
-        } catch (error) {
-          console.warn('Failed to cache explore groups:', error)
-          // Clear localStorage aggressively if quota exceeded
-          if (error instanceof Error && error.name === 'QuotaExceededError') {
-            try {
-              // Clear all app-related cache
-              const keysToRemove = []
-              for (let i = 0; i < localStorage.length; i++) {
-                const key = localStorage.key(i)
-                if (key && (key.includes('Groups_') || key.includes('groups_'))) {
-                  keysToRemove.push(key)
-                }
-              }
-              keysToRemove.forEach(key => localStorage.removeItem(key))
-            } catch (e) {
-              // If all else fails, clear all localStorage
-              try {
-                localStorage.clear()
-              } catch (clearError) {
-                // Ignore cleanup errors
-              }
-            }
-          }
-        }
       }
     } catch (error) {
-      console.error('Error fetching explore groups from API:', error)
+      console.error('Error fetching explore groups:', error)
     } finally {
       setLoading(false)
     }
   }
+  
 
   const formatTime = (dateString: string) => {
     const date = new Date(dateString)

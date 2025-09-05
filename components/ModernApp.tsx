@@ -20,33 +20,7 @@ export function ModernApp() {
       setIsMobile(window.innerWidth < 768)
     }
     
-    // Clean up localStorage on app start if needed
-    const cleanupLocalStorage = () => {
-      try {
-        // Test if localStorage is working
-        const testKey = 'test_' + Date.now()
-        localStorage.setItem(testKey, 'test')
-        localStorage.removeItem(testKey)
-      } catch (error) {
-        // If localStorage is full or corrupted, clear app-related data
-        console.warn('localStorage issues detected, cleaning up:', error)
-        try {
-          const keysToRemove = []
-          for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i)
-            if (key && (key.includes('Groups_') || key.includes('groups_') || key.includes('exploreGroups_') || key.includes('myGroups_'))) {
-              keysToRemove.push(key)
-            }
-          }
-          keysToRemove.forEach(key => localStorage.removeItem(key))
-        } catch (cleanupError) {
-          console.warn('Failed to cleanup localStorage:', cleanupError)
-        }
-      }
-    }
-    
     checkMobile()
-    cleanupLocalStorage()
     window.addEventListener('resize', checkMobile)
     
     return () => window.removeEventListener('resize', checkMobile)
