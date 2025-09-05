@@ -6,6 +6,7 @@ import { Search, Plus, Hash, Users, User, Lock, Crown } from 'lucide-react'
 import Image from 'next/image'
 import { CreateGroupModal } from './CreateGroupModal'
 import { HiveLogo } from './HiveLogo'
+import { useSocket } from '../lib/socketContext'
 
 interface Group {
   id: string
@@ -41,6 +42,7 @@ export function ModernSidebar({
   isMobile = false 
 }: ModernSidebarProps) {
   const { data: session } = useSession()
+  const { socket, isConnected, joinGroups: joinSocketGroups } = useSocket()
   const [groups, setGroups] = useState<Group[]>([])
   const [exploreGroups, setExploreGroupsRaw] = useState<Group[]>([])
   const [loading, setLoading] = useState(true)
@@ -57,56 +59,54 @@ export function ModernSidebar({
 
   useEffect(() => {
     if (session?.user) {
+      // Initial data fetch
       if (activeTab === 'chats') {
         fetchMyGroups()
       } else if (activeTab === 'explore') {
         fetchExploreGroups()
       }
-
-      // Set up smart polling for updates (no localStorage needed!)
-      let pollInterval: NodeJS.Timeout
-      let lastCheck = Date.now()
-      
-      const pollForUpdates = async () => {
-        try {
-          const response = await fetch(`/api/groups/updates?lastCheck=${lastCheck}`)
-          if (response.ok) {
-            const data = await response.json()
-            if (data.hasUpdates && data.updates.includes('groups')) {
-              // Refresh groups if there are updates
-              if (activeTab === 'chats') {
-                fetchMyGroups()
-              } else if (activeTab === 'explore') {
-                fetchExploreGroups()
-              }
-            }
-            lastCheck = data.timestamp
-          }
-        } catch (error) {
-          console.error('Error polling for updates:', error)
-        }
-      }
-
-      // Poll every 15 seconds for group updates
-      pollInterval = setInterval(pollForUpdates, 15000)
-      
-      // Poll every 5 seconds for new messages (more frequent for real-time feel)
-      const messageInterval = setInterval(() => {
-        if (activeTab === 'chats') {
-          fetchMyGroups()
-        }
-      }, 5000)
-
-      return () => {
-        if (pollInterval) {
-          clearInterval(pollInterval)
-        }
-        if (messageInterval) {
-          clearInterval(messageInterval)
-        }
-      }
     }
   }, [session, activeTab])
+
+  // WebSocket setup for real-time messaging
+  useEffect(() => {
+    if (socket && isConnected && groups.length > 0) {
+      console.log('🔌 Setting up WebSocket listeners')
+      
+      // Join all user's groups for real-time updates
+      const groupIds = groups.map(group => group.id)
+      joinSocketGroups(groupIds)
+
+      // Listen for new messages
+      const handleMessageReceived = (data: any) => {
+        console.log('🔌 Received new message via WebSocket:', data)
+        
+        // Update unread count only if user isn't viewing this group
+        if (selectedGroupId !== data.groupId) {
+          setUnreadCounts(prev => ({
+            ...prev,
+            [data.groupId]: (prev[data.groupId] || 0) + 1
+          }))
+        }
+
+        // Update the last message in the groups list
+        setGroups(prevGroups => 
+          prevGroups.map(group => 
+            group.id === data.groupId 
+              ? { ...group, lastMessage: data.message }
+              : group
+          )
+        )
+      }
+
+      socket.on('message-received', handleMessageReceived)
+
+      return () => {
+        console.log('🔌 Cleaning up WebSocket listeners')
+        socket.off('message-received', handleMessageReceived)
+      }
+    }
+  }, [socket, isConnected, groups, selectedGroupId, joinSocketGroups])
 
 
   const fetchMyGroups = async () => {
@@ -117,39 +117,12 @@ export function ModernSidebar({
         const data = await response.json()
         const groups = data.groups || []
         setGroups(groups)
-        
-        // Check for new messages and update unread counts
-        checkForNewMessages(groups)
       }
     } catch (error) {
       console.error('Error fetching groups:', error)
     } finally {
       setLoading(false)
     }
-  }
-  
-  const checkForNewMessages = (groupList: Group[]) => {
-    groupList.forEach((group: any) => {
-      if (group.lastMessage && group.lastMessage.createdAt) {
-        const lastMessageTime = lastMessageTimes[group.id]
-        const currentMessageTime = group.lastMessage.createdAt
-        
-        // If this is a new message (different timestamp) and it's not from current user
-        if (lastMessageTime && lastMessageTime !== currentMessageTime && group.lastMessage.user.id !== session?.user?.id) {
-          // Increment unread count
-          setUnreadCounts(prev => ({
-            ...prev,
-            [group.id]: (prev[group.id] || 0) + 1
-          }))
-        }
-        
-        // Update last message time
-        setLastMessageTimes(prev => ({
-          ...prev,
-          [group.id]: currentMessageTime
-        }))
-      }
-    })
   }
   
 

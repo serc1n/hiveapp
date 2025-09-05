@@ -7,6 +7,7 @@ import { ModernMessageList } from './ModernMessageList'
 import { GroupSettingsModal } from './GroupSettingsModal'
 import { AISummaryModal } from './AISummaryModal'
 import { AnnouncementModal } from './AnnouncementModal'
+import { useSocket } from '../lib/socketContext'
 
 interface Message {
   id: string
@@ -41,6 +42,7 @@ interface ModernChatViewProps {
 
 export function ModernChatView({ groupId, onBack, isMobile = false }: ModernChatViewProps) {
   const { data: session } = useSession()
+  const { socket, emitNewMessage } = useSocket()
   const [messages, setMessages] = useState<Message[]>([])
   const [newMessage, setNewMessage] = useState('')
   const [group, setGroup] = useState<Group | null>(null)
@@ -187,6 +189,12 @@ export function ModernChatView({ groupId, onBack, isMobile = false }: ModernChat
         setMessages(prev => prev.map(msg => 
           msg.id === tempMessage.id ? data.message : msg
         ))
+        
+        // Emit WebSocket event for real-time updates
+        emitNewMessage({
+          groupId,
+          message: data.message
+        })
       } else {
         // Remove temporary message on failure
         setMessages(prev => prev.filter(msg => msg.id !== tempMessage.id))
