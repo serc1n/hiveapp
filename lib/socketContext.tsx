@@ -55,19 +55,28 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
 
   const joinGroups = useCallback((groupIds: string[]) => {
     if (!session?.user || !messageCallback) {
+      console.log('🔌 Cannot join groups - no session or messageCallback')
       return
     }
 
-    console.log('🔌 Setting up single Realtime channel for all messages')
+    console.log('🔌 Setting up Supabase Realtime channel')
+    console.log('🔌 Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL)
+    console.log('🔌 Groups to monitor:', groupIds)
 
     // Remove existing channels
     channels.forEach(channel => {
+      console.log('🔌 Removing existing channel')
       supabase.removeChannel(channel)
     })
 
     // Create a single channel for all messages
     const channel = supabase
-      .channel('all_messages')
+      .channel('hive_messages', {
+        config: {
+          broadcast: { self: false },
+          presence: { key: session.user.id }
+        }
+      })
       .on(
         'postgres_changes',
         {
@@ -76,15 +85,21 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
           table: 'messages'
         },
         async (payload: any) => {
-          console.log('🔌 New message received:', payload.new)
+          console.log('🔌 Realtime payload received:', {
+            event: payload.eventType,
+            table: payload.table,
+            new: payload.new,
+            old: payload.old
+          })
           
           // Only process if user is not the sender and groupId is in our groups
           if (payload.new && payload.new.userId !== session.user.id && groupIds.includes(payload.new.groupId)) {
+            console.log('🔌 Processing message for group:', payload.new.groupId)
             try {
               const userResponse = await fetch(`/api/users/${payload.new.userId}`)
               const user = userResponse.ok ? await userResponse.json() : null
               
-              messageCallback({
+              const messageData = {
                 groupId: payload.new.groupId,
                 message: {
                   id: payload.new.id,
@@ -93,23 +108,39 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
                   createdAt: payload.new.createdAt,
                   user
                 }
-              })
+              }
+              
+              console.log('🔌 Calling messageCallback with:', messageData)
+              messageCallback(messageData)
             } catch (error) {
-              console.error('Error fetching user data:', error)
+              console.error('🔌 Error processing message:', error)
             }
+          } else {
+            console.log('🔌 Message ignored:', {
+              hasNew: !!payload.new,
+              isFromSelf: payload.new?.userId === session.user.id,
+              isInGroups: payload.new ? groupIds.includes(payload.new.groupId) : false
+            })
           }
         }
       )
-      .subscribe((status) => {
-        console.log('🔌 Realtime channel status:', status)
+      .subscribe((status, err) => {
+        console.log('🔌 Realtime subscription status:', status)
+        if (err) {
+          console.error('🔌 Realtime subscription error:', err)
+        }
+        
         if (status === 'SUBSCRIBED') {
+          console.log('✅ Successfully subscribed to Realtime!')
           setIsConnected(true)
-        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+          console.log('❌ Realtime connection failed:', status)
           setIsConnected(false)
         }
       })
 
     setChannels([channel])
+    console.log('🔌 Channel created and subscribed')
   }, [session, messageCallback])
 
   const leaveGroups = useCallback((groupIds: string[]) => {
