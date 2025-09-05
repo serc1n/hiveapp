@@ -142,7 +142,7 @@ export function ProfileTab() {
               const cacheNames = await caches.keys()
               await Promise.all(cacheNames.map(name => caches.delete(name)))
             }
-            window.location.reload(true)
+            window.location.reload()
           }
           return
         }
