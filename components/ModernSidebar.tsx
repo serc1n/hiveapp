@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { Search, Plus, Hash, Users, Settings, Bell, User, Lock, Crown } from 'lucide-react'
+import Image from 'next/image'
 import { CreateGroupModal } from './CreateGroupModal'
 
 interface Group {
@@ -125,7 +126,7 @@ export function ModernSidebar({
         {!isMobile && (
           <div className="flex bg-gray-100 rounded-2xl p-1 mb-6">
             {[
-              { id: 'chats', label: 'All chats', icon: Hash },
+              { id: 'chats', label: 'My Hives', icon: Hash, useCustomIcon: true },
               { id: 'explore', label: 'Explore', icon: Users },
               { id: 'profile', label: 'Profile', icon: User }
             ].map((tab) => {
@@ -140,7 +141,17 @@ export function ModernSidebar({
                       : 'text-gray-600 hover:text-gray-900'
                   }`}
                 >
-                  <Icon className="w-4 h-4" />
+                  {tab.useCustomIcon && tab.id === 'chats' ? (
+                    <Image 
+                      src="/hiveblack.png"
+                      alt="My Hives" 
+                      width={16} 
+                      height={16} 
+                      className="w-4 h-4"
+                    />
+                  ) : (
+                    <Icon className="w-4 h-4" />
+                  )}
                   <span>{tab.label}</span>
                 </button>
               )

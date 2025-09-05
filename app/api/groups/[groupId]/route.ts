@@ -68,6 +68,7 @@ export async function GET(
         contractAddress: group.contractAddress,
         memberCount: group._count.members,
         isCreator: group.creatorId === session.user.id,
+        creatorId: group.creatorId,
         members: group.members.map(member => ({
           id: member.user.id,
           name: member.user.name,

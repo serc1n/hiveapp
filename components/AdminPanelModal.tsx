@@ -157,30 +157,30 @@ export function AdminPanelModal({ groupId, groupName, onClose }: AdminPanelModal
         <div className="flex-1 overflow-y-auto p-6">
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+              <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
             </div>
           ) : (
             <div className="space-y-8">
               {/* Pending Join Requests */}
               <div>
                 <div className="flex items-center space-x-2 mb-4">
-                  <Clock className="w-5 h-5 text-yellow-500" />
-                  <h3 className="text-lg font-semibold text-white">
+                  <Clock className="w-5 h-5 text-yellow-600" />
+                  <h3 className="text-lg font-semibold text-gray-900">
                     Pending Join Requests ({joinRequests.length})
                   </h3>
                 </div>
                 
                 {joinRequests.length === 0 ? (
-                  <div className="text-center py-8 bg-gray-800 rounded-lg">
-                    <Clock className="w-12 h-12 text-gray-600 mx-auto mb-2" />
-                    <p className="text-gray-400">No pending join requests</p>
+                  <div className="text-center py-8 bg-gray-50 rounded-2xl border border-gray-200">
+                    <Clock className="w-12 h-12 text-gray-400 mx-auto mb-2" />
+                    <p className="text-gray-600">No pending join requests</p>
                   </div>
                 ) : (
                   <div className="space-y-3">
                     {joinRequests.map((request) => (
-                      <div key={request.id} className="bg-gray-800 rounded-lg p-4 flex items-center justify-between">
+                      <div key={request.id} className="bg-white border border-gray-200 rounded-2xl p-4 flex items-center justify-between shadow-sm">
                         <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center overflow-hidden">
+                          <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center overflow-hidden">
                             {request.user.profileImage ? (
                               <img
                                 src={request.user.profileImage}
@@ -188,16 +188,16 @@ export function AdminPanelModal({ groupId, groupName, onClose }: AdminPanelModal
                                 className="w-10 h-10 rounded-full object-cover"
                               />
                             ) : (
-                              <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center">
-                                <span className="text-white font-medium">
+                              <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
+                                <span className="text-gray-700 font-medium">
                                   {request.user.name.charAt(0).toUpperCase()}
                                 </span>
                               </div>
                             )}
                           </div>
                           <div>
-                            <p className="text-white font-medium">{request.user.name}</p>
-                            <p className="text-gray-400 text-sm">@{request.user.twitterHandle}</p>
+                            <p className="text-gray-900 font-medium">{request.user.name}</p>
+                            <p className="text-gray-600 text-sm">@{request.user.twitterHandle}</p>
                             <p className="text-gray-500 text-xs">
                               Requested {formatDate(request.createdAt)}
                             </p>
@@ -231,15 +231,15 @@ export function AdminPanelModal({ groupId, groupName, onClose }: AdminPanelModal
               {/* Current Members */}
               <div>
                 <div className="flex items-center space-x-2 mb-4">
-                  <Users className="w-5 h-5 text-blue-500" />
-                  <h3 className="text-lg font-semibold text-white">
+                  <Users className="w-5 h-5 text-indigo-600" />
+                  <h3 className="text-lg font-semibold text-gray-900">
                     Current Members ({members.length})
                   </h3>
                 </div>
                 
                 <div className="space-y-3">
                   {members.map((member) => (
-                    <div key={member.id} className="bg-gray-800 rounded-lg p-4 flex items-center justify-between">
+                    <div key={member.id} className="bg-white border border-gray-200 rounded-2xl p-4 flex items-center justify-between shadow-sm">
                       <div className="flex items-center space-x-3">
                         <div className="w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center overflow-hidden">
                           {member.user.profileImage ? (

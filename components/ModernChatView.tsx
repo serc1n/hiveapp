@@ -25,6 +25,7 @@ interface Group {
   profileImage: string | null
   memberCount: number
   isCreator?: boolean
+  creatorId?: string
   contractAddress: string | null
   requiresApproval?: boolean
   createdAt?: string
@@ -251,6 +252,7 @@ export function ModernChatView({ groupId, onBack, isMobile = false }: ModernChat
           currentUserImage={session?.user?.image}
           onMakeAnnouncement={() => {}}
           isGroupOwner={group.isCreator}
+          groupCreatorId={group.creatorId}
         />
         <div ref={messagesEndRef} />
       </div>

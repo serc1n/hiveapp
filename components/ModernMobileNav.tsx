@@ -37,7 +37,7 @@ export function ModernMobileNav({ activeTab, onTabChange }: ModernMobileNavProps
               }`}>
                 {tab.useCustomIcon && tab.id === 'chats' ? (
                   <Image 
-                    src="/hive.png" 
+                    src="/hiveblack.png"
                     alt="Hives" 
                     width={20} 
                     height={20} 
