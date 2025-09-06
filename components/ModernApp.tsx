@@ -30,7 +30,8 @@ export function ModernApp() {
   }, [])
 
   const handleSelectGroup = (groupId: string) => {
-    setSelectedGroupId(groupId)
+    // Treat empty string as null to clear selection
+    setSelectedGroupId(groupId || null)
   }
 
   const handleBackToList = () => {

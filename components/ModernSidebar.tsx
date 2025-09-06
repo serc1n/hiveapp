@@ -141,9 +141,15 @@ export function ModernSidebar({
           return rest
         })
 
-        // If the deleted group was selected, clear selection
+        // If the deleted group was selected, clear selection and navigate back
         if (selectedGroupId === data.groupId) {
-          onSelectGroup('')
+          console.log('🔌 Currently viewing deleted group, navigating back to main view')
+          onSelectGroup('') // Clear selection to return to main view
+          
+          // Make sure we're on the chats tab
+          if (activeTab !== 'chats') {
+            onTabChange('chats')
+          }
         }
       }
 
