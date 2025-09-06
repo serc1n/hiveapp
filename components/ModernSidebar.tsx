@@ -93,7 +93,7 @@ export function ModernSidebar({
         console.log('🔌 Received new group creation via WebSocket:', data)
         
         // Add the new group to explore groups list
-        setExploreGroups(prevGroups => {
+        setExploreGroups((prevGroups: Group[]) => {
           // Check if group already exists to avoid duplicates
           const existingGroup = prevGroups.find(group => group.id === data.group.id)
           if (existingGroup) {
