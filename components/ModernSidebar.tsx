@@ -44,7 +44,7 @@ export function ModernSidebar({
   refreshTrigger 
 }: ModernSidebarProps) {
   const { data: session } = useSession()
-  const { isConnected, joinGroups: joinSocketGroups, onMessageReceived, offMessageReceived } = useSocket()
+  const { isConnected, joinGroups: joinSocketGroups, onMessageReceived, offMessageReceived, onGroupDeleted, offGroupDeleted } = useSocket()
   const [groups, setGroups] = useState<Group[]>([])
   const [exploreGroups, setExploreGroupsRaw] = useState<Group[]>([])
   const [loading, setLoading] = useState(true)
@@ -124,11 +124,36 @@ export function ModernSidebar({
         })
       }
 
+      // Listen for group deletions
+      const handleGroupDeleted = (data: any) => {
+        console.log('🔌 Received group deletion via WebSocket:', data)
+        
+        // Remove the deleted group from the groups list
+        setGroups(prevGroups => {
+          const filteredGroups = prevGroups.filter(group => group.id !== data.groupId)
+          console.log('🔌 Removed group from list:', data.groupId, 'remaining:', filteredGroups.length)
+          return filteredGroups
+        })
+
+        // Clear unread count for deleted group
+        setUnreadCounts(prev => {
+          const { [data.groupId]: deleted, ...rest } = prev
+          return rest
+        })
+
+        // If the deleted group was selected, clear selection
+        if (selectedGroupId === data.groupId) {
+          onSelectGroup('')
+        }
+      }
+
       onMessageReceived(handleMessageReceived)
+      onGroupDeleted(handleGroupDeleted)
 
       return () => {
         console.log('🔌 Cleaning up WebSocket listeners')
         offMessageReceived()
+        offGroupDeleted()
       }
     }
   }, [session?.user?.id, activeTab, selectedGroupId]) // Include selectedGroupId to get fresh value

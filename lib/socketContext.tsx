@@ -11,6 +11,8 @@ interface SocketContextType {
   leaveGroups: (groupIds: string[]) => void
   onMessageReceived: (callback: (data: any) => void) => void
   offMessageReceived: () => void
+  onGroupDeleted: (callback: (data: any) => void) => void
+  offGroupDeleted: () => void
 }
 
 const SocketContext = createContext<SocketContextType>({
@@ -19,6 +21,8 @@ const SocketContext = createContext<SocketContextType>({
   leaveGroups: () => {},
   onMessageReceived: () => {},
   offMessageReceived: () => {},
+  onGroupDeleted: () => {},
+  offGroupDeleted: () => {},
 })
 
 export const useSocket = () => {
@@ -36,6 +40,7 @@ interface SocketProviderProps {
 export const SocketProvider = ({ children }: SocketProviderProps) => {
   const [isConnected, setIsConnected] = useState(false)
   const [messageCallback, setMessageCallback] = useState<((data: any) => void) | null>(null)
+  const [groupDeletedCallback, setGroupDeletedCallback] = useState<((data: any) => void) | null>(null)
   const [channels, setChannels] = useState<RealtimeChannel[]>([])
   const [currentGroupIds, setCurrentGroupIds] = useState<string[]>([])
   const { data: session } = useSession()
@@ -72,9 +77,9 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
       supabase.removeChannel(channel)
     })
 
-    // Create a single channel for all messages
+    // Create a single channel for both messages and group deletions
     const channel = supabase
-      .channel('hive_messages')
+      .channel('hive_realtime')
       .on(
         'postgres_changes',
         {
@@ -126,6 +131,33 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
           console.log('🔌 =====================================')
         }
       )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'groups'
+        },
+        async (payload: any) => {
+          console.log('🔌 ===== REALTIME GROUP DELETED =====')
+          console.log('🔌 Group deletion payload:', JSON.stringify(payload, null, 2))
+          console.log('🔌 Deleted group data:', payload.old)
+          
+          if (payload.old && groupDeletedCallback) {
+            console.log('🔌 Processing group deletion:', payload.old.id)
+            const groupDeletedData = {
+              groupId: payload.old.id,
+              groupName: payload.old.name
+            }
+            
+            console.log('🔌 Calling groupDeletedCallback with:', groupDeletedData)
+            groupDeletedCallback(groupDeletedData)
+          } else {
+            console.log('🔌 No group deletion callback available or no payload data!')
+          }
+          console.log('🔌 ===================================')
+        }
+      )
       .subscribe((status, err) => {
         console.log('🔌 Realtime subscription status:', status)
         if (err) {
@@ -143,7 +175,7 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
 
     setChannels([channel])
     console.log('🔌 Channel created and subscribed')
-  }, [session?.user?.id, currentGroupIds, messageCallback]) // Include dependencies for proper closure
+  }, [session?.user?.id, currentGroupIds, messageCallback, groupDeletedCallback]) // Include dependencies for proper closure
 
   const leaveGroups = useCallback((groupIds: string[]) => {
     console.log('🔌 Leaving groups:', groupIds)
@@ -164,6 +196,16 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
     setMessageCallback(null)
   }, [])
 
+  const onGroupDeleted = useCallback((callback: (data: any) => void) => {
+    console.log('🔌 Setting group deleted callback')
+    setGroupDeletedCallback(() => callback)
+  }, [])
+
+  const offGroupDeleted = useCallback(() => {
+    console.log('🔌 Removing group deleted callback')
+    setGroupDeletedCallback(null)
+  }, [])
+
   return (
     <SocketContext.Provider
       value={{
@@ -172,6 +214,8 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
         leaveGroups,
         onMessageReceived,
         offMessageReceived,
+        onGroupDeleted,
+        offGroupDeleted,
       }}
     >
       {children}
