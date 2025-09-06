@@ -7,8 +7,9 @@ export async function POST(
   request: NextRequest,
   { params }: { params: { groupId: string } }
 ) {
+  let session: any = null
   try {
-    const session = await getServerSession(authOptions)
+    session = await getServerSession(authOptions)
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
