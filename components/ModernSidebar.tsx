@@ -7,6 +7,7 @@ import Image from 'next/image'
 import { CreateGroupModal } from './CreateGroupModal'
 import { HiveLogo } from './HiveLogo'
 import { useSocket } from '../lib/socketContext'
+import { NativeNotification, useNativeNotification } from './NativeNotification'
 
 interface Group {
   id: string
@@ -44,7 +45,7 @@ export function ModernSidebar({
   refreshTrigger 
 }: ModernSidebarProps) {
   const { data: session } = useSession()
-  const { isConnected, joinGroups: joinSocketGroups, onMessageReceived, offMessageReceived, onGroupDeleted, offGroupDeleted } = useSocket()
+  const { isConnected, joinGroups: joinSocketGroups, onMessageReceived, offMessageReceived, onGroupDeleted, offGroupDeleted, onGroupCreated, offGroupCreated } = useSocket()
   const [groups, setGroups] = useState<Group[]>([])
   const [exploreGroups, setExploreGroupsRaw] = useState<Group[]>([])
   const [loading, setLoading] = useState(true)
@@ -53,6 +54,7 @@ export function ModernSidebar({
   const [joiningGroups, setJoiningGroups] = useState<Set<string>>(new Set())
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({})
   const [lastMessageTimes, setLastMessageTimes] = useState<Record<string, string>>({})
+  const { notification, showSuccess, showInfo, hideNotification } = useNativeNotification()
   
   const setExploreGroups = (groups: Group[]) => {
     console.log('🔄 Setting explore groups state:', groups.length, groups.map((g: any) => g.name))
@@ -80,6 +82,38 @@ export function ModernSidebar({
       }
     }
   }, [refreshTrigger, session, activeTab])
+
+  // WebSocket setup for explore tab - listen for new group creation
+  useEffect(() => {
+    if (session?.user && activeTab === 'explore') {
+      console.log('🔌 Setting up WebSocket listeners for Explore tab')
+      
+      // Listen for new group creation
+      const handleGroupCreated = (data: any) => {
+        console.log('🔌 Received new group creation via WebSocket:', data)
+        
+        // Add the new group to explore groups list
+        setExploreGroups(prevGroups => {
+          // Check if group already exists to avoid duplicates
+          const existingGroup = prevGroups.find(group => group.id === data.group.id)
+          if (existingGroup) {
+            console.log('🔌 Group already exists in explore list, skipping')
+            return prevGroups
+          }
+          
+          console.log('🔌 Adding new group to explore list:', data.group.name)
+          return [data.group, ...prevGroups] // Add to top of list
+        })
+      }
+
+      onGroupCreated(handleGroupCreated)
+
+      return () => {
+        console.log('🔌 Cleaning up WebSocket listeners for Explore tab')
+        offGroupCreated()
+      }
+    }
+  }, [session?.user?.id, activeTab]) // Include activeTab to setup/cleanup based on current tab
 
   // WebSocket setup for real-time messaging - stable version
   useEffect(() => {
@@ -265,7 +299,7 @@ export function ModernSidebar({
         
         if (result.requiresApproval) {
           // Join request sent, waiting for approval
-          alert(result.message || 'Join request sent! Waiting for approval from group creator.')
+          showInfo('Request sent! Waiting for approval')
           
           // Refresh explore groups to update join status
           if (activeTab === 'explore') {
@@ -274,7 +308,7 @@ export function ModernSidebar({
           }
         } else {
           // Direct join successful
-          alert(result.message || 'Successfully joined the group!')
+          showSuccess('Successfully joined the group!')
           
           // Refresh explore groups to update join status
           if (activeTab === 'explore') {
@@ -292,11 +326,11 @@ export function ModernSidebar({
       } else {
         const error = await response.json()
         console.log('❌ Join failed:', error)
-        alert(error.error || 'Failed to join group')
+        showInfo(error.error || 'Failed to join group')
       }
     } catch (error) {
       console.error('💥 Error joining group:', error)
-      alert('Failed to join group')
+      showInfo('Failed to join group')
     } finally {
       console.log('🧹 Cleaning up joining state for:', groupId)
       setJoiningGroups(prev => {
@@ -536,6 +570,16 @@ export function ModernSidebar({
             setShowCreateModal(false)
             fetchMyGroups()
           }}
+        />
+      )}
+
+      {/* Native Notification */}
+      {notification && (
+        <NativeNotification
+          message={notification.message}
+          type={notification.type}
+          isVisible={notification.isVisible}
+          onClose={hideNotification}
         />
       )}
     </div>

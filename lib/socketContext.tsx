@@ -13,6 +13,8 @@ interface SocketContextType {
   offMessageReceived: () => void
   onGroupDeleted: (callback: (data: any) => void) => void
   offGroupDeleted: () => void
+  onGroupCreated: (callback: (data: any) => void) => void
+  offGroupCreated: () => void
 }
 
 const SocketContext = createContext<SocketContextType>({
@@ -23,6 +25,8 @@ const SocketContext = createContext<SocketContextType>({
   offMessageReceived: () => {},
   onGroupDeleted: () => {},
   offGroupDeleted: () => {},
+  onGroupCreated: () => {},
+  offGroupCreated: () => {},
 })
 
 export const useSocket = () => {
@@ -41,6 +45,7 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
   const [isConnected, setIsConnected] = useState(false)
   const [messageCallback, setMessageCallback] = useState<((data: any) => void) | null>(null)
   const [groupDeletedCallback, setGroupDeletedCallback] = useState<((data: any) => void) | null>(null)
+  const [groupCreatedCallback, setGroupCreatedCallback] = useState<((data: any) => void) | null>(null)
   const [channels, setChannels] = useState<RealtimeChannel[]>([])
   const [currentGroupIds, setCurrentGroupIds] = useState<string[]>([])
   const { data: session } = useSession()
@@ -158,6 +163,42 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
           console.log('🔌 ===================================')
         }
       )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'groups'
+        },
+        async (payload: any) => {
+          console.log('🔌 ===== REALTIME GROUP CREATED =====')
+          console.log('🔌 Group creation payload:', JSON.stringify(payload, null, 2))
+          console.log('🔌 New group data:', payload.new)
+          
+          if (payload.new && groupCreatedCallback) {
+            console.log('🔌 Processing new group creation:', payload.new.id)
+            const groupCreatedData = {
+              group: {
+                id: payload.new.id,
+                name: payload.new.name,
+                profileImage: payload.new.profileImage,
+                contractAddress: payload.new.contractAddress,
+                memberCount: 1, // Creator is the first member
+                isCreator: payload.new.creatorId === session?.user?.id,
+                hasAccess: false, // Other users don't have access yet
+                requiresApproval: payload.new.requiresApproval,
+                updatedAt: payload.new.updatedAt
+              }
+            }
+            
+            console.log('🔌 Calling groupCreatedCallback with:', groupCreatedData)
+            groupCreatedCallback(groupCreatedData)
+          } else {
+            console.log('🔌 No group creation callback available or no payload data!')
+          }
+          console.log('🔌 ===================================')
+        }
+      )
       .subscribe((status, err) => {
         console.log('🔌 Realtime subscription status:', status)
         if (err) {
@@ -175,7 +216,7 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
 
     setChannels([channel])
     console.log('🔌 Channel created and subscribed')
-  }, [session?.user?.id, currentGroupIds, messageCallback, groupDeletedCallback]) // Include dependencies for proper closure
+  }, [session?.user?.id, currentGroupIds, messageCallback, groupDeletedCallback, groupCreatedCallback]) // Include dependencies for proper closure
 
   const leaveGroups = useCallback((groupIds: string[]) => {
     console.log('🔌 Leaving groups:', groupIds)
@@ -206,6 +247,16 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
     setGroupDeletedCallback(null)
   }, [])
 
+  const onGroupCreated = useCallback((callback: (data: any) => void) => {
+    console.log('🔌 Setting group created callback')
+    setGroupCreatedCallback(() => callback)
+  }, [])
+
+  const offGroupCreated = useCallback(() => {
+    console.log('🔌 Removing group created callback')
+    setGroupCreatedCallback(null)
+  }, [])
+
   return (
     <SocketContext.Provider
       value={{
@@ -216,6 +267,8 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
         offMessageReceived,
         onGroupDeleted,
         offGroupDeleted,
+        onGroupCreated,
+        offGroupCreated,
       }}
     >
       {children}
