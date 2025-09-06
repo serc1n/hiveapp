@@ -42,6 +42,8 @@ export function GroupSettingsModal({ group, onClose, onGroupUpdated, onGroupDele
   const [showAdminPanel, setShowAdminPanel] = useState(false)
   const [showMembersList, setShowMembersList] = useState(false)
   const [isLeavingGroup, setIsLeavingGroup] = useState(false)
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false)
+  const [deleteConfirmationText, setDeleteConfirmationText] = useState('')
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -114,14 +116,8 @@ export function GroupSettingsModal({ group, onClose, onGroupUpdated, onGroupDele
   }
 
   const handleDeleteGroup = async () => {
-    if (!confirm('Are you ABSOLUTELY sure you want to delete this Hive?\n\nThis will:\n- Delete all messages permanently\n- Remove all members\n- Cannot be undone\n\nType "DELETE" to confirm this action.')) {
-      return
-    }
-
-    const confirmation = prompt('Type "DELETE" to confirm deletion:')
-    if (confirmation !== 'DELETE') {
-      alert('Deletion cancelled. You must type "DELETE" exactly to confirm.')
-      return
+    if (deleteConfirmationText !== 'DELETE') {
+      return // Don't proceed if confirmation text doesn't match
     }
 
     setIsLoading(true)
@@ -131,7 +127,7 @@ export function GroupSettingsModal({ group, onClose, onGroupUpdated, onGroupDele
       })
 
       if (response.ok) {
-        alert('Hive deleted successfully.')
+        setShowDeleteConfirmation(false)
         onClose() // Close the modal first
         
         // Call the deletion callback to handle navigation and refresh
@@ -145,11 +141,11 @@ export function GroupSettingsModal({ group, onClose, onGroupUpdated, onGroupDele
         }
       } else {
         const error = await response.json()
-        alert(error.error || 'Failed to delete Hive')
+        // Show error in the confirmation modal instead of alert
+        console.error('Delete error:', error.error || 'Failed to delete Hive')
       }
     } catch (error) {
       console.error('Failed to delete Hive:', error)
-      alert('Failed to delete Hive. Please try again.')
     } finally {
       setIsLoading(false)
     }
@@ -395,18 +391,11 @@ export function GroupSettingsModal({ group, onClose, onGroupUpdated, onGroupDele
                     </div>
                   </div>
                   <button
-                    onClick={() => handleDeleteGroup()}
+                    onClick={() => setShowDeleteConfirmation(true)}
                     disabled={isLoading}
                     className="w-full px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                   >
-                    {isLoading ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                        Deleting...
-                      </>
-                    ) : (
-                      'Delete Hive Permanently'
-                    )}
+                    Delete Hive
                   </button>
                 </div>
               )}
@@ -440,6 +429,79 @@ export function GroupSettingsModal({ group, onClose, onGroupUpdated, onGroupDele
           groupName={group.name}
           onClose={() => setShowMembersList(false)}
         />
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirmation && (
+        <div className="absolute inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-10">
+          <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl">
+            {/* Warning Icon */}
+            <div className="flex items-center justify-center w-16 h-16 bg-red-100 rounded-full mx-auto mb-6">
+              <Trash2 className="w-8 h-8 text-red-600" />
+            </div>
+
+            {/* Title and Description */}
+            <div className="text-center mb-6">
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Delete "{group.name}"?</h3>
+              <p className="text-gray-600 text-sm leading-relaxed">
+                This action will permanently delete this Hive and all its content:
+              </p>
+            </div>
+
+            {/* Warning List */}
+            <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6">
+              <ul className="text-sm text-red-800 space-y-1">
+                <li>• All messages will be deleted permanently</li>
+                <li>• All members will be removed</li>
+                <li>• All announcements will be lost</li>
+                <li>• This action cannot be undone</li>
+              </ul>
+            </div>
+
+            {/* Confirmation Input */}
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Type <span className="font-bold text-red-600">DELETE</span> to confirm:
+              </label>
+              <input
+                type="text"
+                value={deleteConfirmationText}
+                onChange={(e) => setDeleteConfirmationText(e.target.value)}
+                placeholder="Type DELETE here"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                autoFocus
+              />
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex space-x-3">
+              <button
+                onClick={() => {
+                  setShowDeleteConfirmation(false)
+                  setDeleteConfirmationText('')
+                }}
+                disabled={isLoading}
+                className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteGroup}
+                disabled={isLoading || deleteConfirmationText !== 'DELETE'}
+                className="flex-1 px-4 py-3 bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white rounded-xl font-medium transition-colors flex items-center justify-center"
+              >
+                {isLoading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                    Deleting...
+                  </>
+                ) : (
+                  'Delete Forever'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )
