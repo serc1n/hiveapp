@@ -27,9 +27,10 @@ interface GroupSettingsModalProps {
   group: Group
   onClose: () => void
   onGroupUpdated: () => void
+  onGroupDeleted?: () => void
 }
 
-export function GroupSettingsModal({ group, onClose, onGroupUpdated }: GroupSettingsModalProps) {
+export function GroupSettingsModal({ group, onClose, onGroupUpdated, onGroupDeleted }: GroupSettingsModalProps) {
   const [formData, setFormData] = useState({
     name: group.name,
     contractAddress: group.contractAddress || '',
@@ -131,8 +132,17 @@ export function GroupSettingsModal({ group, onClose, onGroupUpdated }: GroupSett
 
       if (response.ok) {
         alert('Hive deleted successfully.')
-        onGroupUpdated() // Refresh the group list
-        onClose() // Close the modal
+        onClose() // Close the modal first
+        
+        // Call the deletion callback to handle navigation and refresh
+        if (onGroupDeleted) {
+          onGroupDeleted()
+        } else {
+          // Fallback to full page refresh if no callback provided
+          if (typeof window !== 'undefined') {
+            window.location.href = '/'
+          }
+        }
       } else {
         const error = await response.json()
         alert(error.error || 'Failed to delete Hive')

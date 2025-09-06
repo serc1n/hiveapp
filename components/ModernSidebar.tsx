@@ -32,6 +32,7 @@ interface ModernSidebarProps {
   selectedGroupId: string | null
   onSelectGroup: (groupId: string) => void
   isMobile?: boolean
+  refreshTrigger?: number // Add this to trigger refresh from parent
 }
 
 export function ModernSidebar({ 
@@ -39,7 +40,8 @@ export function ModernSidebar({
   onTabChange, 
   selectedGroupId, 
   onSelectGroup,
-  isMobile = false 
+  isMobile = false,
+  refreshTrigger 
 }: ModernSidebarProps) {
   const { data: session } = useSession()
   const { isConnected, joinGroups: joinSocketGroups, onMessageReceived, offMessageReceived } = useSocket()
@@ -67,6 +69,17 @@ export function ModernSidebar({
       }
     }
   }, [session, activeTab])
+
+  // Refresh when refreshTrigger changes
+  useEffect(() => {
+    if (refreshTrigger && session?.user) {
+      if (activeTab === 'chats') {
+        fetchMyGroups()
+      } else if (activeTab === 'explore') {
+        fetchExploreGroups()
+      }
+    }
+  }, [refreshTrigger, session, activeTab])
 
   // WebSocket setup for real-time messaging - stable version
   useEffect(() => {

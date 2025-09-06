@@ -15,6 +15,7 @@ export function ModernApp() {
   const [activeTab, setActiveTab] = useState<'chats' | 'explore' | 'profile'>('chats')
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null)
   const [isMobile, setIsMobile] = useState(false)
+  const [refreshTrigger, setRefreshTrigger] = useState(0)
 
   // Handle responsive design and localStorage cleanup
   useEffect(() => {
@@ -34,6 +35,11 @@ export function ModernApp() {
 
   const handleBackToList = () => {
     setSelectedGroupId(null)
+  }
+
+  const handleGroupDeleted = () => {
+    setSelectedGroupId(null)
+    setRefreshTrigger(prev => prev + 1) // Trigger sidebar refresh
   }
 
   if (!session) {
@@ -77,6 +83,7 @@ export function ModernApp() {
               onTabChange={setActiveTab}
               selectedGroupId={selectedGroupId}
               onSelectGroup={handleSelectGroup}
+              refreshTrigger={refreshTrigger}
             />
           </div>
           
@@ -86,6 +93,7 @@ export function ModernApp() {
               <ModernChatView 
                 groupId={selectedGroupId} 
                 onBack={handleBackToList}
+                onGroupDeleted={handleGroupDeleted}
               />
             ) : activeTab === 'profile' ? (
               <div className="flex-1 overflow-y-auto bg-gray-50">
@@ -116,6 +124,7 @@ export function ModernApp() {
               groupId={selectedGroupId} 
               onBack={handleBackToList}
               isMobile={true}
+              onGroupDeleted={handleGroupDeleted}
             />
           ) : activeTab === 'profile' ? (
             <div className="flex-1 overflow-y-auto bg-gray-50 pb-20">
@@ -123,13 +132,14 @@ export function ModernApp() {
             </div>
           ) : (
             <div className="flex-1 overflow-hidden">
-              <ModernSidebar
-                activeTab={activeTab}
-                onTabChange={setActiveTab}
-                selectedGroupId={selectedGroupId}
-                onSelectGroup={handleSelectGroup}
-                isMobile={true}
-              />
+            <ModernSidebar
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+              selectedGroupId={selectedGroupId}
+              onSelectGroup={handleSelectGroup}
+              isMobile={true}
+              refreshTrigger={refreshTrigger}
+            />
             </div>
           )}
           {!selectedGroupId && (

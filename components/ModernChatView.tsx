@@ -38,9 +38,10 @@ interface ModernChatViewProps {
   groupId: string
   onBack?: () => void
   isMobile?: boolean
+  onGroupDeleted?: () => void
 }
 
-export function ModernChatView({ groupId, onBack, isMobile = false }: ModernChatViewProps) {
+export function ModernChatView({ groupId, onBack, isMobile = false, onGroupDeleted }: ModernChatViewProps) {
   const { data: session } = useSession()
   // Supabase Realtime handles message broadcasting automatically
   const [messages, setMessages] = useState<Message[]>([])
@@ -399,6 +400,15 @@ export function ModernChatView({ groupId, onBack, isMobile = false }: ModernChat
           onGroupUpdated={() => {
             fetchGroupData()
             setShowGroupSettings(false)
+          }}
+          onGroupDeleted={() => {
+            setShowGroupSettings(false)
+            // Call the deletion callback to handle navigation and refresh
+            if (onGroupDeleted) {
+              onGroupDeleted()
+            } else if (onBack) {
+              onBack()
+            }
           }}
         />
       )}

@@ -445,6 +445,13 @@ export function ChatArea({ groupId, onBack }: ChatAreaProps) {
             fetchGroupData()
             setShowGroupSettings(false)
           }}
+          onGroupDeleted={() => {
+            setShowGroupSettings(false)
+            // Navigate back to main view
+            if (onBack) {
+              onBack()
+            }
+          }}
         />
       )}
 
