@@ -78,6 +78,7 @@ export function ModernSidebar({
         console.log('🔌 Received new message via WebSocket:', data)
         
         // Update unread count only if user isn't viewing this group
+        console.log('🔌 Checking unread logic - selectedGroupId:', selectedGroupId, 'messageGroupId:', data.groupId, 'shouldIncrement:', selectedGroupId !== data.groupId)
         if (selectedGroupId !== data.groupId) {
           setUnreadCounts(prev => ({
             ...prev,
@@ -117,7 +118,7 @@ export function ModernSidebar({
         offMessageReceived()
       }
     }
-  }, [session?.user?.id, activeTab]) // Only depend on user ID and activeTab
+  }, [session?.user?.id, activeTab, selectedGroupId]) // Include selectedGroupId to get fresh value
 
   // Join groups for real-time updates when groups are loaded - stable version
   useEffect(() => {
@@ -128,6 +129,16 @@ export function ModernSidebar({
     }
   }, [groups.length, activeTab, session?.user?.id]) // Only depend on groups.length, not the full array
 
+  // Clear unread count when user selects a group
+  useEffect(() => {
+    if (selectedGroupId) {
+      console.log('🔄 Clearing unread count for selected group:', selectedGroupId)
+      setUnreadCounts(prev => ({
+        ...prev,
+        [selectedGroupId]: 0
+      }))
+    }
+  }, [selectedGroupId])
 
   const fetchMyGroups = async () => {
     try {
@@ -278,15 +289,6 @@ export function ModernSidebar({
           <h1 className="text-xl font-bold text-gray-900">
             {activeTab === 'chats' ? 'Hives' : activeTab === 'explore' ? 'Explore' : 'Profile'}
           </h1>
-          {activeTab === 'chats' && (
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="w-10 h-10 bg-gradient-primary rounded-xl flex items-center justify-center shadow-card hover:shadow-modern transition-all duration-200"
-              title="Create new chat"
-            >
-              <Plus className="w-5 h-5 text-white" />
-            </button>
-          )}
         </div>
         
         {/* Navigation Tabs - Desktop only */}
@@ -322,15 +324,30 @@ export function ModernSidebar({
         
         {/* Search */}
         {(activeTab === 'chats' || activeTab === 'explore') && (
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search conversations..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
-            />
+          <div className="space-y-3">
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search conversations..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+              />
+            </div>
+            
+            {/* Create Hive Button */}
+            {activeTab === 'chats' && (
+              <div className="relative">
+                <button
+                  onClick={() => setShowCreateModal(true)}
+                  className="w-full flex items-center pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-sm text-gray-500 hover:bg-gray-100 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+                >
+                  <Plus className="absolute left-4 w-4 h-4" />
+                  Create your Hive
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -377,14 +394,6 @@ export function ModernSidebar({
                 : 'All available groups have been joined'
               }
             </p>
-            {activeTab === 'chats' && (
-              <button
-                onClick={() => setShowCreateModal(true)}
-                className="btn-primary"
-              >
-                Create Group
-              </button>
-            )}
           </div>
         ) : (
           <div className="divide-y divide-gray-100">

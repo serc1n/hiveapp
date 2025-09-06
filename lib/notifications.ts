@@ -17,61 +17,65 @@ export async function sendNotificationToGroupMembers(
   excludeUserId?: string
 ) {
   try {
-    // Get all group members with push subscriptions
-    const members = await prisma.groupMember.findMany({
+    // Get all push subscriptions for group members
+    const groupMembers = await prisma.groupMember.findMany({
       where: {
         groupId,
         userId: excludeUserId ? { not: excludeUserId } : undefined,
       },
-      include: {
-        user: {
-          include: {
-            pushSubscriptions: true
-          }
+      select: {
+        userId: true
+      }
+    })
+
+    const userIds = groupMembers.map(member => member.userId)
+    
+    const subscriptions = await prisma.pushSubscription.findMany({
+      where: {
+        userId: {
+          in: userIds
         }
       }
     })
 
     const notifications = []
 
-    for (const member of members) {
-      for (const subscription of member.user.pushSubscriptions) {
-        try {
-          const pushSubscription = {
-            endpoint: subscription.endpoint,
-            keys: {
-              p256dh: subscription.p256dh,
-              auth: subscription.auth
-            }
+    for (const subscription of subscriptions) {
+      try {
+        const pushSubscription = {
+          endpoint: subscription.endpoint,
+          keys: {
+            p256dh: subscription.p256dh,
+            auth: subscription.auth
           }
-
-          const payload = JSON.stringify({
-            title,
-            body,
-            icon: '/icon-192x192.png',
-            badge: '/icon-192x192.png',
-            tag: `group-${groupId}`,
-            data: {
-              groupId,
-              url: `/?groupId=${groupId}`
-            }
-          })
-
-          notifications.push(
-            webpush.sendNotification(pushSubscription, payload)
-              .catch(error => {
-                console.error('Failed to send notification to:', subscription.id, error)
-                // Remove invalid subscriptions
-                if (error.statusCode === 410) {
-                  prisma.pushSubscription.delete({ 
-                    where: { id: subscription.id } 
-                  }).catch(console.error)
-                }
-              })
-          )
-        } catch (error) {
-          console.error('Error preparing notification:', error)
         }
+
+        const payload = JSON.stringify({
+          title,
+          body,
+          icon: '/icon-192x192.png',
+          badge: '/icon-192x192.png',
+          tag: `group-${groupId}`,
+          data: {
+            groupId,
+            url: `/?groupId=${groupId}`
+          }
+        })
+
+        notifications.push(
+          webpush.sendNotification(pushSubscription, payload)
+            .catch(error => {
+              console.error('Failed to send notification to:', subscription.id, error)
+              // Remove invalid subscriptions
+              if (error.statusCode === 410) {
+                prisma.pushSubscription.delete({ 
+                  where: { id: subscription.id } 
+                }).catch(console.error)
+              }
+            })
+        )
+      } catch (error) {
+        console.error('Error preparing notification:', error)
       }
     }
 

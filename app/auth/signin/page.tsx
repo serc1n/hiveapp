@@ -3,7 +3,8 @@
 import { signIn, getSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { Twitter, MessageCircle } from 'lucide-react'
+import { Twitter, MessageCircle, Sparkles, Users, Shield } from 'lucide-react'
+import { HiveLogo } from '@/components/HiveLogo'
 
 export default function SignIn() {
   const router = useRouter()
@@ -42,83 +43,125 @@ export default function SignIn() {
   }
 
   return (
-    <div className="min-h-screen bg-dark-900 flex items-center justify-center px-4">
-      <div className="max-w-md w-full space-y-8">
+    <div className="min-h-screen bg-gradient-to-br from-white via-gray-50 to-purple-50 flex items-center justify-center px-4 relative overflow-hidden">
+      {/* Background Decorative Elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-100 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-100 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
+        <div className="absolute top-40 left-40 w-80 h-80 bg-pink-100 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
+      </div>
+
+      <div className="relative z-10 max-w-md w-full space-y-8">
+        {/* Logo and Header */}
         <div className="text-center">
-          <div className="flex justify-center mb-6">
-            <img
-              src="/hive.png"
-              alt="HiveApp Logo"
-              className="w-16 h-16 rounded-2xl object-cover"
-              onError={(e) => {
-                const target = e.target as HTMLImageElement
-                target.style.display = 'none'
-                target.parentElement!.innerHTML = '<div class="w-16 h-16 bg-primary-600 rounded-2xl flex items-center justify-center"><svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m3 21 1.9-1.9a4.2 4.2 0 0 1 5.9-.5L13 20a6 6 0 0 0 6-6V6a6 6 0 0 0-6-6H6a6 6 0 0 0-6 6v14Z"></path><path d="M7 9h10"></path><path d="M7 13h6"></path></svg></div>'
-              }}
-            />
+          <div className="flex justify-center mb-8">
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-blue-600 rounded-3xl blur opacity-25"></div>
+              <div className="relative bg-white rounded-3xl p-4 shadow-xl border border-gray-100">
+                <HiveLogo className="w-12 h-12 text-purple-600" />
+              </div>
+            </div>
           </div>
-          <h2 className="text-3xl font-bold text-white mb-2">
-            Welcome to HiveApp
-          </h2>
-          <p className="text-dark-400 text-lg">
-            Connect with Twitter to join token-gated communities
+          
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 via-purple-900 to-blue-900 bg-clip-text text-transparent mb-3">
+            Welcome to Hive
+          </h1>
+          <p className="text-gray-600 text-lg leading-relaxed max-w-sm mx-auto">
+            Connect with <span className="font-semibold text-gray-800">𝕏</span> to join exclusive token-gated communities
           </p>
         </div>
 
-        <div className="card space-y-4">
+        {/* Login Card */}
+        <div className="bg-white/80 backdrop-blur-xl rounded-3xl p-8 shadow-2xl border border-white/20 space-y-6">
           {/* Demo Login Button */}
           <button
             onClick={handleDemoSignIn}
             disabled={isLoading}
-            className="w-full flex items-center justify-center px-4 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+            className="group w-full relative overflow-hidden bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold py-4 px-6 rounded-2xl transition-all duration-300 transform hover:scale-[1.02] hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
           >
-            {isLoading ? (
-              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-3" />
-            ) : (
-              <MessageCircle className="w-5 h-5 mr-3" />
-            )}
-            {isLoading ? 'Connecting...' : 'Demo Login (Test Features)'}
+            <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <div className="relative flex items-center justify-center">
+              {isLoading ? (
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-3" />
+              ) : (
+                <MessageCircle className="w-5 h-5 mr-3" />
+              )}
+              <span>{isLoading ? 'Connecting...' : 'Demo Login (Test Features)'}</span>
+            </div>
           </button>
 
-          {/* Twitter Login Button */}
+          {/* Divider */}
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-200"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-4 bg-white/80 text-gray-500 font-medium">or</span>
+            </div>
+          </div>
+
+          {/* X (Twitter) Login Button */}
           <button
             onClick={handleTwitterSignIn}
             disabled={isLoading}
-            className="w-full flex items-center justify-center px-4 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-blue-500 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+            className="group w-full relative overflow-hidden bg-black hover:bg-gray-800 text-white font-semibold py-4 px-6 rounded-2xl transition-all duration-300 transform hover:scale-[1.02] hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
           >
-            {isLoading ? (
-              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-3" />
-            ) : (
-              <Twitter className="w-5 h-5 mr-3" />
-            )}
-            {isLoading ? 'Connecting...' : 'Continue with Twitter'}
+            <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <div className="relative flex items-center justify-center">
+              {isLoading ? (
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-3" />
+              ) : (
+                <div className="w-5 h-5 mr-3 flex items-center justify-center">
+                  <span className="text-lg font-bold">𝕏</span>
+                </div>
+              )}
+              <span>{isLoading ? 'Connecting...' : 'Continue with 𝕏'}</span>
+            </div>
           </button>
 
-          <div className="mt-6 text-sm text-dark-400 text-center">
-            <p>By signing in, you agree to our terms and privacy policy.</p>
-            <p className="mt-2">Your Twitter handle will be used as your username.</p>
+          {/* Terms and Privacy */}
+          <div className="text-center space-y-2">
+            <p className="text-sm text-gray-500">
+              By signing in, you agree to our{' '}
+              <span className="text-purple-600 font-medium cursor-pointer hover:text-purple-700 transition-colors">
+                terms
+              </span>{' '}
+              and{' '}
+              <span className="text-purple-600 font-medium cursor-pointer hover:text-purple-700 transition-colors">
+                privacy policy
+              </span>
+            </p>
+            <p className="text-xs text-gray-400">
+              Your 𝕏 handle will be used as your username
+            </p>
           </div>
         </div>
 
-        <div className="text-center">
-          <div className="grid grid-cols-3 gap-4 text-sm text-dark-400">
-            <div className="flex flex-col items-center">
-              <div className="w-8 h-8 bg-dark-800 rounded-lg flex items-center justify-center mb-2">
-                🔐
+        {/* Features Grid */}
+        <div className="bg-white/60 backdrop-blur-xl rounded-2xl p-6 shadow-xl border border-white/20">
+          <div className="grid grid-cols-3 gap-6">
+            <div className="text-center group">
+              <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-purple-200 rounded-2xl flex items-center justify-center mb-3 mx-auto group-hover:scale-110 transition-transform duration-300">
+                <Shield className="w-6 h-6 text-purple-600" />
               </div>
-              <span>Token Gated</span>
+              <h3 className="font-semibold text-gray-800 text-sm">Token Gated</h3>
+              <p className="text-xs text-gray-500 mt-1">Exclusive access</p>
             </div>
-            <div className="flex flex-col items-center">
-              <div className="w-8 h-8 bg-dark-800 rounded-lg flex items-center justify-center mb-2">
-                💬
+            
+            <div className="text-center group">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 rounded-2xl flex items-center justify-center mb-3 mx-auto group-hover:scale-110 transition-transform duration-300">
+                <Users className="w-6 h-6 text-blue-600" />
               </div>
-              <span>Group Chat</span>
+              <h3 className="font-semibold text-gray-800 text-sm">Communities</h3>
+              <p className="text-xs text-gray-500 mt-1">Connect & chat</p>
             </div>
-            <div className="flex flex-col items-center">
-              <div className="w-8 h-8 bg-dark-800 rounded-lg flex items-center justify-center mb-2">
-                📱
+            
+            <div className="text-center group">
+              <div className="w-12 h-12 bg-gradient-to-br from-pink-100 to-pink-200 rounded-2xl flex items-center justify-center mb-3 mx-auto group-hover:scale-110 transition-transform duration-300">
+                <Sparkles className="w-6 h-6 text-pink-600" />
               </div>
-              <span>Mobile Ready</span>
+              <h3 className="font-semibold text-gray-800 text-sm">Modern</h3>
+              <p className="text-xs text-gray-500 mt-1">PWA ready</p>
             </div>
           </div>
         </div>

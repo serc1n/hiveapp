@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { MoreHorizontal, Megaphone, User, MessageCircle } from 'lucide-react'
+import { MoreHorizontal, Megaphone, User, MessageCircle, Bell } from 'lucide-react'
 
 // Helper function to detect Twitter/X URLs and extract tweet ID
 const extractTweetId = (url: string) => {
@@ -116,6 +116,7 @@ export function ModernMessageList({
   groupCreatorId 
 }: ModernMessageListProps) {
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
+  const [showingUsername, setShowingUsername] = useState<string | null>(null)
 
   const formatTime = (dateString: string) => {
     const date = new Date(dateString)
@@ -267,9 +268,13 @@ export function ModernMessageList({
                             <div className="relative">
                               <button
                                 onClick={() => setActiveDropdown(activeDropdown === message.id ? null : message.id)}
-                                className="w-8 h-8 bg-white hover:bg-gray-50 rounded-full flex items-center justify-center shadow-modern border border-gray-200 transition-all duration-200"
+                                className="w-6 h-6 bg-white hover:bg-gray-50 rounded-full flex items-center justify-center shadow-sm border border-gray-200 transition-all duration-200"
                               >
-                                <MoreHorizontal className="w-4 h-4 text-gray-600" />
+                                {activeDropdown === message.id ? (
+                                  <Bell className="w-3 h-3 text-indigo-600" />
+                                ) : (
+                                  <MoreHorizontal className="w-3 h-3 text-gray-600" />
+                                )}
                               </button>
 
                               {activeDropdown === message.id && (
@@ -279,16 +284,16 @@ export function ModernMessageList({
                                     onClick={() => setActiveDropdown(null)}
                                   />
                                   
-                                  <div className="absolute right-0 top-10 bg-white border border-gray-200 rounded-2xl shadow-modern z-20 min-w-[180px] py-2">
+                                  <div className="absolute right-0 top-8 bg-white border border-gray-200 rounded-xl shadow-modern z-20 min-w-[140px] py-1">
                                     <button
                                       onClick={() => {
                                         onMakeAnnouncement(message.id)
                                         setActiveDropdown(null)
                                       }}
-                                      className="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center font-medium"
+                                      className="w-full px-3 py-2 text-left text-xs text-gray-700 hover:bg-gray-50 transition-colors flex items-center font-medium"
                                     >
-                                      <Megaphone className="w-4 h-4 mr-3 text-indigo-600" />
-                                      Make Announcement
+                                      <Megaphone className="w-3 h-3 mr-2 text-indigo-600" />
+                                      Announce
                                     </button>
                                   </div>
                                 </>

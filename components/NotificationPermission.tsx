@@ -139,67 +139,48 @@ export function NotificationPermission() {
   // Notification permission prompt
   if (showPrompt && permission === 'default') {
     return (
-      <div className="fixed top-4 left-4 right-4 md:left-auto md:w-80 bg-gray-900 border border-gray-700 rounded-lg p-4 shadow-xl z-50">
-        <div className="flex items-start justify-between mb-3">
-          <div className="flex items-center">
-            <Bell className="w-5 h-5 text-blue-500 mr-2" />
-            <h4 className="font-semibold text-white">Enable Notifications</h4>
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div className="bg-white/95 backdrop-blur-xl rounded-3xl p-8 shadow-2xl border border-white/20 max-w-sm w-full mx-4 animate-slide-in">
+          <div className="text-center mb-6">
+            <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <Bell className="w-8 h-8 text-purple-600" />
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">Stay Updated</h3>
+            <p className="text-gray-600 text-sm leading-relaxed">
+              Get notified instantly when group announcements are made, even when the app is closed.
+            </p>
           </div>
-          <button
-            onClick={() => setShowPrompt(false)}
-            className="text-gray-400 hover:text-white"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-        
-        <p className="text-sm text-gray-300 mb-4">
-          Get notified when group announcements are made, even when the app is closed.
-        </p>
-        
-        <div className="flex space-x-2">
-          <button
-            onClick={requestPermission}
-            disabled={isLoading}
-            className="flex-1 px-4 py-2 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-600 text-white rounded-lg font-medium text-sm transition-colors"
-          >
-            {isLoading ? 'Enabling...' : 'Enable'}
-          </button>
-          <button
-            onClick={() => setShowPrompt(false)}
-            className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-medium text-sm transition-colors"
-          >
-            Later
-          </button>
+          
+          <div className="space-y-3">
+            <button
+              onClick={requestPermission}
+              disabled={isLoading}
+              className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 disabled:opacity-50 text-white font-semibold py-4 px-6 rounded-2xl transition-all duration-300 transform hover:scale-[1.02] hover:shadow-xl disabled:hover:scale-100"
+            >
+              {isLoading ? (
+                <div className="flex items-center justify-center">
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-3" />
+                  Enabling...
+                </div>
+              ) : (
+                'Allow Notifications'
+              )}
+            </button>
+            
+            <button
+              onClick={() => setShowPrompt(false)}
+              className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3 px-6 rounded-2xl transition-all duration-200"
+            >
+              Not Now
+            </button>
+          </div>
         </div>
       </div>
     )
   }
 
-  // Notification status indicator (top bar) - Hidden on mobile to avoid clutter
-  return (
-    <div className="hidden md:block fixed bottom-4 left-4 z-40">
-      <button
-        onClick={permission === 'granted' ? (isSubscribed ? unsubscribe : subscribeToPush) : requestPermission}
-        className={`p-2 rounded-lg transition-colors ${
-          permission === 'granted' && isSubscribed
-            ? 'bg-green-600 hover:bg-green-700 text-white'
-            : 'bg-gray-800 hover:bg-gray-700 text-gray-300'
-        }`}
-        title={
-          permission === 'granted' && isSubscribed
-            ? 'Notifications enabled - Click to disable'
-            : 'Enable notifications'
-        }
-      >
-        {permission === 'granted' && isSubscribed ? (
-          <Bell className="w-4 h-4" />
-        ) : (
-          <BellOff className="w-4 h-4" />
-        )}
-      </button>
-    </div>
-  )
+  // No status indicator needed - only show the main permission prompt
+  return null
 }
 
 declare global {

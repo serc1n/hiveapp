@@ -354,7 +354,7 @@ export function ModernChatView({ groupId, onBack, isMobile = false }: ModernChat
       {/* Message Input */}
       <div className="sticky bottom-0 border-t border-gray-200 bg-white safe-area-pb z-10">
         <div className="p-4">
-          <form onSubmit={handleSendMessage} className="flex items-end space-x-3">
+          <form onSubmit={handleSendMessage} className="flex items-center space-x-3">
             <div className="flex-1 relative">
               <textarea
                 value={newMessage}
@@ -379,8 +379,7 @@ export function ModernChatView({ groupId, onBack, isMobile = false }: ModernChat
             <button
               type="submit"
               disabled={!newMessage.trim() || isSending}
-              className="min-w-[48px] h-12 bg-gradient-primary hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-2xl flex items-center justify-center transition-all duration-200 transform hover:scale-105 active:scale-95 flex-shrink-0"
-              style={{ alignSelf: 'flex-end' }}
+              className="w-12 h-12 bg-gradient-primary hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-2xl flex items-center justify-center transition-all duration-200 transform hover:scale-105 active:scale-95 flex-shrink-0"
             >
               {isSending ? (
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
