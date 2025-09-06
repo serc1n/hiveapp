@@ -47,6 +47,12 @@ export async function POST(
 
     // Check if group requires approval
     if (group.requiresApproval) {
+      console.log('Creating join request for approval-required group:', {
+        userId: session.user.id,
+        groupId: params.groupId,
+        status: 'pending'
+      })
+      
       // Create a join request instead of directly adding to group
       await prisma.joinRequest.create({
         data: {
@@ -62,6 +68,11 @@ export async function POST(
         requiresApproval: true 
       })
     } else {
+      console.log('Creating direct group membership:', {
+        userId: session.user.id,
+        groupId: params.groupId
+      })
+      
       // Direct join for groups that don't require approval
       await prisma.groupMember.create({
         data: {
@@ -78,6 +89,15 @@ export async function POST(
     }
   } catch (error) {
     console.error('Error joining group:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    console.error('Error details:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      groupId: params.groupId,
+      userId: session?.user?.id
+    })
+    return NextResponse.json({ 
+      error: 'Internal server error',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 })
   }
 }
