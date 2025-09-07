@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { Send, Hash, Users, Bell, BellOff, MoreVertical, UserPlus, UserMinus, Sparkles } from 'lucide-react'
 import { FigmaChatList } from './FigmaChatList'
 import { AnnouncementModal } from './AnnouncementModal'
-import { GroupSettingsModal } from './GroupSettingsModal'
+import { TwitterGroupSettings } from './TwitterGroupSettings'
 import { MembersListModal } from './MembersListModal'
 import { AISummaryModal } from './AISummaryModal'
 import { getImageUrl } from '@/lib/imageUpload'
@@ -438,7 +438,7 @@ export function ChatArea({ groupId, onBack }: ChatAreaProps) {
       )}
 
       {showGroupSettings && group && (
-        <GroupSettingsModal
+        <TwitterGroupSettings
           group={group}
           onClose={() => setShowGroupSettings(false)}
           onGroupUpdated={() => {

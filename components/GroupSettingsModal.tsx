@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { X, Upload, Hash, Save, Trash2, Users, Settings, UserMinus } from 'lucide-react'
+import { X, Upload, Hash, Save, Trash2, Users, Settings, UserMinus, Edit3, LogOut, Calendar } from 'lucide-react'
 import { AdminPanelModal } from './AdminPanelModal'
 import { MembersListModal } from './MembersListModal'
 

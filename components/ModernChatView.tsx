@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useSession } from 'next-auth/react'
 import { ArrowLeft, Send, MoreVertical, Hash, Users, Sparkles } from 'lucide-react'
 import { ModernMessageList } from './ModernMessageList'
-import { GroupSettingsModal } from './GroupSettingsModal'
+import { TwitterGroupSettings } from './TwitterGroupSettings'
 import { AISummaryModal } from './AISummaryModal'
 import { AnnouncementModal } from './AnnouncementModal'
 import { useSocket } from '../lib/socketContext'
@@ -394,7 +394,7 @@ export function ModernChatView({ groupId, onBack, isMobile = false, onGroupDelet
 
       {/* Modals */}
       {showGroupSettings && group && (
-        <GroupSettingsModal
+        <TwitterGroupSettings
           group={group}
           onClose={() => setShowGroupSettings(false)}
           onGroupUpdated={() => {
