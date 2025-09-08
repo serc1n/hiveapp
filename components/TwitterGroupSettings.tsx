@@ -139,9 +139,10 @@ export function TwitterGroupSettings({ group, onClose, onGroupUpdated, onGroupDe
 
       console.log('Sending PUT request to:', `/api/groups/${group.id}`)
       console.log('Form data entries:')
-      for (let [key, value] of submitData.entries()) {
+      const entries = Array.from(submitData.entries())
+      entries.forEach(([key, value]) => {
         console.log(`  ${key}:`, value)
-      }
+      })
 
       const response = await fetch(`/api/groups/${group.id}`, {
         method: 'PUT',
