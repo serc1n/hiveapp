@@ -20,7 +20,30 @@ export async function GET(
         _count: {
           select: { members: true }
         },
+        creator: {
+          select: {
+            id: true,
+            name: true,
+            twitterHandle: true,
+            profileImage: true
+          }
+        },
         members: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                twitterHandle: true,
+                profileImage: true
+              }
+            }
+          }
+        },
+        joinRequests: {
+          where: {
+            status: 'pending'
+          },
           include: {
             user: {
               select: {
@@ -69,12 +92,31 @@ export async function GET(
         memberCount: group._count.members,
         isCreator: group.creatorId === session.user.id,
         creatorId: group.creatorId,
+        createdAt: group.createdAt,
+        creator: {
+          id: group.creator.id,
+          name: group.creator.name,
+          twitterHandle: group.creator.twitterHandle,
+          profileImage: group.creator.profileImage
+        },
         members: group.members.map(member => ({
           id: member.user.id,
           name: member.user.name,
           twitterHandle: member.user.twitterHandle,
           profileImage: member.user.profileImage,
           joinedAt: member.joinedAt
+        })),
+        joinRequests: group.joinRequests.map(request => ({
+          id: request.id,
+          userId: request.userId,
+          user: {
+            id: request.user.id,
+            name: request.user.name,
+            twitterHandle: request.user.twitterHandle,
+            profileImage: request.user.profileImage
+          },
+          createdAt: request.createdAt,
+          status: request.status
         }))
       }
     })

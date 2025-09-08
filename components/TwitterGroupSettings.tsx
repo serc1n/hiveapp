@@ -14,6 +14,26 @@ interface Member {
   joinedAt: string
 }
 
+interface JoinRequest {
+  id: string
+  userId: string
+  user: {
+    id: string
+    name: string
+    twitterHandle: string
+    profileImage: string | null
+  }
+  createdAt: string
+  status: string
+}
+
+interface Creator {
+  id: string
+  name: string
+  twitterHandle: string
+  profileImage: string | null
+}
+
 interface Group {
   id: string
   name: string
@@ -22,6 +42,8 @@ interface Group {
   memberCount: number
   isCreator?: boolean
   members?: Member[]
+  joinRequests?: JoinRequest[]
+  creator?: Creator
   createdAt?: string
 }
 
@@ -41,6 +63,7 @@ export function TwitterGroupSettings({ group, onClose, onGroupUpdated, onGroupDe
   const [showLeaveConfirmation, setShowLeaveConfirmation] = useState(false)
   const [leaveConfirmationText, setLeaveConfirmationText] = useState('')
   const [isLeavingGroup, setIsLeavingGroup] = useState(false)
+  const [processingRequests, setProcessingRequests] = useState<Set<string>>(new Set())
   const [editForm, setEditForm] = useState({
     name: group.name,
     contractAddress: group.contractAddress || '',
@@ -75,10 +98,10 @@ export function TwitterGroupSettings({ group, onClose, onGroupUpdated, onGroupDe
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'Recently'
     const date = new Date(dateString)
-    return date.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
+    return date.toLocaleDateString('en-GB', { 
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
     })
   }
 
@@ -233,6 +256,38 @@ export function TwitterGroupSettings({ group, onClose, onGroupUpdated, onGroupDe
     }
   }
 
+  const handleJoinRequest = async (requestId: string, action: 'approve' | 'reject', userName: string) => {
+    setProcessingRequests(prev => new Set(prev).add(requestId))
+    
+    try {
+      const response = await fetch(`/api/groups/${group.id}/join-requests/${requestId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ action })
+      })
+
+      if (response.ok) {
+        const result = await response.json()
+        showSuccess(result.message)
+        onGroupUpdated() // Refresh the group data
+      } else {
+        const errorData = await response.json()
+        alert(errorData.error || `Failed to ${action} request`)
+      }
+    } catch (error) {
+      console.error(`Error ${action}ing join request:`, error)
+      alert(`Failed to ${action} request`)
+    } finally {
+      setProcessingRequests(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(requestId)
+        return newSet
+      })
+    }
+  }
+
   const handleDeleteGroup = async () => {
     if (deleteConfirmationText !== 'DELETE') return
 
@@ -317,7 +372,12 @@ export function TwitterGroupSettings({ group, onClose, onGroupUpdated, onGroupDe
                     <Calendar className="w-5 h-5 text-gray-400" />
                     <div>
                       <p className="text-sm font-medium text-gray-900">Created</p>
-                      <p className="text-sm text-gray-500">{formatDate(group.createdAt)}</p>
+                      <p className="text-xs text-gray-500">
+                        {group.creator && (
+                          <>by @{group.creator.twitterHandle} ({group.creator.id}) </>
+                        )}
+                        ({formatDate(group.createdAt)})
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -365,33 +425,80 @@ export function TwitterGroupSettings({ group, onClose, onGroupUpdated, onGroupDe
           )}
 
           {activeView === 'members' && (
-            <div className="p-4">
-              <div className="space-y-1">
-                {group.members?.map((member) => (
-                  <div key={member.id} className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-xl">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden">
-                        {member.profileImage ? (
-                          <img src={member.profileImage} alt={member.name} className="w-full h-full object-cover" />
-                        ) : (
-                          <span className="text-sm font-medium text-gray-600">{member.name.charAt(0).toUpperCase()}</span>
-                        )}
+            <div className="p-4 space-y-6">
+              {/* Join Requests Section - Only show for creators with pending requests */}
+              {group.isCreator && group.joinRequests && group.joinRequests.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Join Requests</h3>
+                  <div className="space-y-2">
+                    {group.joinRequests.map((request) => (
+                      <div key={request.id} className="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-xl">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden">
+                            {request.user.profileImage ? (
+                              <img src={request.user.profileImage} alt={request.user.name} className="w-full h-full object-cover" />
+                            ) : (
+                              <span className="text-sm font-medium text-gray-600">{request.user.name.charAt(0).toUpperCase()}</span>
+                            )}
+                          </div>
+                          <div>
+                            <p className="font-medium text-gray-900">{request.user.name}</p>
+                            <p className="text-sm text-gray-500">@{request.user.twitterHandle}</p>
+                            <p className="text-xs text-blue-600">Requested to join</p>
+                          </div>
+                        </div>
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => handleJoinRequest(request.id, 'approve', request.user.name)}
+                            disabled={processingRequests.has(request.id)}
+                            className="px-3 py-1 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white text-sm rounded-lg font-medium transition-colors"
+                          >
+                            {processingRequests.has(request.id) ? '...' : 'Approve'}
+                          </button>
+                          <button
+                            onClick={() => handleJoinRequest(request.id, 'reject', request.user.name)}
+                            disabled={processingRequests.has(request.id)}
+                            className="px-3 py-1 bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white text-sm rounded-lg font-medium transition-colors"
+                          >
+                            {processingRequests.has(request.id) ? '...' : 'Reject'}
+                          </button>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-medium text-gray-900">{member.name}</p>
-                        <p className="text-sm text-gray-500">@{member.twitterHandle}</p>
-                      </div>
-                    </div>
-                    {group.isCreator && member.id !== group.members?.find(m => m.id === member.id)?.id && (
-                      <button
-                        onClick={() => handleRemoveMember(member.id)}
-                        className="p-2 text-red-500 hover:bg-red-50 rounded-full transition-colors"
-                      >
-                        <UserMinus className="w-4 h-4" />
-                      </button>
-                    )}
+                    ))}
                   </div>
-                ))}
+                </div>
+              )}
+
+              {/* Members Section */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">Members ({group.memberCount})</h3>
+                <div className="space-y-1">
+                  {group.members?.map((member) => (
+                    <div key={member.id} className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-xl">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden">
+                          {member.profileImage ? (
+                            <img src={member.profileImage} alt={member.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <span className="text-sm font-medium text-gray-600">{member.name.charAt(0).toUpperCase()}</span>
+                          )}
+                        </div>
+                        <div>
+                          <p className="font-medium text-gray-900">{member.name}</p>
+                          <p className="text-sm text-gray-500">@{member.twitterHandle}</p>
+                        </div>
+                      </div>
+                      {group.isCreator && member.id !== group.creator?.id && (
+                        <button
+                          onClick={() => handleRemoveMember(member.id)}
+                          className="p-2 text-red-500 hover:bg-red-50 rounded-full transition-colors"
+                        >
+                          <UserMinus className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           )}
