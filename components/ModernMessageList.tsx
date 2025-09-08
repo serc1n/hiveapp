@@ -308,7 +308,7 @@ export function ModernMessageList({
                         </div>
 
                         {/* Reactions and Add reaction button - inline */}
-                        <div className="flex flex-wrap items-center gap-1 mt-1">
+                        <div className="flex flex-wrap items-center gap-1">
                           {/* Existing reactions */}
                           {message.reactions && message.reactions.length > 0 && (
                             message.reactions.map((reaction) => (
@@ -409,7 +409,7 @@ const EmojiPicker = ({
 }) => {
   return (
     <div className="absolute top-full left-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-lg p-3 z-10">
-      <div className="flex flex-wrap gap-2 max-w-48">
+      <div className="grid grid-cols-3 gap-2 w-32">
         {COMMON_EMOJIS.map((emoji) => (
           <button
             key={emoji}
@@ -417,7 +417,7 @@ const EmojiPicker = ({
               onEmojiSelect(emoji)
               onClose()
             }}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-lg"
+            className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors text-lg flex items-center justify-center w-8 h-8"
           >
             {emoji}
           </button>
