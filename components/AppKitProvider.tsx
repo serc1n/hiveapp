@@ -7,7 +7,7 @@ import { ReactNode } from 'react'
 import type { AppKitNetwork } from '@reown/appkit/networks'
 
 // 1. Get projectId from https://cloud.reown.com
-const projectId = process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || '198428b2135fe152f2d234d15c7d2f77'
+const projectId = process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || '2495cc0bb91d66458c515fdae1d3b3c5'
 
 // 2. Set the networks with proper typing
 const networks: [AppKitNetwork, ...AppKitNetwork[]] = [mainnet]
@@ -17,7 +17,9 @@ const metadata = {
   name: 'HiveApp',
   description: 'Token-gated group chat platform',
   url: typeof window !== 'undefined' ? window.location.origin : 'https://hiveapp.vercel.app',
-  icons: ['https://avatars.githubusercontent.com/u/179229932']
+  icons: [
+    typeof window !== 'undefined' ? `${window.location.origin}/hive.png` : 'https://hiveapp.vercel.app/hive.png'
+  ]
 }
 
 // 4. Create Ethers adapter
