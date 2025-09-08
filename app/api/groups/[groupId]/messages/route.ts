@@ -87,7 +87,7 @@ export async function GET(
     // Reverse to get chronological order and process reactions
     const orderedMessages = messages.reverse().map(message => {
       // Safely process reactions (may not exist if table isn't created yet)
-      let processedReactions = []
+      let processedReactions: any[] = []
       
       if (message.reactions && Array.isArray(message.reactions)) {
         const groupedReactions = message.reactions.reduce((acc, reaction) => {
