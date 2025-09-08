@@ -4,9 +4,10 @@ import { useState, useEffect } from 'react'
 import { useSession, signOut } from 'next-auth/react'
 import { User, Wallet, Edit3, Save, X, LogOut, RefreshCw } from 'lucide-react'
 import { WalletConnection } from './WalletConnection'
+import { useDisconnect, useAppKitAccount } from '@reown/appkit/react'
 
 export function ProfileTab() {
-  const { data: session } = useSession()
+  const { data: session, update } = useSession()
   const [isEditing, setIsEditing] = useState(false)
   const [bio, setBio] = useState('')
   const [tempBio, setTempBio] = useState('')
@@ -14,6 +15,9 @@ export function ProfileTab() {
   const [isSaving, setIsSaving] = useState(false)
   const [isCheckingUpdate, setIsCheckingUpdate] = useState(false)
   const [registration, setRegistration] = useState<ServiceWorkerRegistration | null>(null)
+  
+  const { disconnect } = useDisconnect()
+  const { isConnected: appKitConnected } = useAppKitAccount()
 
   useEffect(() => {
     if (session?.user) {
@@ -185,6 +189,11 @@ export function ProfileTab() {
     if (!confirmDisconnect) return
 
     try {
+      // Disconnect from AppKit if connected
+      if (appKitConnected) {
+        await disconnect()
+      }
+      
       const response = await fetch('/api/user/wallet', {
         method: 'DELETE',
         headers: {
@@ -193,8 +202,8 @@ export function ProfileTab() {
       })
 
       if (response.ok) {
-        // Refresh the session to update the UI
-        window.location.reload()
+        // Update session instead of reloading page
+        await update()
       } else {
         alert('❌ Failed to disconnect wallet. Please try again.')
       }

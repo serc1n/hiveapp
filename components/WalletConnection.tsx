@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { X, Wallet, CheckCircle, AlertCircle } from 'lucide-react'
-import { useAppKit, useAppKitAccount } from '@reown/appkit/react'
+import { useAppKit, useAppKitAccount, useDisconnect } from '@reown/appkit/react'
 
 interface WalletConnectionProps {
   onClose: () => void
@@ -18,6 +18,7 @@ export function WalletConnection({ onClose }: WalletConnectionProps) {
   
   const { open } = useAppKit()
   const { address: appKitAddress, isConnected: appKitConnected } = useAppKitAccount()
+  const { disconnect } = useDisconnect()
 
   // Sync AppKit state with local state
   useEffect(() => {
@@ -140,6 +141,12 @@ export function WalletConnection({ onClose }: WalletConnectionProps) {
 
   const handleDisconnect = async () => {
     try {
+      // Disconnect from AppKit if connected
+      if (appKitConnected) {
+        await disconnect()
+      }
+      
+      // Clear local state
       setAddress('')
       setIsConnected(false)
       
