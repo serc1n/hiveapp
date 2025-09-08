@@ -389,16 +389,19 @@ export function ModernMessageList({
           </div>
 
           {/* Messages for this date */}
-          <div className="space-y-2">
+          <div>
             {dateMessages.map((message, index) => {
               const isOwn = message.userId === currentUserId
               const showAvatar = index === 0 || dateMessages[index - 1].userId !== message.userId
               const showName = !isOwn && showAvatar
+              const isConsecutive = index > 0 && dateMessages[index - 1].userId === message.userId
 
               return (
                 <div
                   key={message.id}
-                  className={`flex group ${isOwn ? 'justify-end' : 'justify-start'} animate-fade-in`}
+                  className={`flex group ${isOwn ? 'justify-end' : 'justify-start'} animate-fade-in ${
+                    isConsecutive ? 'mt-0.5' : 'mt-2'
+                  }`}
                 >
                   <div className={`flex items-start space-x-2 max-w-[75%] ${isOwn ? 'flex-row-reverse space-x-reverse' : ''}`}>
                     {/* Avatar for others */}

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { X, Wallet, CheckCircle, AlertCircle } from 'lucide-react'
 
@@ -45,7 +45,7 @@ export function WalletConnection({ onClose }: WalletConnectionProps) {
     }
   }
 
-  const connectWallet = async () => {
+  const connectMetaMask = async () => {
     if (typeof window !== 'undefined' && window.ethereum) {
       try {
         const accounts = await window.ethereum.request({
@@ -56,44 +56,69 @@ export function WalletConnection({ onClose }: WalletConnectionProps) {
           setIsConnected(true)
         }
       } catch (error) {
-        console.error('Error connecting wallet:', error)
+        console.error('Error connecting MetaMask:', error)
+        alert('❌ Failed to connect MetaMask. Please try again.')
       }
     } else {
       // Check if we're on mobile
       const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
       
       if (isMobile) {
-        // On mobile, try multiple methods to connect to MetaMask
-        const metamaskAppUrl = `https://metamask.app.link/dapp/${window.location.host}`
-        const metamaskDeepLink = `metamask://dapp/${window.location.host}`
+        // On mobile, use proper deep linking for MetaMask
+        const currentUrl = window.location.href
+        const metamaskDeepLink = `https://metamask.app.link/dapp/${window.location.host}${window.location.pathname}`
         
         const userChoice = confirm(
           '🦊 Connect MetaMask Wallet\n\n' +
-          'To securely connect your wallet:\n\n' +
-          '1. Open MetaMask app first\n' +
-          '2. Click OK to connect via MetaMask\n' +
-          '3. If MetaMask doesn\'t open, try opening the app manually\n\n' +
-          '⚠️ For security, manual wallet entry is not allowed'
+          'This will open MetaMask app to connect your wallet securely.\n\n' +
+          'Make sure you have MetaMask app installed on your device.'
         )
         
         if (userChoice) {
-          // Try deep link first (works if MetaMask is installed)
-          try {
-            window.location.href = metamaskDeepLink
-            // Fallback to app link after a short delay
-            setTimeout(() => {
-              window.open(metamaskAppUrl, '_self')
-            }, 1000)
-          } catch (error) {
-            // If deep link fails, use app link
-            window.open(metamaskAppUrl, '_self')
-          }
-        } else {
-          alert('🔒 For security reasons, you must connect through MetaMask or another verified wallet extension. Manual wallet entry is not permitted.')
+          // Use the correct deep link format for MetaMask mobile
+          window.open(metamaskDeepLink, '_self')
         }
       } else {
-        alert('Please install MetaMask or another Ethereum wallet extension')
+        alert('Please install MetaMask browser extension from metamask.io')
       }
+    }
+  }
+
+  const connectWalletConnect = async () => {
+    try {
+      // Simple WalletConnect implementation
+      alert('🔗 WalletConnect\n\nThis will show a QR code to connect with mobile wallets like:\n\n• Trust Wallet\n• Rainbow\n• Coinbase Wallet\n• And 300+ other wallets\n\nFeature coming soon!')
+    } catch (error) {
+      console.error('Error connecting with WalletConnect:', error)
+      alert('❌ Failed to connect with WalletConnect. Please try again.')
+    }
+  }
+
+  const connectCoinbaseWallet = async () => {
+    try {
+      // Check for Coinbase Wallet
+      if (typeof window !== 'undefined' && window.ethereum && window.ethereum.isCoinbaseWallet) {
+        const accounts = await window.ethereum.request({
+          method: 'eth_requestAccounts',
+        })
+        if (accounts.length > 0) {
+          setAddress(accounts[0])
+          setIsConnected(true)
+        }
+      } else {
+        // Redirect to Coinbase Wallet
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+        
+        if (isMobile) {
+          const coinbaseDeepLink = `https://go.cb-w.com/dapp?cb_url=${encodeURIComponent(window.location.href)}`
+          window.open(coinbaseDeepLink, '_self')
+        } else {
+          alert('Please install Coinbase Wallet extension or use the mobile app')
+        }
+      }
+    } catch (error) {
+      console.error('Error connecting Coinbase Wallet:', error)
+      alert('❌ Failed to connect Coinbase Wallet. Please try again.')
     }
   }
 
@@ -147,15 +172,60 @@ export function WalletConnection({ onClose }: WalletConnectionProps) {
             </div>
           )}
 
-          {/* Connection Status */}
-          <div className="text-center">
+          {/* Wallet Options */}
+          <div className="space-y-3">
             {!isConnected ? (
-              <button
-                onClick={connectWallet}
-                className="w-full mb-4 px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors"
-              >
-                Connect Wallet
-              </button>
+              <>
+                <h3 className="text-lg font-medium text-white mb-4">Choose Your Wallet</h3>
+                
+                {/* MetaMask */}
+                <button
+                  onClick={connectMetaMask}
+                  className="w-full flex items-center justify-between px-4 py-3 bg-gradient-to-r from-orange-500 to-yellow-500 hover:from-orange-600 hover:to-yellow-600 text-white rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl"
+                >
+                  <div className="flex items-center">
+                    <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center mr-3">
+                      <span className="text-orange-500 font-bold text-lg">🦊</span>
+                    </div>
+                    <span>MetaMask</span>
+                  </div>
+                  <span className="text-sm opacity-90">Most Popular</span>
+                </button>
+
+                {/* Coinbase Wallet */}
+                <button
+                  onClick={connectCoinbaseWallet}
+                  className="w-full flex items-center justify-between px-4 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl"
+                >
+                  <div className="flex items-center">
+                    <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center mr-3">
+                      <span className="text-blue-500 font-bold text-lg">💼</span>
+                    </div>
+                    <span>Coinbase Wallet</span>
+                  </div>
+                  <span className="text-sm opacity-90">Easy & Secure</span>
+                </button>
+
+                {/* WalletConnect */}
+                <button
+                  onClick={connectWalletConnect}
+                  className="w-full flex items-center justify-between px-4 py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl"
+                >
+                  <div className="flex items-center">
+                    <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center mr-3">
+                      <span className="text-purple-500 font-bold text-lg">🔗</span>
+                    </div>
+                    <span>WalletConnect</span>
+                  </div>
+                  <span className="text-sm opacity-90">300+ Wallets</span>
+                </button>
+
+                <div className="mt-4 p-3 bg-gray-800 rounded-lg border border-gray-700">
+                  <p className="text-xs text-gray-400 text-center">
+                    🔒 Your wallet connection is secure and encrypted. We never store your private keys.
+                  </p>
+                </div>
+              </>
             ) : null}
 
             {isConnected && address && (
