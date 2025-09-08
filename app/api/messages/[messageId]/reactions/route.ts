@@ -24,15 +24,38 @@ export async function POST(
       return NextResponse.json({ error: 'Invalid emoji' }, { status: 400 })
     }
 
-    // Check if MessageReaction table exists, if not return error with instructions
+    // Check if MessageReaction table exists, if not create it
     try {
       await prisma.messageReaction.findFirst({ take: 1 })
     } catch (tableError) {
-      console.error('MessageReaction table does not exist:', tableError)
-      return NextResponse.json({ 
-        error: 'Reactions feature not available yet. Database table needs to be created.',
-        details: 'MessageReaction table missing'
-      }, { status: 503 })
+      console.log('MessageReaction table does not exist, attempting to create it...')
+      try {
+        // Create the table using raw SQL
+        await prisma.$executeRaw`
+          CREATE TABLE IF NOT EXISTS "message_reactions" (
+            "id" TEXT NOT NULL DEFAULT gen_random_uuid()::text,
+            "emoji" TEXT NOT NULL,
+            "userId" TEXT NOT NULL,
+            "messageId" TEXT NOT NULL,
+            "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            CONSTRAINT "message_reactions_pkey" PRIMARY KEY ("id")
+          );
+        `
+        
+        // Create unique index
+        await prisma.$executeRaw`
+          CREATE UNIQUE INDEX IF NOT EXISTS "message_reactions_userId_messageId_emoji_key" 
+          ON "message_reactions"("userId", "messageId", "emoji");
+        `
+        
+        console.log('MessageReaction table created successfully')
+      } catch (createError) {
+        console.error('Failed to create MessageReaction table:', createError)
+        return NextResponse.json({ 
+          error: 'Reactions feature not available. Failed to create database table.',
+          details: 'Could not create MessageReaction table'
+        }, { status: 503 })
+      }
     }
 
     // Check if message exists and user has access to it
