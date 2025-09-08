@@ -17,6 +17,8 @@ interface SocketContextType {
   offGroupCreated: () => void
   onMemberLeft: (callback: (data: any) => void) => void
   offMemberLeft: () => void
+  onReaction: (callback: (data: any) => void) => void
+  offReaction: () => void
 }
 
 const SocketContext = createContext<SocketContextType>({
@@ -31,6 +33,8 @@ const SocketContext = createContext<SocketContextType>({
   offGroupCreated: () => {},
   onMemberLeft: () => {},
   offMemberLeft: () => {},
+  onReaction: () => {},
+  offReaction: () => {},
 })
 
 export const useSocket = () => {
@@ -51,6 +55,7 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
   const [groupDeletedCallback, setGroupDeletedCallback] = useState<((data: any) => void) | null>(null)
   const [groupCreatedCallback, setGroupCreatedCallback] = useState<((data: any) => void) | null>(null)
   const [memberLeftCallback, setMemberLeftCallback] = useState<((data: any) => void) | null>(null)
+  const [reactionCallback, setReactionCallback] = useState<((data: any) => void) | null>(null)
   const [channels, setChannels] = useState<RealtimeChannel[]>([])
   const [currentGroupIds, setCurrentGroupIds] = useState<string[]>([])
   const { data: session } = useSession()
@@ -236,6 +241,49 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
           // Silently ignore null/invalid payloads to reduce console spam
         }
       )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'message_reactions'
+        },
+        async (payload: any) => {
+          console.log('🔌 ===== REALTIME REACTION EVENT =====')
+          console.log('🔌 Reaction payload:', JSON.stringify(payload, null, 2))
+          console.log('🔌 Event type:', payload.eventType)
+          console.log('🔌 Reaction data:', payload.new || payload.old)
+          
+          if (reactionCallback && payload.new) {
+            console.log('🔌 Processing reaction event:', payload.eventType)
+            const reactionData = {
+              messageId: payload.new.messageId,
+              emoji: payload.new.emoji,
+              userId: payload.new.userId,
+              eventType: payload.eventType, // INSERT or DELETE
+              reactionId: payload.new.id
+            }
+            
+            console.log('🔌 Calling reaction callback with:', reactionData)
+            reactionCallback(reactionData)
+          } else if (reactionCallback && payload.old && payload.eventType === 'DELETE') {
+            console.log('🔌 Processing reaction deletion')
+            const reactionData = {
+              messageId: payload.old.messageId,
+              emoji: payload.old.emoji,
+              userId: payload.old.userId,
+              eventType: 'DELETE',
+              reactionId: payload.old.id
+            }
+            
+            console.log('🔌 Calling reaction callback with:', reactionData)
+            reactionCallback(reactionData)
+          } else {
+            console.log('🔌 No reaction callback or payload data available')
+          }
+          console.log('🔌 ===================================')
+        }
+      )
       .subscribe((status, err) => {
         console.log('🔌 Realtime subscription status:', status)
         if (err) {
@@ -253,7 +301,7 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
 
     setChannels([channel])
     console.log('🔌 Channel created and subscribed')
-  }, [session?.user?.id, currentGroupIds, messageCallback, groupDeletedCallback, groupCreatedCallback, memberLeftCallback]) // Include dependencies for proper closure
+  }, [session?.user?.id, currentGroupIds, messageCallback, groupDeletedCallback, groupCreatedCallback, memberLeftCallback, reactionCallback]) // Include dependencies for proper closure
 
   const leaveGroups = useCallback((groupIds: string[]) => {
     console.log('🔌 Leaving groups:', groupIds)
@@ -304,6 +352,16 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
     setMemberLeftCallback(null)
   }, [])
 
+  const onReaction = useCallback((callback: (data: any) => void) => {
+    console.log('🔌 Setting reaction callback')
+    setReactionCallback(() => callback)
+  }, [])
+
+  const offReaction = useCallback(() => {
+    console.log('🔌 Removing reaction callback')
+    setReactionCallback(null)
+  }, [])
+
   return (
     <SocketContext.Provider
       value={{
@@ -318,6 +376,8 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
         offGroupCreated,
         onMemberLeft,
         offMemberLeft,
+        onReaction,
+        offReaction,
       }}
     >
       {children}

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { MoreHorizontal, Megaphone, User, MessageCircle, Bell, Smile, Plus } from 'lucide-react'
+import { useSocket } from '../lib/socketContext'
 
 // Helper function to detect Twitter/X URLs and extract tweet ID
 const extractTweetId = (url: string) => {
@@ -133,11 +134,98 @@ export function ModernMessageList({
   const [showingUsername, setShowingUsername] = useState<string | null>(null)
   const [showEmojiPicker, setShowEmojiPicker] = useState<string | null>(null)
   const [localMessages, setLocalMessages] = useState<Message[]>(messages)
+  const { onReaction, offReaction } = useSocket()
 
   // Sync local messages with prop messages
   useEffect(() => {
     setLocalMessages(messages)
   }, [messages])
+
+  // Listen for real-time reaction updates
+  useEffect(() => {
+    const handleReactionUpdate = (data: any) => {
+      console.log('📱 Real-time reaction received:', data)
+      
+      // Update local messages with the reaction change
+      setLocalMessages(prevMessages => 
+        prevMessages.map(message => {
+          if (message.id !== data.messageId) return message
+          
+          const existingReactions = message.reactions || []
+          
+          if (data.eventType === 'INSERT') {
+            // Add or update reaction
+            const existingReaction = existingReactions.find(r => r.emoji === data.emoji)
+            
+            if (existingReaction) {
+              // Update existing reaction count
+              return {
+                ...message,
+                reactions: existingReactions.map(r => 
+                  r.emoji === data.emoji 
+                    ? { 
+                        ...r, 
+                        count: r.count + 1,
+                        userReacted: data.userId === currentUserId ? true : r.userReacted
+                      }
+                    : r
+                )
+              }
+            } else {
+              // Add new reaction
+              return {
+                ...message,
+                reactions: [
+                  ...existingReactions,
+                  { 
+                    emoji: data.emoji, 
+                    count: 1, 
+                    users: [], 
+                    userReacted: data.userId === currentUserId 
+                  }
+                ]
+              }
+            }
+          } else if (data.eventType === 'DELETE') {
+            // Remove or decrease reaction
+            const existingReaction = existingReactions.find(r => r.emoji === data.emoji)
+            
+            if (existingReaction) {
+              if (existingReaction.count === 1) {
+                // Remove the entire reaction
+                return {
+                  ...message,
+                  reactions: existingReactions.filter(r => r.emoji !== data.emoji)
+                }
+              } else {
+                // Decrease count
+                return {
+                  ...message,
+                  reactions: existingReactions.map(r => 
+                    r.emoji === data.emoji 
+                      ? { 
+                          ...r, 
+                          count: r.count - 1,
+                          userReacted: data.userId === currentUserId ? false : r.userReacted
+                        }
+                      : r
+                  )
+                }
+              }
+            }
+          }
+          
+          return message
+        })
+      )
+    }
+
+    onReaction(handleReactionUpdate)
+    
+    return () => {
+      offReaction()
+    }
+  }, [onReaction, offReaction, currentUserId])
 
   const formatTime = (dateString: string) => {
     const date = new Date(dateString)
