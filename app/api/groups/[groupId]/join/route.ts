@@ -41,6 +41,53 @@ export async function POST(
       return NextResponse.json({ error: 'Group not found' }, { status: 404 })
     }
 
+    // Check NFT ownership for token-gated groups
+    if (group.contractAddress) {
+      // Get user's wallet address
+      const user = await prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: { walletAddress: true }
+      })
+
+      if (!user?.walletAddress) {
+        return NextResponse.json({ 
+          error: 'Wallet connection required',
+          message: 'You need to connect your wallet to join this token-gated group'
+        }, { status: 400 })
+      }
+
+      // Verify NFT ownership
+      try {
+        const verifyResponse = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/nft/verify-ownership`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            walletAddress: user.walletAddress,
+            contractAddress: group.contractAddress
+          })
+        })
+
+        const verifyData = await verifyResponse.json()
+
+        if (!verifyResponse.ok || !verifyData.ownsNFT) {
+          return NextResponse.json({ 
+            error: 'NFT ownership required',
+            message: `You need to own an NFT from collection ${group.contractAddress} to join this group`
+          }, { status: 403 })
+        }
+
+        console.log(`✅ NFT ownership verified for user ${session.user.id} in contract ${group.contractAddress}`)
+      } catch (error) {
+        console.error('Error verifying NFT ownership:', error)
+        return NextResponse.json({ 
+          error: 'NFT verification failed',
+          message: 'Unable to verify NFT ownership at this time. Please try again later.'
+        }, { status: 500 })
+      }
+    }
+
     // Check if user is already a member
     if (group.members.length > 0) {
       return NextResponse.json({ error: 'Already a member of this group' }, { status: 400 })

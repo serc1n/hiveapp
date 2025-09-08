@@ -40,9 +40,7 @@ export function WalletConnection({ onClose }: WalletConnectionProps) {
 
             if (response.ok) {
               await update() // Refresh session
-              setTimeout(() => {
-                onClose() // Close modal after successful save
-              }, 500)
+              // Don't auto-close, let user close manually with X button
             }
           } catch (error) {
             console.error('Error auto-saving wallet:', error)
@@ -111,9 +109,7 @@ export function WalletConnection({ onClose }: WalletConnectionProps) {
 
               if (response.ok) {
                 await update()
-                setTimeout(() => {
-                  onClose()
-                }, 500)
+                // Don't auto-close, let user close manually
               }
             } catch (error) {
               console.error('Error auto-saving MetaMask wallet:', error)
@@ -185,9 +181,7 @@ export function WalletConnection({ onClose }: WalletConnectionProps) {
 
               if (response.ok) {
                 await update()
-                setTimeout(() => {
-                  onClose()
-                }, 500)
+                // Don't auto-close, let user close manually
               }
             } catch (error) {
               console.error('Error auto-saving Coinbase wallet:', error)
@@ -370,12 +364,20 @@ export function WalletConnection({ onClose }: WalletConnectionProps) {
 
             {isConnected && address && (
               <div className="space-y-3">
-                <div className="p-3 bg-green-800 rounded-lg border border-green-600">
-                  <div className="flex items-center justify-center text-green-400 text-sm mb-2">
-                    <CheckCircle className="w-4 h-4 mr-2" />
-                    Wallet Connected Successfully!
+                <div className="p-4 bg-green-800 rounded-lg border border-green-600">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center text-green-400 text-sm">
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                      Wallet Connected Successfully!
+                    </div>
+                    <button
+                      onClick={onClose}
+                      className="p-1 hover:bg-green-700 rounded-lg transition-colors"
+                    >
+                      <X className="w-4 h-4 text-green-400" />
+                    </button>
                   </div>
-                  <p className="text-sm text-gray-400 mb-1 text-center">Connected Wallet</p>
+                  <p className="text-sm text-gray-300 mb-1 text-center">Connected Wallet</p>
                   <p className="font-mono text-sm text-white text-center">
                     {address.slice(0, 6)}...{address.slice(-4)}
                   </p>

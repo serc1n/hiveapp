@@ -179,14 +179,14 @@ export function ProfileTab() {
     }
   }
 
+  const [showDisconnectModal, setShowDisconnectModal] = useState(false)
+
   const handleDisconnectWallet = async () => {
-    const confirmDisconnect = confirm(
-      '🔓 Disconnect Wallet\n\n' +
-      'Are you sure you want to disconnect your wallet?\n\n' +
-      'You will lose access to token-gated groups until you reconnect.'
-    )
-    
-    if (!confirmDisconnect) return
+    setShowDisconnectModal(true)
+  }
+
+  const confirmDisconnectWallet = async () => {
+    setShowDisconnectModal(false)
 
     try {
       // Disconnect from AppKit if connected
@@ -227,6 +227,49 @@ export function ProfileTab() {
 
   return (
     <div className="flex flex-col h-full">
+      {/* Disconnect Wallet Modal */}
+      {showDisconnectModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50">
+          <div className="bg-gray-900 rounded-xl p-6 w-full max-w-md border border-gray-700">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-white flex items-center">
+                🔓 Disconnect Wallet
+              </h2>
+              <button
+                onClick={() => setShowDisconnectModal(false)}
+                className="p-1 hover:bg-gray-800 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-400" />
+              </button>
+            </div>
+            
+            <div className="space-y-4 mb-6">
+              <p className="text-gray-300">Are you sure you want to disconnect your wallet?</p>
+              <div className="p-3 bg-yellow-900 bg-opacity-30 rounded-lg border border-yellow-600">
+                <p className="text-yellow-400 text-sm">
+                  ⚠️ You will lose access to token-gated groups until you reconnect.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex space-x-3">
+              <button
+                onClick={() => setShowDisconnectModal(false)}
+                className="flex-1 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-medium transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDisconnectWallet}
+                className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors"
+              >
+                Disconnect
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="p-4 border-b border-gray-200 flex-shrink-0">
         <h1 className="text-2xl font-bold text-gray-900">Profile</h1>
@@ -339,7 +382,7 @@ export function ProfileTab() {
                 </p>
                 <p className="text-xs text-green-600 mt-2">✓ Wallet connected</p>
                 <button
-                  onClick={handleDisconnectWallet}
+                  onClick={() => setShowDisconnectModal(true)}
                   className="mt-3 px-3 py-1.5 bg-red-100 hover:bg-red-200 text-red-700 text-sm font-medium rounded-lg transition-colors"
                 >
                   Disconnect Wallet
