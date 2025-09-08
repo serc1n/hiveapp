@@ -58,6 +58,14 @@ export async function POST(
 
       // Verify NFT ownership
       try {
+        console.log('🔍 Starting NFT verification for token-gated group:', {
+          groupId: params.groupId,
+          groupName: group.name,
+          contractAddress: group.contractAddress,
+          userWallet: user.walletAddress,
+          userId: session.user.id
+        })
+
         const verifyResponse = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/nft/verify-ownership`, {
           method: 'POST',
           headers: {
@@ -70,20 +78,46 @@ export async function POST(
         })
 
         const verifyData = await verifyResponse.json()
+        
+        console.log('📊 NFT verification response:', {
+          status: verifyResponse.status,
+          ok: verifyResponse.ok,
+          data: verifyData
+        })
 
         if (!verifyResponse.ok || !verifyData.ownsNFT) {
+          console.error('❌ NFT ownership verification failed:', {
+            responseOk: verifyResponse.ok,
+            ownsNFT: verifyData.ownsNFT,
+            nftCount: verifyData.nftCount,
+            error: verifyData.error
+          })
+          
           return NextResponse.json({ 
             error: 'NFT ownership required',
-            message: `You need to own an NFT from collection ${group.contractAddress} to join this group`
+            message: `You need to own an NFT from collection ${group.contractAddress} to join this group`,
+            debug: {
+              walletAddress: user.walletAddress,
+              contractAddress: group.contractAddress,
+              nftCount: verifyData.nftCount || 0,
+              verifyError: verifyData.error
+            }
           }, { status: 403 })
         }
 
-        console.log(`✅ NFT ownership verified for user ${session.user.id} in contract ${group.contractAddress}`)
+        console.log(`✅ NFT ownership verified for user ${session.user.id} in contract ${group.contractAddress}`, {
+          nftCount: verifyData.nftCount
+        })
       } catch (error) {
-        console.error('Error verifying NFT ownership:', error)
+        console.error('❌ Error verifying NFT ownership:', error)
         return NextResponse.json({ 
           error: 'NFT verification failed',
-          message: 'Unable to verify NFT ownership at this time. Please try again later.'
+          message: 'Unable to verify NFT ownership at this time. Please try again later.',
+          debug: {
+            errorMessage: error instanceof Error ? error.message : 'Unknown error',
+            walletAddress: user.walletAddress,
+            contractAddress: group.contractAddress
+          }
         }, { status: 500 })
       }
     }
