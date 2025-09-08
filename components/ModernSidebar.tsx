@@ -347,8 +347,13 @@ export function ModernSidebar({
         }
       } else {
         const error = await response.json()
-        console.log('❌ Join failed:', error)
-        showInfo(error.error || 'Failed to join group')
+        console.error('❌ Join failed:', error)
+        console.error('❌ Full error response:', {
+          status: response.status,
+          statusText: response.statusText,
+          error
+        })
+        showInfo(`${error.error || 'Failed to join group'}${error.details ? ` (${error.details})` : ''}`)
       }
     } catch (error) {
       console.error('💥 Error joining group:', error)

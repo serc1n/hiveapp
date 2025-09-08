@@ -9,10 +9,21 @@ export async function POST(
 ) {
   let session: any = null
   try {
+    console.log('🔍 Getting session for join request...')
     session = await getServerSession(authOptions)
+    console.log('🔍 Session data:', {
+      hasSession: !!session,
+      hasUser: !!session?.user,
+      userId: session?.user?.id,
+      userName: session?.user?.name
+    })
+    
     if (!session?.user?.id) {
+      console.log('❌ No valid session found')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+    
+    console.log('✅ Valid session found for user:', session.user.id)
 
     const group = await prisma.group.findUnique({
       where: { id: params.groupId },
@@ -89,16 +100,40 @@ export async function POST(
       })
     }
   } catch (error) {
-    console.error('Error joining group:', error)
-    console.error('Error details:', {
+    console.error('❌ CRITICAL ERROR in join group API:', error)
+    console.error('❌ Error details:', {
       message: error instanceof Error ? error.message : 'Unknown error',
       stack: error instanceof Error ? error.stack : undefined,
       groupId: params.groupId,
-      userId: session?.user?.id
+      userId: session?.user?.id,
+      errorName: error instanceof Error ? error.name : 'Unknown',
+      errorCode: (error as any)?.code,
+      errorMeta: (error as any)?.meta
     })
+    
+    // More specific error handling for Prisma errors
+    if (error instanceof Error) {
+      if (error.message.includes('Unique constraint')) {
+        console.error('❌ Unique constraint violation - user might already be a member')
+        return NextResponse.json({ 
+          error: 'You are already a member of this group or have a pending request',
+          details: 'Duplicate membership attempt'
+        }, { status: 400 })
+      }
+      
+      if (error.message.includes('Foreign key constraint')) {
+        console.error('❌ Foreign key constraint violation')
+        return NextResponse.json({ 
+          error: 'Invalid group or user reference',
+          details: 'Database constraint violation'
+        }, { status: 400 })
+      }
+    }
+    
     return NextResponse.json({ 
       error: 'Internal server error',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
+      timestamp: new Date().toISOString()
     }, { status: 500 })
   }
 }
