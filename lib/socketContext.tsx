@@ -216,18 +216,25 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
           console.log('🔌 Member left payload:', JSON.stringify(payload, null, 2))
           console.log('🔌 Left member data:', payload.old)
           
-          if (payload.old && memberLeftCallback) {
+          if (payload && payload.old && payload.old.userId && payload.old.groupId && memberLeftCallback && session?.user?.id) {
             console.log('🔌 Processing member left:', payload.old.userId, 'from group:', payload.old.groupId)
             const memberLeftData = {
               userId: payload.old.userId,
               groupId: payload.old.groupId,
-              currentUserId: session?.user?.id
+              currentUserId: session.user.id
             }
             
             console.log('🔌 Calling member left callback with:', memberLeftData)
             memberLeftCallback(memberLeftData)
           } else {
-            console.log('🔌 No member left callback set or invalid payload')
+            console.log('🔌 No member left callback set, invalid payload, or no session:', {
+              hasPayload: !!payload,
+              hasOld: !!payload?.old,
+              hasUserId: !!payload?.old?.userId,
+              hasGroupId: !!payload?.old?.groupId,
+              hasCallback: !!memberLeftCallback,
+              hasSession: !!session?.user?.id
+            })
           }
           console.log('🔌 =================================')
         }

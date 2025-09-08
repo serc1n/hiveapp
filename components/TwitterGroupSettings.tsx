@@ -54,13 +54,18 @@ export function TwitterGroupSettings({ group, onClose, onGroupUpdated, onGroupDe
   useEffect(() => {
     const handleMemberLeft = (data: any) => {
       console.log('Member left event received:', data)
-      // If current user left the group, navigate to My Hives
-      if (data.userId === data.currentUserId && data.groupId === group.id) {
-        console.log('Current user left this group, navigating to My Hives')
-        onClose()
-        if (onNavigateToMyHives) {
-          onNavigateToMyHives()
+      // Check if data is valid before processing
+      if (data && data.userId && data.currentUserId && data.groupId) {
+        // If current user left the group, navigate to My Hives
+        if (data.userId === data.currentUserId && data.groupId === group.id) {
+          console.log('Current user left this group, navigating to My Hives')
+          onClose()
+          if (onNavigateToMyHives) {
+            onNavigateToMyHives()
+          }
         }
+      } else {
+        console.log('Invalid member left data received:', data)
       }
     }
 
