@@ -94,6 +94,8 @@ export function TwitterGroupSettings({ group, onClose, onGroupUpdated, onGroupDe
 
     try {
       console.log('Original file size:', file.size, 'bytes')
+      console.log('Original file type:', file.type)
+      console.log('Original file name:', file.name)
       
       // Resize image if it's larger than 1MB or dimensions are too big
       let processedFile = file
@@ -108,9 +110,11 @@ export function TwitterGroupSettings({ group, onClose, onGroupUpdated, onGroupDe
         console.log('Resized file size:', processedFile.size, 'bytes')
       }
 
+      console.log('Setting processed file in form:', processedFile.name, processedFile.size)
       setEditForm(prev => ({ ...prev, profileImage: processedFile }))
       const url = URL.createObjectURL(processedFile)
       setPreviewUrl(url)
+      console.log('Preview URL set:', url)
     } catch (error) {
       console.error('Error processing image:', error)
       alert('Failed to process image. Please try a different image.')
@@ -127,7 +131,16 @@ export function TwitterGroupSettings({ group, onClose, onGroupUpdated, onGroupDe
       submitData.append('name', editForm.name.trim())
       submitData.append('contractAddress', editForm.contractAddress.trim())
       if (editForm.profileImage) {
+        console.log('Adding profile image to form data:', editForm.profileImage.name, editForm.profileImage.size)
         submitData.append('profileImage', editForm.profileImage)
+      } else {
+        console.log('No profile image to upload')
+      }
+
+      console.log('Sending PUT request to:', `/api/groups/${group.id}`)
+      console.log('Form data entries:')
+      for (let [key, value] of submitData.entries()) {
+        console.log(`  ${key}:`, value)
       }
 
       const response = await fetch(`/api/groups/${group.id}`, {
@@ -136,8 +149,22 @@ export function TwitterGroupSettings({ group, onClose, onGroupUpdated, onGroupDe
       })
 
       if (response.ok) {
+        const result = await response.json()
+        console.log('Group updated successfully:', result)
+        showSuccess('Group updated successfully')
         onGroupUpdated()
         setActiveView('info')
+        // Reset the form
+        setEditForm({
+          name: result.group.name,
+          contractAddress: result.group.contractAddress || '',
+          profileImage: null
+        })
+        setPreviewUrl(result.group.profileImage)
+      } else {
+        const errorData = await response.json()
+        console.error('Failed to update group:', errorData)
+        alert(errorData.error || 'Failed to update group')
       }
     } catch (error) {
       console.error('Error updating group:', error)
@@ -182,7 +209,13 @@ export function TwitterGroupSettings({ group, onClose, onGroupUpdated, onGroupDe
         showSuccess('Successfully left the Hive')
         setShowLeaveConfirmation(false)
         setLeaveConfirmationText('')
-        // The WebSocket listener will handle navigation automatically
+        // Navigate immediately after successful leave
+        setTimeout(() => {
+          onClose()
+          if (onNavigateToMyHives) {
+            onNavigateToMyHives()
+          }
+        }, 1000) // Small delay to show success message
       } else {
         const data = await response.json()
         alert(data.error || 'Failed to leave group')

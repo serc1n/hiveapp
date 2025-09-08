@@ -45,7 +45,7 @@ export function ModernSidebar({
   refreshTrigger 
 }: ModernSidebarProps) {
   const { data: session } = useSession()
-  const { isConnected, joinGroups: joinSocketGroups, onMessageReceived, offMessageReceived, onGroupDeleted, offGroupDeleted, onGroupCreated, offGroupCreated } = useSocket()
+  const { isConnected, joinGroups: joinSocketGroups, onMessageReceived, offMessageReceived, onGroupDeleted, offGroupDeleted, onGroupCreated, offGroupCreated, onMemberLeft, offMemberLeft } = useSocket()
   const [groups, setGroups] = useState<Group[]>([])
   const [exploreGroups, setExploreGroupsRaw] = useState<Group[]>([])
   const [loading, setLoading] = useState(true)
@@ -187,13 +187,33 @@ export function ModernSidebar({
         }
       }
 
+      const handleMemberLeft = (data: any) => {
+        console.log('Member left event in sidebar:', data)
+        if (data && data.userId && data.currentUserId && data.groupId) {
+          // If current user was removed from a group, navigate back to My Hives
+          if (data.userId === data.currentUserId) {
+            console.log('Current user was removed from group:', data.groupId)
+            // Remove the group from the list
+            setGroups(prevGroups => prevGroups.filter(g => g.id !== data.groupId))
+            // If this was the selected group, clear selection and navigate back
+            if (selectedGroupId === data.groupId) {
+              console.log('Selected group was the one user left, navigating back')
+              onSelectGroup('')
+              onTabChange('chats')
+            }
+          }
+        }
+      }
+
       onMessageReceived(handleMessageReceived)
       onGroupDeleted(handleGroupDeleted)
+      onMemberLeft(handleMemberLeft)
 
       return () => {
         console.log('🔌 Cleaning up WebSocket listeners')
         offMessageReceived()
         offGroupDeleted()
+        offMemberLeft()
       }
     }
   }, [session?.user?.id, activeTab, selectedGroupId]) // Include selectedGroupId to get fresh value
