@@ -57,6 +57,7 @@ export function ModernChatView({ groupId, onBack, isMobile = false, onGroupDelet
   const [isMember, setIsMember] = useState(false)
   const [onlineCount, setOnlineCount] = useState(0)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const messageInputRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
     if (groupId) {
@@ -215,6 +216,10 @@ export function ModernChatView({ groupId, onBack, isMobile = false, onGroupDelet
       alert('Failed to send message')
     } finally {
       setIsSending(false)
+      // Focus the input field after sending
+      setTimeout(() => {
+        messageInputRef.current?.focus()
+      }, 100)
     }
   }
 
@@ -368,6 +373,7 @@ export function ModernChatView({ groupId, onBack, isMobile = false, onGroupDelet
           <form onSubmit={handleSendMessage} className="flex items-center space-x-3">
             <div className="flex-1 relative">
               <textarea
+                ref={messageInputRef}
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 placeholder={`Message ${group.name}...`}
@@ -390,7 +396,8 @@ export function ModernChatView({ groupId, onBack, isMobile = false, onGroupDelet
             <button
               type="submit"
               disabled={!newMessage.trim() || isSending}
-              className="w-12 h-12 bg-gradient-primary hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-2xl flex items-center justify-center transition-all duration-200 transform hover:scale-105 active:scale-95 flex-shrink-0"
+              className="w-12 h-12 bg-gradient-primary hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-2xl flex items-center justify-center transition-all duration-200 transform hover:scale-105 active:scale-95 flex-shrink-0 self-end"
+              style={{ marginBottom: '2px' }}
             >
               {isSending ? (
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />

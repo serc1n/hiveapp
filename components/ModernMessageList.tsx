@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { MoreHorizontal, Megaphone, User, MessageCircle, Bell, Smile, Plus } from 'lucide-react'
 import { useSocket } from '../lib/socketContext'
+import { HiveLogo } from './HiveLogo'
 
 // Helper function to detect Twitter/X URLs and extract tweet ID
 const extractTweetId = (url: string) => {
@@ -275,7 +276,7 @@ export function ModernMessageList({
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="text-center max-w-md">
           <div className="w-20 h-20 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-3xl flex items-center justify-center mx-auto mb-6">
-            <div className="text-4xl">👋</div>
+            <HiveLogo className="w-10 h-10 text-indigo-600" />
           </div>
           <h3 className="text-xl font-semibold text-gray-900 mb-4">Start the conversation</h3>
           <p className="text-gray-600 leading-relaxed">
