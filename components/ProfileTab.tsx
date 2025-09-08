@@ -175,6 +175,35 @@ export function ProfileTab() {
     }
   }
 
+  const handleDisconnectWallet = async () => {
+    const confirmDisconnect = confirm(
+      '🔓 Disconnect Wallet\n\n' +
+      'Are you sure you want to disconnect your wallet?\n\n' +
+      'You will lose access to token-gated groups until you reconnect.'
+    )
+    
+    if (!confirmDisconnect) return
+
+    try {
+      const response = await fetch('/api/user/wallet', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (response.ok) {
+        // Refresh the session to update the UI
+        window.location.reload()
+      } else {
+        alert('❌ Failed to disconnect wallet. Please try again.')
+      }
+    } catch (error) {
+      console.error('Error disconnecting wallet:', error)
+      alert('❌ Error disconnecting wallet. Please try again.')
+    }
+  }
+
   if (!session) {
     return (
       <div className="flex-1 flex items-center justify-center p-8">
@@ -300,6 +329,12 @@ export function ProfileTab() {
                   {session.user.walletAddress.slice(0, 8)}...{session.user.walletAddress.slice(-6)}
                 </p>
                 <p className="text-xs text-green-600 mt-2">✓ Wallet connected</p>
+                <button
+                  onClick={handleDisconnectWallet}
+                  className="mt-3 px-3 py-1.5 bg-red-100 hover:bg-red-200 text-red-700 text-sm font-medium rounded-lg transition-colors"
+                >
+                  Disconnect Wallet
+                </button>
               </div>
             ) : (
               <div>
@@ -316,14 +351,6 @@ export function ProfileTab() {
         <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
           <h3 className="text-lg font-medium text-gray-900 mb-4">Actions</h3>
           <div className="space-y-3">
-            {/* Edit Profile Button */}
-            <button
-              onClick={handleEditBio}
-              className="w-full flex items-center px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition-colors"
-            >
-              <User className="w-4 h-4 mr-3" />
-              Edit Profile
-            </button>
 
             {/* Check Updates Button */}
             <button

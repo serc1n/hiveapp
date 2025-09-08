@@ -458,43 +458,57 @@ export function ModernMessageList({
                           </div>
                         </div>
 
-                        {/* Reactions and Add reaction button - inline */}
-                        <div className="flex flex-wrap items-center gap-0.5">
-                          {/* Existing reactions */}
-                          {message.reactions && message.reactions.length > 0 && (
-                            message.reactions.map((reaction) => (
+                        {/* Reactions and Add reaction button - only show if reactions exist */}
+                        {((message.reactions && message.reactions.length > 0) || showEmojiPicker === message.id) && (
+                          <div className="flex flex-wrap items-center gap-0.5 mt-1">
+                            {/* Existing reactions */}
+                            {message.reactions && message.reactions.length > 0 && (
+                              message.reactions.map((reaction) => (
+                                <button
+                                  key={reaction.emoji}
+                                  onClick={() => handleEmojiReaction(message.id, reaction.emoji)}
+                                  className={`inline-flex items-center space-x-0.5 px-1.5 py-0.5 rounded-full text-xs transition-colors ${
+                                    reaction.userReacted
+                                      ? 'bg-indigo-100 text-indigo-700 border border-indigo-200'
+                                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                  }`}
+                                >
+                                  <span className="text-xs">{reaction.emoji}</span>
+                                  <span className="text-xs">{reaction.count}</span>
+                                </button>
+                              ))
+                            )}
+                            
+                            {/* Add reaction button */}
+                            <div className="relative">
                               <button
-                                key={reaction.emoji}
-                                onClick={() => handleEmojiReaction(message.id, reaction.emoji)}
-                                className={`inline-flex items-center space-x-0.5 px-1.5 py-0.5 rounded-full text-xs transition-colors ${
-                                  reaction.userReacted
-                                    ? 'bg-indigo-100 text-indigo-700 border border-indigo-200'
-                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                }`}
+                                onClick={() => setShowEmojiPicker(showEmojiPicker === message.id ? null : message.id)}
+                                className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors opacity-0 group-hover:opacity-100"
                               >
-                                <span className="text-xs">{reaction.emoji}</span>
-                                <span className="text-xs">{reaction.count}</span>
+                                <span className="text-xs">😀</span>
                               </button>
-                            ))
-                          )}
-                          
-                          {/* Add reaction button */}
-                          <div className="relative">
+                              {showEmojiPicker === message.id && (
+                                <EmojiPicker
+                                  onEmojiSelect={(emoji) => handleEmojiReaction(message.id, emoji)}
+                                  onClose={() => setShowEmojiPicker(null)}
+                                  isOwnMessage={isOwn}
+                                />
+                              )}
+                            </div>
+                          </div>
+                        )}
+                        
+                        {/* Show add reaction button on hover even when no reactions exist */}
+                        {!(message.reactions && message.reactions.length > 0) && showEmojiPicker !== message.id && (
+                          <div className="relative mt-1">
                             <button
                               onClick={() => setShowEmojiPicker(showEmojiPicker === message.id ? null : message.id)}
                               className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors opacity-0 group-hover:opacity-100"
                             >
                               <span className="text-xs">😀</span>
                             </button>
-                            {showEmojiPicker === message.id && (
-                              <EmojiPicker
-                                onEmojiSelect={(emoji) => handleEmojiReaction(message.id, emoji)}
-                                onClose={() => setShowEmojiPicker(null)}
-                                isOwnMessage={isOwn}
-                              />
-                            )}
                           </div>
-                        </div>
+                        )}
 
                         {/* Admin menu */}
                         {isGroupOwner && (
