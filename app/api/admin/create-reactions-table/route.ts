@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
       console.error('Error creating table:', sqlError)
       return NextResponse.json({ 
         error: 'Failed to create table', 
-        details: sqlError.message 
+        details: sqlError instanceof Error ? sqlError.message : 'Unknown error'
       }, { status: 500 })
     }
   } catch (error) {
