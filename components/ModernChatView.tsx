@@ -349,6 +349,7 @@ export function ModernChatView({ groupId, onBack, isMobile = false, onGroupDelet
           onMakeAnnouncement={handleMakeAnnouncement}
           isGroupOwner={group.isCreator}
           groupCreatorId={group.creatorId}
+          onMessagesUpdate={() => fetchMessages(false)}
         />
         <div ref={messagesEndRef} />
       </div>

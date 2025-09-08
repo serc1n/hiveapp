@@ -117,6 +117,7 @@ interface ModernMessageListProps {
   onMakeAnnouncement: (messageId: string) => void
   isGroupOwner?: boolean
   groupCreatorId?: string
+  onMessagesUpdate?: () => void
 }
 
 export function ModernMessageList({ 
@@ -124,8 +125,9 @@ export function ModernMessageList({
   currentUserId, 
   currentUserImage, 
   onMakeAnnouncement, 
-  isGroupOwner,
-  groupCreatorId 
+  isGroupOwner, 
+  groupCreatorId,
+  onMessagesUpdate
 }: ModernMessageListProps) {
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
   const [showingUsername, setShowingUsername] = useState<string | null>(null)
@@ -203,9 +205,11 @@ export function ModernMessageList({
       })
 
       if (response.ok) {
-        // The message list should refresh automatically via real-time updates
-        // For now, we could trigger a manual refresh if needed
         console.log('Reaction updated successfully')
+        // Refresh messages to show updated reactions
+        if (onMessagesUpdate) {
+          onMessagesUpdate()
+        }
       } else {
         console.error('Failed to update reaction')
       }
@@ -318,12 +322,11 @@ export function ModernMessageList({
                         )}
 
                         {/* Add reaction button */}
-                        <div className="relative mt-1">
+                        <div className="relative">
                           <button
                             onClick={() => setShowEmojiPicker(showEmojiPicker === message.id ? null : message.id)}
                             className="inline-flex items-center space-x-1 px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors opacity-0 group-hover:opacity-100"
                           >
-                            <Smile className="w-3 h-3" />
                             <span>😀</span>
                           </button>
                           {showEmojiPicker === message.id && (
@@ -398,7 +401,7 @@ const EmojiPicker = ({
   onClose: () => void 
 }) => {
   return (
-    <div className="absolute bottom-full right-0 mb-2 bg-white border border-gray-200 rounded-xl shadow-lg p-3 z-10">
+    <div className="absolute top-full left-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-lg p-3 z-10">
       <div className="flex flex-wrap gap-2 max-w-48">
         {COMMON_EMOJIS.map((emoji) => (
           <button
