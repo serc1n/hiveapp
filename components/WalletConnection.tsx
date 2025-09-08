@@ -103,7 +103,9 @@ export function WalletConnection({ onClose }: WalletConnectionProps) {
 
   const connectWalletConnect = async () => {
     try {
-      // Open AppKit modal
+      // Close this modal first
+      onClose()
+      // Then open AppKit modal
       await open()
     } catch (error) {
       console.error('Error opening WalletConnect modal:', error)

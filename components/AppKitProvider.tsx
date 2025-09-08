@@ -31,6 +31,9 @@ createAppKit({
   projectId,
   features: {
     analytics: true, // Optional - defaults to your Cloud configuration
+    email: false, // Disable email connection
+    socials: [], // Remove all social connections
+    emailShowWallets: false, // Don't show wallets in email flow
   }
 })
 
