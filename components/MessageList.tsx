@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { MoreHorizontal, Megaphone } from 'lucide-react'
+import { HiveLogo } from './HiveLogo'
 
 interface Message {
   id: string
@@ -75,7 +76,7 @@ export function MessageList({ messages, currentUserId, currentUserImage, onMakeA
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="text-center max-w-sm">
           <div className="w-20 h-20 bg-gray-800 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-lg">
-            <div className="text-3xl">💬</div>
+            <HiveLogo className="w-10 h-10 text-white" />
           </div>
           <h3 className="text-xl font-semibold text-white mb-3">No messages yet</h3>
           <p className="text-gray-400 leading-relaxed">

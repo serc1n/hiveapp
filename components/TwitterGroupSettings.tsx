@@ -535,7 +535,7 @@ export function TwitterGroupSettings({ group, onClose, onGroupUpdated, onGroupDe
                   type="text"
                   value={editForm.name}
                   onChange={(e) => setEditForm(prev => ({ ...prev, name: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500"
                   placeholder="Enter hive name"
                 />
               </div>
@@ -547,7 +547,7 @@ export function TwitterGroupSettings({ group, onClose, onGroupUpdated, onGroupDe
                   type="text"
                   value={editForm.contractAddress}
                   onChange={(e) => setEditForm(prev => ({ ...prev, contractAddress: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500"
                   placeholder="0x... (optional)"
                 />
                 <p className="text-xs text-gray-500 mt-1">Leave empty for public hive</p>

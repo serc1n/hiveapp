@@ -157,6 +157,24 @@ export function WalletConnection({ onClose }: WalletConnectionProps) {
     }
   }
 
+  // Auto-open WalletConnect modal when component mounts (for Manage Wallet button)
+  useEffect(() => {
+    const autoOpenWalletConnect = async () => {
+      // Small delay to ensure modal is rendered
+      setTimeout(async () => {
+        try {
+          onClose()
+          await open()
+        } catch (error) {
+          console.error('Error auto-opening WalletConnect:', error)
+        }
+      }, 100)
+    }
+
+    // Auto-open WalletConnect for wallet management
+    autoOpenWalletConnect()
+  }, [])
+
   const connectCoinbaseWallet = async () => {
     try {
       // Check for Coinbase Wallet

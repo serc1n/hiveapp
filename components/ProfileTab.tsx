@@ -418,14 +418,6 @@ export function ProfileTab() {
               {isCheckingUpdate ? 'Checking...' : 'Check Updates'}
             </button>
 
-            {/* Connect Wallet Button */}
-            <button
-              onClick={() => setShowWalletModal(true)}
-              className="w-full flex items-center px-4 py-3 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-xl transition-colors"
-            >
-              <Wallet className="w-4 h-4 mr-3" />
-              {session.user.walletAddress ? 'Manage Wallet' : 'Connect Wallet'}
-            </button>
 
             {/* Sign Out Button */}
             <button
