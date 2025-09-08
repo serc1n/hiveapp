@@ -30,24 +30,19 @@ export async function POST(request: NextRequest) {
       contractAddress
     })
     
-    // Check if the wallet owns any NFTs from the contract
-    const response = await fetch(alchemyUrl, {
-      method: 'POST',
+    // Check if the wallet owns any NFTs from the contract using Alchemy's REST API
+    const nftApiUrl = `${alchemyUrl}/getNFTs?owner=${walletAddress}&contractAddresses[]=${contractAddress}&withMetadata=false`
+    
+    console.log('📡 Making Alchemy REST API call:', {
+      url: nftApiUrl.replace(alchemyApiKey, 'HIDDEN'),
+      method: 'GET'
+    })
+    
+    const response = await fetch(nftApiUrl, {
+      method: 'GET',
       headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        jsonrpc: '2.0',
-        id: 1,
-        method: 'alchemy_getNFTs',
-        params: [
-          walletAddress,
-          {
-            contractAddresses: [contractAddress],
-            withMetadata: false,
-          }
-        ]
-      })
+        'Accept': 'application/json',
+      }
     })
 
     const data = await response.json()
@@ -55,17 +50,21 @@ export async function POST(request: NextRequest) {
     console.log('📊 Alchemy API response:', {
       hasError: !!data.error,
       error: data.error,
-      resultExists: !!data.result,
-      ownedNftsCount: data.result?.ownedNfts?.length || 0,
-      firstFewNfts: data.result?.ownedNfts?.slice(0, 3) || []
+      ownedNftsCount: data.ownedNfts?.length || 0,
+      firstFewNfts: data.ownedNfts?.slice(0, 3) || [],
+      totalCount: data.totalCount || 0,
+      rawResponse: data
     })
 
     if (data.error) {
       console.error('❌ Alchemy API error:', data.error)
-      return NextResponse.json({ error: 'Failed to verify NFT ownership' }, { status: 500 })
+      return NextResponse.json({ 
+        error: 'Failed to verify NFT ownership',
+        details: data.error 
+      }, { status: 500 })
     }
 
-    const ownedNFTs = data.result?.ownedNfts || []
+    const ownedNFTs = data.ownedNfts || []
     const ownsNFT = ownedNFTs.length > 0
 
     console.log('✅ NFT Verification Result:', {
