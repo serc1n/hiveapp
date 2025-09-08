@@ -461,7 +461,7 @@ export function ModernMessageList({
 }
 
 // Common emoji reactions
-const COMMON_EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '😡']
+const COMMON_EMOJIS = ['❤️', '💯', '😂', '👍']
 
 // Emoji picker component
 const EmojiPicker = ({ 

@@ -64,6 +64,11 @@ export function ModernChatView({ groupId, onBack, isMobile = false, onGroupDelet
       fetchMessages(true)
       updateOnlineStatus() // Initial online status update
       
+      // Scroll to bottom when entering a new chat
+      setTimeout(() => scrollToBottom(true), 300)
+      setTimeout(() => scrollToBottom(true), 800)
+      setTimeout(() => scrollToBottom(true), 1500)
+      
       // Set up polling for new messages and online status
       const messageInterval = setInterval(() => {
         if (!document.hidden) {
@@ -126,7 +131,10 @@ export function ModernChatView({ groupId, onBack, isMobile = false, onGroupDelet
           if (data.messages.length === 0) return data.messages
           if (prevMessages.length === 0) {
             // First time loading messages - scroll to bottom immediately
-            setTimeout(() => scrollToBottom(true), 100)
+            setTimeout(() => scrollToBottom(true), 200)
+            // Additional scroll attempts to ensure it works
+            setTimeout(() => scrollToBottom(true), 500)
+            setTimeout(() => scrollToBottom(true), 1000)
             return data.messages
           }
           
