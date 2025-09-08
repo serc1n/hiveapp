@@ -24,6 +24,17 @@ export async function POST(
       return NextResponse.json({ error: 'Invalid emoji' }, { status: 400 })
     }
 
+    // Check if MessageReaction table exists, if not return error with instructions
+    try {
+      await prisma.messageReaction.findFirst({ take: 1 })
+    } catch (tableError) {
+      console.error('MessageReaction table does not exist:', tableError)
+      return NextResponse.json({ 
+        error: 'Reactions feature not available yet. Database table needs to be created.',
+        details: 'MessageReaction table missing'
+      }, { status: 503 })
+    }
+
     // Check if message exists and user has access to it
     const message = await prisma.message.findUnique({
       where: { id: params.messageId },

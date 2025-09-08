@@ -211,7 +211,13 @@ export function ModernMessageList({
           onMessagesUpdate()
         }
       } else {
-        console.error('Failed to update reaction')
+        const errorData = await response.json()
+        console.error('Failed to update reaction:', errorData)
+        
+        if (response.status === 503 && errorData.details === 'MessageReaction table missing') {
+          console.log('MessageReaction table needs to be created in the database')
+          alert('Emoji reactions are not available yet. The database needs to be updated.')
+        }
       }
     } catch (error) {
       console.error('Error updating reaction:', error)
