@@ -209,34 +209,31 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
         {
           event: 'DELETE',
           schema: 'public',
-          table: 'GroupMember'
+          table: 'group_members'
         },
         async (payload: any) => {
-          console.log('🔌 ===== REALTIME MEMBER LEFT =====')
-          console.log('🔌 Member left payload:', JSON.stringify(payload, null, 2))
-          console.log('🔌 Left member data:', payload.old)
-          
-          if (payload && payload.old && payload.old.userId && payload.old.groupId && memberLeftCallback && session?.user?.id) {
-            console.log('🔌 Processing member left:', payload.old.userId, 'from group:', payload.old.groupId)
-            const memberLeftData = {
-              userId: payload.old.userId,
-              groupId: payload.old.groupId,
-              currentUserId: session.user.id
-            }
+          // Only log if we have valid data to avoid spam
+          if (payload && payload.old && payload.old.userId && payload.old.groupId) {
+            console.log('🔌 ===== REALTIME MEMBER LEFT =====')
+            console.log('🔌 Member left payload:', JSON.stringify(payload, null, 2))
+            console.log('🔌 Left member data:', payload.old)
             
-            console.log('🔌 Calling member left callback with:', memberLeftData)
-            memberLeftCallback(memberLeftData)
-          } else {
-            console.log('🔌 No member left callback set, invalid payload, or no session:', {
-              hasPayload: !!payload,
-              hasOld: !!payload?.old,
-              hasUserId: !!payload?.old?.userId,
-              hasGroupId: !!payload?.old?.groupId,
-              hasCallback: !!memberLeftCallback,
-              hasSession: !!session?.user?.id
-            })
+            if (memberLeftCallback && session?.user?.id) {
+              console.log('🔌 Processing member left:', payload.old.userId, 'from group:', payload.old.groupId)
+              const memberLeftData = {
+                userId: payload.old.userId,
+                groupId: payload.old.groupId,
+                currentUserId: session.user.id
+              }
+              
+              console.log('🔌 Calling member left callback with:', memberLeftData)
+              memberLeftCallback(memberLeftData)
+            } else {
+              console.log('🔌 No member left callback or session available')
+            }
+            console.log('🔌 =================================')
           }
-          console.log('🔌 =================================')
+          // Silently ignore null/invalid payloads to reduce console spam
         }
       )
       .subscribe((status, err) => {

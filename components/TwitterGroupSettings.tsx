@@ -53,9 +53,9 @@ export function TwitterGroupSettings({ group, onClose, onGroupUpdated, onGroupDe
   // Listen for when current user leaves group (real-time navigation)
   useEffect(() => {
     const handleMemberLeft = (data: any) => {
-      console.log('Member left event received:', data)
-      // Check if data is valid before processing
+      // Only process valid data to avoid spam
       if (data && data.userId && data.currentUserId && data.groupId) {
+        console.log('Member left event received:', data)
         // If current user left the group, navigate to My Hives
         if (data.userId === data.currentUserId && data.groupId === group.id) {
           console.log('Current user left this group, navigating to My Hives')
@@ -64,9 +64,8 @@ export function TwitterGroupSettings({ group, onClose, onGroupUpdated, onGroupDe
             onNavigateToMyHives()
           }
         }
-      } else {
-        console.log('Invalid member left data received:', data)
       }
+      // Silently ignore invalid data to reduce console spam
     }
 
     onMemberLeft(handleMemberLeft)
@@ -84,9 +83,14 @@ export function TwitterGroupSettings({ group, onClose, onGroupUpdated, onGroupDe
   }
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log('🖼️ Image change handler triggered!')
     const file = e.target.files?.[0]
-    if (!file) return
+    if (!file) {
+      console.log('🖼️ No file selected')
+      return
+    }
 
+    console.log('🖼️ File selected:', file.name)
     if (!isImageFile(file)) {
       alert('Please select a valid image file')
       return
@@ -396,22 +400,24 @@ export function TwitterGroupSettings({ group, onClose, onGroupUpdated, onGroupDe
             <form onSubmit={handleSaveChanges} className="p-6 space-y-6">
               {/* Group Image */}
               <div className="text-center">
-                <div className="w-20 h-20 bg-gray-200 rounded-full mx-auto mb-3 flex items-center justify-center overflow-hidden relative group cursor-pointer">
-                  {previewUrl ? (
-                    <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
-                  ) : (
-                    <span className="text-2xl font-bold text-gray-500">{editForm.name.charAt(0).toUpperCase()}</span>
-                  )}
+                <label className="block cursor-pointer">
+                  <div className="w-20 h-20 bg-gray-200 rounded-full mx-auto mb-3 flex items-center justify-center overflow-hidden relative group hover:ring-4 hover:ring-blue-200 transition-all">
+                    {previewUrl ? (
+                      <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-2xl font-bold text-gray-500">{editForm.name.charAt(0).toUpperCase()}</span>
+                    )}
+                    <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-full">
+                      <Edit3 className="w-5 h-5 text-white" />
+                    </div>
+                  </div>
                   <input
                     type="file"
                     accept="image/*"
                     onChange={handleImageChange}
-                    className="absolute inset-0 opacity-0 cursor-pointer"
+                    className="hidden"
                   />
-                  <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-full">
-                    <Edit3 className="w-5 h-5 text-white" />
-                  </div>
-                </div>
+                </label>
                 <p className="text-xs text-gray-500">Tap to change photo</p>
               </div>
 

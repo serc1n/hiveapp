@@ -188,8 +188,9 @@ export function ModernSidebar({
       }
 
       const handleMemberLeft = (data: any) => {
-        console.log('Member left event in sidebar:', data)
+        // Only process valid data to avoid spam
         if (data && data.userId && data.currentUserId && data.groupId) {
+          console.log('Member left event in sidebar:', data)
           // If current user was removed from a group, navigate back to My Hives
           if (data.userId === data.currentUserId) {
             console.log('Current user was removed from group:', data.groupId)
@@ -203,6 +204,7 @@ export function ModernSidebar({
             }
           }
         }
+        // Silently ignore invalid data to reduce console spam
       }
 
       onMessageReceived(handleMessageReceived)
