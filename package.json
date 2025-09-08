@@ -30,7 +30,7 @@
     "ethers": "^6.8.1",
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.294.0",
-    "next": "14.0.4",
+    "next": "^14.2.32",
     "next-auth": "^4.24.5",
     "openai": "^5.19.1",
     "postcss": "^8",
