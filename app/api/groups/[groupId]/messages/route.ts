@@ -89,8 +89,8 @@ export async function GET(
       // Safely process reactions (may not exist if table isn't created yet)
       let processedReactions: any[] = []
       
-      if (message.reactions && Array.isArray(message.reactions)) {
-        const groupedReactions = message.reactions.reduce((acc, reaction) => {
+      if ((message as any).reactions && Array.isArray((message as any).reactions)) {
+        const groupedReactions = (message as any).reactions.reduce((acc, reaction) => {
           if (!acc[reaction.emoji]) {
             acc[reaction.emoji] = {
               emoji: reaction.emoji,
