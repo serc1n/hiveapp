@@ -166,8 +166,8 @@ export function WalletConnection({ onClose }: WalletConnectionProps) {
   const currentWallet = session?.user?.walletAddress
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50">
-      <div className="bg-gray-900 rounded-xl p-6 w-full max-w-md border border-gray-700">
+    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50 overflow-y-auto">
+      <div className="bg-gray-900 rounded-xl p-6 w-full max-w-md border border-gray-700 my-8 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold text-white flex items-center">
             <Wallet className="w-6 h-6 mr-2" />
@@ -209,8 +209,17 @@ export function WalletConnection({ onClose }: WalletConnectionProps) {
                   className="w-full flex items-center justify-between px-6 py-4 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] mb-4"
                 >
                   <div className="flex items-center">
-                    <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center mr-4">
-                      <span className="text-blue-500 font-bold text-xl">🔗</span>
+                    <div className="w-10 h-10 mr-4">
+                      <svg viewBox="0 0 40 40" className="w-full h-full">
+                        <defs>
+                          <linearGradient id="walletconnect-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stopColor="#3B99FC"/>
+                            <stop offset="100%" stopColor="#9945FF"/>
+                          </linearGradient>
+                        </defs>
+                        <rect width="40" height="40" rx="20" fill="url(#walletconnect-gradient)"/>
+                        <path fill="white" d="M12 18c4.4-4.3 11.6-4.3 16 0l.5.5c.2.2.2.5 0 .7l-1.8 1.8c-.1.1-.3.1-.4 0l-.7-.7c-3.1-3-8-3-11.1 0l-.8.8c-.1.1-.3.1-.4 0l-1.8-1.8c-.2-.2-.2-.5 0-.7L12 18zm19.8 3.7l1.6 1.6c.2.2.2.5 0 .7l-7.3 7.2c-.2.2-.5.2-.7 0l-5.2-5.1c0-.1-.1-.1-.2 0l-5.2 5.1c-.2.2-.5.2-.7 0l-7.3-7.2c-.2-.2-.2-.5 0-.7l1.6-1.6c.2-.2.5-.2.7 0l5.2 5.1c0 .1.1.1.2 0l5.2-5.1c.2-.2.5-.2.7 0l5.2 5.1c0 .1.1.1.2 0l5.2-5.1c.2-.2.5-.2.7 0z"/>
+                      </svg>
                     </div>
                     <div className="text-left">
                       <div className="font-semibold">Connect Wallet</div>
@@ -230,8 +239,12 @@ export function WalletConnection({ onClose }: WalletConnectionProps) {
                     onClick={connectMetaMask}
                     className="flex flex-col items-center px-4 py-3 bg-gray-800 hover:bg-gray-700 text-white rounded-lg font-medium transition-all duration-200 border border-gray-700 hover:border-orange-500"
                   >
-                    <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center mb-2">
-                      <span className="text-orange-500 font-bold text-lg">🦊</span>
+                    <div className="w-8 h-8 mb-2">
+                      <svg viewBox="0 0 40 40" className="w-full h-full">
+                        <path fill="#E17726" d="M37.3 14.4L23.4 1.4c-.8-.8-2.1-.8-2.9 0L6.7 14.4c-.8.8-.8 2.1 0 2.9L20.5 31.1c.8.8 2.1.8 2.9 0l13.9-13.8c.8-.8.8-2.1 0-2.9z"/>
+                        <path fill="#E27625" d="M37.3 14.4L23.4 1.4c-.8-.8-2.1-.8-2.9 0L6.7 14.4c-.8.8-.8 2.1 0 2.9L20.5 31.1c.8.8 2.1.8 2.9 0l13.9-13.8c.8-.8.8-2.1 0-2.9z"/>
+                        <path fill="#F5841F" d="M32.1 16.9l-4.9-1.6-1.5 4.6 4.9 1.6c.5.2.8.6.8 1.1s-.3.9-.8 1.1l-4.9 1.6 1.5 4.6 4.9-1.6c1.7-.6 2.7-2.3 2.7-4.1v-2.2c0-1.8-1-3.5-2.7-4.1z"/>
+                      </svg>
                     </div>
                     <span className="text-sm">MetaMask</span>
                   </button>
@@ -241,8 +254,12 @@ export function WalletConnection({ onClose }: WalletConnectionProps) {
                     onClick={connectCoinbaseWallet}
                     className="flex flex-col items-center px-4 py-3 bg-gray-800 hover:bg-gray-700 text-white rounded-lg font-medium transition-all duration-200 border border-gray-700 hover:border-blue-500"
                   >
-                    <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center mb-2">
-                      <span className="text-blue-500 font-bold text-lg">💼</span>
+                    <div className="w-8 h-8 mb-2">
+                      <svg viewBox="0 0 40 40" className="w-full h-full">
+                        <rect width="40" height="40" rx="20" fill="#0052FF"/>
+                        <path fill="white" d="M20 8C13.4 8 8 13.4 8 20s5.4 12 12 12 12-5.4 12-12S26.6 8 20 8zm0 18c-3.3 0-6-2.7-6-6s2.7-6 6-6 6 2.7 6 6-2.7 6-6 6z"/>
+                        <rect x="17" y="17" width="6" height="6" rx="1" fill="#0052FF"/>
+                      </svg>
                     </div>
                     <span className="text-sm">Coinbase</span>
                   </button>
