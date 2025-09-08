@@ -46,16 +46,12 @@ export async function GET(
       whereClause.createdAt = { lt: new Date(before) }
     }
 
-    const messages = await prisma.message.findMany({
-      where: whereClause,
-      include: {
-        user: {
-          select: {
-            name: true,
-            twitterHandle: true,
-            profileImage: true
-          }
-        },
+    // Try to include reactions, but fallback gracefully if table doesn't exist
+    let includeReactions = {}
+    try {
+      // Test if MessageReaction table exists by doing a simple query
+      await prisma.messageReaction.findFirst({ take: 1 })
+      includeReactions = {
         reactions: {
           include: {
             user: {
@@ -67,6 +63,22 @@ export async function GET(
             }
           }
         }
+      }
+    } catch (error) {
+      console.log('MessageReaction table not available yet, skipping reactions')
+    }
+
+    const messages = await prisma.message.findMany({
+      where: whereClause,
+      include: {
+        user: {
+          select: {
+            name: true,
+            twitterHandle: true,
+            profileImage: true
+          }
+        },
+        ...includeReactions
       },
       orderBy: { createdAt: 'desc' }, // Changed to desc for better pagination
       take: Math.min(limit, 100) // Max 100 messages per request
@@ -74,34 +86,40 @@ export async function GET(
     
     // Reverse to get chronological order and process reactions
     const orderedMessages = messages.reverse().map(message => {
-      // Group reactions by emoji
-      const groupedReactions = message.reactions.reduce((acc, reaction) => {
-        if (!acc[reaction.emoji]) {
-          acc[reaction.emoji] = {
-            emoji: reaction.emoji,
-            count: 0,
-            users: [],
-            userReacted: false
+      // Safely process reactions (may not exist if table isn't created yet)
+      let processedReactions = []
+      
+      if (message.reactions && Array.isArray(message.reactions)) {
+        const groupedReactions = message.reactions.reduce((acc, reaction) => {
+          if (!acc[reaction.emoji]) {
+            acc[reaction.emoji] = {
+              emoji: reaction.emoji,
+              count: 0,
+              users: [],
+              userReacted: false
+            }
           }
-        }
+          
+          acc[reaction.emoji].count++
+          acc[reaction.emoji].users.push({
+            id: reaction.user.id,
+            name: reaction.user.name,
+            twitterHandle: reaction.user.twitterHandle
+          })
+          
+          if (reaction.userId === session.user.id) {
+            acc[reaction.emoji].userReacted = true
+          }
+          
+          return acc
+        }, {} as Record<string, any>)
         
-        acc[reaction.emoji].count++
-        acc[reaction.emoji].users.push({
-          id: reaction.user.id,
-          name: reaction.user.name,
-          twitterHandle: reaction.user.twitterHandle
-        })
-        
-        if (reaction.userId === session.user.id) {
-          acc[reaction.emoji].userReacted = true
-        }
-        
-        return acc
-      }, {} as Record<string, any>)
+        processedReactions = Object.values(groupedReactions)
+      }
 
       return {
         ...message,
-        reactions: Object.values(groupedReactions)
+        reactions: processedReactions
       }
     })
 
