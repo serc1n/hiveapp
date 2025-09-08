@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { X, Wallet, CheckCircle, AlertCircle } from 'lucide-react'
+import { useAppKit, useAppKitAccount } from '@reown/appkit/react'
 
 interface WalletConnectionProps {
   onClose: () => void
@@ -14,6 +15,21 @@ export function WalletConnection({ onClose }: WalletConnectionProps) {
   const [isConnected, setIsConnected] = useState(false)
   const [isUpdating, setIsUpdating] = useState(false)
   const [updateStatus, setUpdateStatus] = useState<'idle' | 'success' | 'error'>('idle')
+  
+  const { open } = useAppKit()
+  const { address: appKitAddress, isConnected: appKitConnected } = useAppKitAccount()
+
+  // Sync AppKit state with local state
+  useEffect(() => {
+    if (appKitConnected && appKitAddress) {
+      setAddress(appKitAddress)
+      setIsConnected(true)
+    } else {
+      if (!address) { // Only clear if we don't have a manual address
+        setIsConnected(false)
+      }
+    }
+  }, [appKitConnected, appKitAddress, address])
 
   const handleSaveWallet = async () => {
     if (!address || !session?.user?.id) return
@@ -86,11 +102,11 @@ export function WalletConnection({ onClose }: WalletConnectionProps) {
 
   const connectWalletConnect = async () => {
     try {
-      // Simple WalletConnect implementation
-      alert('🔗 WalletConnect\n\nThis will show a QR code to connect with mobile wallets like:\n\n• Trust Wallet\n• Rainbow\n• Coinbase Wallet\n• And 300+ other wallets\n\nFeature coming soon!')
+      // Open AppKit modal
+      await open()
     } catch (error) {
-      console.error('Error connecting with WalletConnect:', error)
-      alert('❌ Failed to connect with WalletConnect. Please try again.')
+      console.error('Error opening WalletConnect modal:', error)
+      alert('❌ Failed to open wallet connection modal. Please try again.')
     }
   }
 
@@ -176,49 +192,52 @@ export function WalletConnection({ onClose }: WalletConnectionProps) {
           <div className="space-y-3">
             {!isConnected ? (
               <>
-                <h3 className="text-lg font-medium text-white mb-4">Choose Your Wallet</h3>
+                <h3 className="text-lg font-medium text-white mb-4">Connect Your Wallet</h3>
                 
-                {/* MetaMask */}
-                <button
-                  onClick={connectMetaMask}
-                  className="w-full flex items-center justify-between px-4 py-3 bg-gradient-to-r from-orange-500 to-yellow-500 hover:from-orange-600 hover:to-yellow-600 text-white rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl"
-                >
-                  <div className="flex items-center">
-                    <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center mr-3">
-                      <span className="text-orange-500 font-bold text-lg">🦊</span>
-                    </div>
-                    <span>MetaMask</span>
-                  </div>
-                  <span className="text-sm opacity-90">Most Popular</span>
-                </button>
-
-                {/* Coinbase Wallet */}
-                <button
-                  onClick={connectCoinbaseWallet}
-                  className="w-full flex items-center justify-between px-4 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl"
-                >
-                  <div className="flex items-center">
-                    <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center mr-3">
-                      <span className="text-blue-500 font-bold text-lg">💼</span>
-                    </div>
-                    <span>Coinbase Wallet</span>
-                  </div>
-                  <span className="text-sm opacity-90">Easy & Secure</span>
-                </button>
-
-                {/* WalletConnect */}
+                {/* WalletConnect - Main Option */}
                 <button
                   onClick={connectWalletConnect}
-                  className="w-full flex items-center justify-between px-4 py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl"
+                  className="w-full flex items-center justify-between px-6 py-4 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] mb-4"
                 >
                   <div className="flex items-center">
-                    <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center mr-3">
-                      <span className="text-purple-500 font-bold text-lg">🔗</span>
+                    <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center mr-4">
+                      <span className="text-blue-500 font-bold text-xl">🔗</span>
                     </div>
-                    <span>WalletConnect</span>
+                    <div className="text-left">
+                      <div className="font-semibold">Connect Wallet</div>
+                      <div className="text-sm opacity-90">300+ Wallets Supported</div>
+                    </div>
                   </div>
-                  <span className="text-sm opacity-90">300+ Wallets</span>
+                  <span className="text-sm bg-white bg-opacity-20 px-2 py-1 rounded-full">Recommended</span>
                 </button>
+
+                <div className="text-center text-gray-400 text-sm mb-4">
+                  <span>or connect directly</span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  {/* MetaMask */}
+                  <button
+                    onClick={connectMetaMask}
+                    className="flex flex-col items-center px-4 py-3 bg-gray-800 hover:bg-gray-700 text-white rounded-lg font-medium transition-all duration-200 border border-gray-700 hover:border-orange-500"
+                  >
+                    <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center mb-2">
+                      <span className="text-orange-500 font-bold text-lg">🦊</span>
+                    </div>
+                    <span className="text-sm">MetaMask</span>
+                  </button>
+
+                  {/* Coinbase Wallet */}
+                  <button
+                    onClick={connectCoinbaseWallet}
+                    className="flex flex-col items-center px-4 py-3 bg-gray-800 hover:bg-gray-700 text-white rounded-lg font-medium transition-all duration-200 border border-gray-700 hover:border-blue-500"
+                  >
+                    <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center mb-2">
+                      <span className="text-blue-500 font-bold text-lg">💼</span>
+                    </div>
+                    <span className="text-sm">Coinbase</span>
+                  </button>
+                </div>
 
                 <div className="mt-4 p-3 bg-gray-800 rounded-lg border border-gray-700">
                   <p className="text-xs text-gray-400 text-center">
