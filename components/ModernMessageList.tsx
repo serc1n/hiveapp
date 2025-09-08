@@ -297,6 +297,43 @@ export function ModernMessageList({
                           </div>
                         </div>
 
+                        {/* Reactions */}
+                        {message.reactions && message.reactions.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {message.reactions.map((reaction) => (
+                              <button
+                                key={reaction.emoji}
+                                onClick={() => handleEmojiReaction(message.id, reaction.emoji)}
+                                className={`inline-flex items-center space-x-1 px-2 py-1 rounded-full text-xs transition-colors ${
+                                  reaction.userReacted
+                                    ? 'bg-indigo-100 text-indigo-700 border border-indigo-200'
+                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                }`}
+                              >
+                                <span>{reaction.emoji}</span>
+                                <span>{reaction.count}</span>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Add reaction button */}
+                        <div className="relative mt-1">
+                          <button
+                            onClick={() => setShowEmojiPicker(showEmojiPicker === message.id ? null : message.id)}
+                            className="inline-flex items-center space-x-1 px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors opacity-0 group-hover:opacity-100"
+                          >
+                            <Smile className="w-3 h-3" />
+                            <span>😀</span>
+                          </button>
+                          {showEmojiPicker === message.id && (
+                            <EmojiPicker
+                              onEmojiSelect={(emoji) => handleEmojiReaction(message.id, emoji)}
+                              onClose={() => setShowEmojiPicker(null)}
+                            />
+                          )}
+                        </div>
+
                         {/* Admin menu */}
                         {isGroupOwner && (
                           <div className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
