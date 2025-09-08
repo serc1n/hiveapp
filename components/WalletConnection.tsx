@@ -97,7 +97,7 @@ export function WalletConnection({ onClose }: WalletConnectionProps) {
   const connectCoinbaseWallet = async () => {
     try {
       // Check for Coinbase Wallet
-      if (typeof window !== 'undefined' && window.ethereum && window.ethereum.isCoinbaseWallet) {
+      if (typeof window !== 'undefined' && window.ethereum && (window.ethereum as any).isCoinbaseWallet) {
         const accounts = await window.ethereum.request({
           method: 'eth_requestAccounts',
         })
