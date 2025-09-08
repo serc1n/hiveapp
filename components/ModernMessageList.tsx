@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { MoreHorizontal, Megaphone, User, MessageCircle, Bell, Smile, Plus } from 'lucide-react'
 
 // Helper function to detect Twitter/X URLs and extract tweet ID
@@ -132,6 +132,12 @@ export function ModernMessageList({
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
   const [showingUsername, setShowingUsername] = useState<string | null>(null)
   const [showEmojiPicker, setShowEmojiPicker] = useState<string | null>(null)
+  const [localMessages, setLocalMessages] = useState<Message[]>(messages)
+
+  // Sync local messages with prop messages
+  useEffect(() => {
+    setLocalMessages(messages)
+  }, [messages])
 
   const formatTime = (dateString: string) => {
     const date = new Date(dateString)
@@ -176,7 +182,7 @@ export function ModernMessageList({
     return groups
   }
 
-  if (messages.length === 0) {
+  if (localMessages.length === 0) {
     return (
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="text-center max-w-md">
@@ -192,9 +198,62 @@ export function ModernMessageList({
     )
   }
 
-  const messageGroups = groupMessagesByDate(messages)
+  const messageGroups = groupMessagesByDate(localMessages)
 
   const handleEmojiReaction = async (messageId: string, emoji: string) => {
+    // Optimistic update - update local state immediately
+    setLocalMessages(prevMessages => 
+      prevMessages.map(message => {
+        if (message.id !== messageId) return message
+        
+        const existingReactions = message.reactions || []
+        const existingReaction = existingReactions.find(r => r.emoji === emoji)
+        
+        if (existingReaction) {
+          if (existingReaction.userReacted) {
+            // Remove user's reaction
+            if (existingReaction.count === 1) {
+              // Remove the entire reaction if count becomes 0
+              return {
+                ...message,
+                reactions: existingReactions.filter(r => r.emoji !== emoji)
+              }
+            } else {
+              // Decrease count and set userReacted to false
+              return {
+                ...message,
+                reactions: existingReactions.map(r => 
+                  r.emoji === emoji 
+                    ? { ...r, count: r.count - 1, userReacted: false }
+                    : r
+                )
+              }
+            }
+          } else {
+            // Add user's reaction to existing emoji
+            return {
+              ...message,
+              reactions: existingReactions.map(r => 
+                r.emoji === emoji 
+                  ? { ...r, count: r.count + 1, userReacted: true }
+                  : r
+              )
+            }
+          }
+        } else {
+          // Add new reaction
+          return {
+            ...message,
+            reactions: [
+              ...existingReactions,
+              { emoji, count: 1, users: [], userReacted: true }
+            ]
+          }
+        }
+      })
+    )
+
+    // Then sync with server
     try {
       const response = await fetch(`/api/messages/${messageId}/reactions`, {
         method: 'POST',
@@ -206,7 +265,7 @@ export function ModernMessageList({
 
       if (response.ok) {
         console.log('Reaction updated successfully')
-        // Refresh messages to show updated reactions
+        // Refresh messages from server to ensure consistency
         if (onMessagesUpdate) {
           onMessagesUpdate()
         }
@@ -214,13 +273,17 @@ export function ModernMessageList({
         const errorData = await response.json()
         console.error('Failed to update reaction:', errorData)
         
+        // Revert optimistic update on error
+        setLocalMessages(messages)
+        
         if (response.status === 503) {
           console.log('Reactions temporarily unavailable:', errorData.details)
-          // Don't show alert, just log it - the table will be created automatically
         }
       }
     } catch (error) {
       console.error('Error updating reaction:', error)
+      // Revert optimistic update on error
+      setLocalMessages(messages)
     }
   }
 
@@ -408,8 +471,8 @@ const EmojiPicker = ({
   onClose: () => void 
 }) => {
   return (
-    <div className="absolute top-full left-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-lg p-3 z-10">
-      <div className="grid grid-cols-3 gap-2 w-32">
+    <div className="absolute top-full left-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-lg p-2 z-10">
+      <div className="flex gap-1">
         {COMMON_EMOJIS.map((emoji) => (
           <button
             key={emoji}
@@ -417,7 +480,7 @@ const EmojiPicker = ({
               onEmojiSelect(emoji)
               onClose()
             }}
-            className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors text-lg flex items-center justify-center w-8 h-8"
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-lg flex items-center justify-center w-10 h-10"
           >
             {emoji}
           </button>
