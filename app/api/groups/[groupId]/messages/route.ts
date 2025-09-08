@@ -90,7 +90,7 @@ export async function GET(
       let processedReactions: any[] = []
       
       if ((message as any).reactions && Array.isArray((message as any).reactions)) {
-        const groupedReactions = (message as any).reactions.reduce((acc, reaction) => {
+        const groupedReactions = (message as any).reactions.reduce((acc: any, reaction: any) => {
           if (!acc[reaction.emoji]) {
             acc[reaction.emoji] = {
               emoji: reaction.emoji,
