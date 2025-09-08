@@ -20,17 +20,43 @@ export function WalletConnection({ onClose }: WalletConnectionProps) {
   const { address: appKitAddress, isConnected: appKitConnected } = useAppKitAccount()
   const { disconnect } = useDisconnect()
 
-  // Sync AppKit state with local state
+  // Sync AppKit state with local state and auto-save wallet
   useEffect(() => {
     if (appKitConnected && appKitAddress) {
       setAddress(appKitAddress)
       setIsConnected(true)
+      
+      // Automatically save the wallet address
+      const autoSaveWallet = async () => {
+        if (session?.user?.id && appKitAddress !== session?.user?.walletAddress) {
+          try {
+            const response = await fetch('/api/user/wallet', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ walletAddress: appKitAddress }),
+            })
+
+            if (response.ok) {
+              await update() // Refresh session
+              setTimeout(() => {
+                onClose() // Close modal after successful save
+              }, 500)
+            }
+          } catch (error) {
+            console.error('Error auto-saving wallet:', error)
+          }
+        }
+      }
+      
+      autoSaveWallet()
     } else {
       if (!address) { // Only clear if we don't have a manual address
         setIsConnected(false)
       }
     }
-  }, [appKitConnected, appKitAddress, address])
+  }, [appKitConnected, appKitAddress, address, session?.user?.id, session?.user?.walletAddress, update, onClose])
 
   const handleSaveWallet = async () => {
     if (!address || !session?.user?.id) return
@@ -71,6 +97,28 @@ export function WalletConnection({ onClose }: WalletConnectionProps) {
         if (accounts.length > 0) {
           setAddress(accounts[0])
           setIsConnected(true)
+          
+          // Auto-save MetaMask wallet
+          if (session?.user?.id && accounts[0] !== session?.user?.walletAddress) {
+            try {
+              const response = await fetch('/api/user/wallet', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ walletAddress: accounts[0] }),
+              })
+
+              if (response.ok) {
+                await update()
+                setTimeout(() => {
+                  onClose()
+                }, 500)
+              }
+            } catch (error) {
+              console.error('Error auto-saving MetaMask wallet:', error)
+            }
+          }
         }
       } catch (error) {
         console.error('Error connecting MetaMask:', error)
@@ -123,6 +171,28 @@ export function WalletConnection({ onClose }: WalletConnectionProps) {
         if (accounts.length > 0) {
           setAddress(accounts[0])
           setIsConnected(true)
+          
+          // Auto-save Coinbase wallet
+          if (session?.user?.id && accounts[0] !== session?.user?.walletAddress) {
+            try {
+              const response = await fetch('/api/user/wallet', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ walletAddress: accounts[0] }),
+              })
+
+              if (response.ok) {
+                await update()
+                setTimeout(() => {
+                  onClose()
+                }, 500)
+              }
+            } catch (error) {
+              console.error('Error auto-saving Coinbase wallet:', error)
+            }
+          }
         }
       } else {
         // Redirect to Coinbase Wallet
@@ -300,49 +370,23 @@ export function WalletConnection({ onClose }: WalletConnectionProps) {
 
             {isConnected && address && (
               <div className="space-y-3">
-                <div className="p-3 bg-gray-800 rounded-lg border border-gray-700">
-                  <p className="text-sm text-gray-400 mb-1">Connected Wallet</p>
-                  <p className="font-mono text-sm text-white">
+                <div className="p-3 bg-green-800 rounded-lg border border-green-600">
+                  <div className="flex items-center justify-center text-green-400 text-sm mb-2">
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                    Wallet Connected Successfully!
+                  </div>
+                  <p className="text-sm text-gray-400 mb-1 text-center">Connected Wallet</p>
+                  <p className="font-mono text-sm text-white text-center">
                     {address.slice(0, 6)}...{address.slice(-4)}
                   </p>
                 </div>
 
-                {updateStatus === 'success' && (
-                  <div className="flex items-center justify-center text-green-500 text-sm">
-                    <CheckCircle className="w-4 h-4 mr-2" />
-                    Wallet updated successfully!
-                  </div>
-                )}
-
-                {updateStatus === 'error' && (
-                  <div className="flex items-center justify-center text-red-500 text-sm">
-                    <AlertCircle className="w-4 h-4 mr-2" />
-                    Failed to update wallet
-                  </div>
-                )}
-
-                <div className="flex space-x-3">
-                  {currentWallet !== address && (
-                    <button
-                      onClick={handleSaveWallet}
-                      disabled={isUpdating || updateStatus === 'success'}
-                      className="flex-1 px-4 py-2 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-600 text-white rounded-lg font-medium transition-colors"
-                    >
-                      {isUpdating ? (
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto" />
-                      ) : (
-                        'Save Wallet'
-                      )}
-                    </button>
-                  )}
-                  
-                  <button
-                    onClick={handleDisconnect}
-                    className="flex-1 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-medium transition-colors"
-                  >
-                    Disconnect
-                  </button>
-                </div>
+                <button
+                  onClick={handleDisconnect}
+                  className="w-full px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-medium transition-colors"
+                >
+                  Disconnect Wallet
+                </button>
               </div>
             )}
           </div>
