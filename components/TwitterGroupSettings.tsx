@@ -40,6 +40,7 @@ export function TwitterGroupSettings({ group, onClose, onGroupUpdated, onGroupDe
   const [deleteConfirmationText, setDeleteConfirmationText] = useState('')
   const [showLeaveConfirmation, setShowLeaveConfirmation] = useState(false)
   const [leaveConfirmationText, setLeaveConfirmationText] = useState('')
+  const [isLeavingGroup, setIsLeavingGroup] = useState(false)
   const [editForm, setEditForm] = useState({
     name: group.name,
     contractAddress: group.contractAddress || '',
