@@ -371,20 +371,20 @@ export function ModernMessageList({
                         </div>
 
                         {/* Reactions and Add reaction button - inline */}
-                        <div className="flex flex-wrap items-center gap-1">
+                        <div className="flex flex-wrap items-center gap-0.5">
                           {/* Existing reactions */}
                           {message.reactions && message.reactions.length > 0 && (
                             message.reactions.map((reaction) => (
                               <button
                                 key={reaction.emoji}
                                 onClick={() => handleEmojiReaction(message.id, reaction.emoji)}
-                                className={`inline-flex items-center space-x-1 px-2 py-1 rounded-full text-xs transition-colors ${
+                                className={`inline-flex items-center space-x-0.5 px-1.5 py-0.5 rounded-full text-xs transition-colors ${
                                   reaction.userReacted
                                     ? 'bg-indigo-100 text-indigo-700 border border-indigo-200'
                                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                 }`}
                               >
-                                <span className="text-sm">{reaction.emoji}</span>
+                                <span className="text-xs">{reaction.emoji}</span>
                                 <span className="text-xs">{reaction.count}</span>
                               </button>
                             ))
@@ -394,14 +394,15 @@ export function ModernMessageList({
                           <div className="relative">
                             <button
                               onClick={() => setShowEmojiPicker(showEmojiPicker === message.id ? null : message.id)}
-                              className="inline-flex items-center px-2 py-1 rounded-full text-sm bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors opacity-0 group-hover:opacity-100"
+                              className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors opacity-0 group-hover:opacity-100"
                             >
-                              <span>😀</span>
+                              <span className="text-xs">😀</span>
                             </button>
                             {showEmojiPicker === message.id && (
                               <EmojiPicker
                                 onEmojiSelect={(emoji) => handleEmojiReaction(message.id, emoji)}
                                 onClose={() => setShowEmojiPicker(null)}
+                                isOwnMessage={isOwn}
                               />
                             )}
                           </div>
@@ -465,14 +466,18 @@ const COMMON_EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '😡']
 // Emoji picker component
 const EmojiPicker = ({ 
   onEmojiSelect, 
-  onClose 
+  onClose,
+  isOwnMessage = false
 }: { 
   onEmojiSelect: (emoji: string) => void
-  onClose: () => void 
+  onClose: () => void
+  isOwnMessage?: boolean
 }) => {
   return (
-    <div className="absolute top-full left-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-lg p-2 z-10">
-      <div className="flex gap-1">
+    <div className={`absolute top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg p-1.5 z-10 ${
+      isOwnMessage ? 'right-0' : 'left-0'
+    }`}>
+      <div className="flex gap-0.5">
         {COMMON_EMOJIS.map((emoji) => (
           <button
             key={emoji}
@@ -480,7 +485,7 @@ const EmojiPicker = ({
               onEmojiSelect(emoji)
               onClose()
             }}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-lg flex items-center justify-center w-10 h-10"
+            className="p-1 hover:bg-gray-100 rounded-md transition-colors text-sm flex items-center justify-center w-7 h-7"
           >
             {emoji}
           </button>
