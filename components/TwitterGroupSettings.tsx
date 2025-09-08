@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { X, Edit3, LogOut, Calendar, Users, Trash2, UserMinus } from 'lucide-react'
+import { resizeImage, isImageFile } from '../lib/imageResize'
+import { useSocket } from '../lib/socketContext'
+import { useNativeNotification, NativeNotification } from './NativeNotification'
 
 interface Member {
   id: string
@@ -27,19 +30,42 @@ interface TwitterGroupSettingsProps {
   onClose: () => void
   onGroupUpdated: () => void
   onGroupDeleted?: () => void
+  onNavigateToMyHives?: () => void
 }
 
-export function TwitterGroupSettings({ group, onClose, onGroupUpdated, onGroupDeleted }: TwitterGroupSettingsProps) {
+export function TwitterGroupSettings({ group, onClose, onGroupUpdated, onGroupDeleted, onNavigateToMyHives }: TwitterGroupSettingsProps) {
   const [activeView, setActiveView] = useState<'info' | 'members' | 'edit'>('info')
   const [isLoading, setIsLoading] = useState(false)
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false)
   const [deleteConfirmationText, setDeleteConfirmationText] = useState('')
+  const [showLeaveConfirmation, setShowLeaveConfirmation] = useState(false)
+  const [leaveConfirmationText, setLeaveConfirmationText] = useState('')
   const [editForm, setEditForm] = useState({
     name: group.name,
     contractAddress: group.contractAddress || '',
     profileImage: null as File | null
   })
   const [previewUrl, setPreviewUrl] = useState<string | null>(group.profileImage)
+  const { showSuccess, showInfo, notification, hideNotification } = useNativeNotification()
+  const { onMemberLeft, offMemberLeft } = useSocket()
+
+  // Listen for when current user leaves group (real-time navigation)
+  useEffect(() => {
+    const handleMemberLeft = (data: any) => {
+      console.log('Member left event received:', data)
+      // If current user left the group, navigate to My Hives
+      if (data.userId === data.currentUserId && data.groupId === group.id) {
+        console.log('Current user left this group, navigating to My Hives')
+        onClose()
+        if (onNavigateToMyHives) {
+          onNavigateToMyHives()
+        }
+      }
+    }
+
+    onMemberLeft(handleMemberLeft)
+    return () => offMemberLeft()
+  }, [group.id, onMemberLeft, offMemberLeft, onClose, onNavigateToMyHives])
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'Recently'
@@ -51,12 +77,37 @@ export function TwitterGroupSettings({ group, onClose, onGroupUpdated, onGroupDe
     })
   }
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (file) {
-      setEditForm(prev => ({ ...prev, profileImage: file }))
-      const url = URL.createObjectURL(file)
+    if (!file) return
+
+    if (!isImageFile(file)) {
+      alert('Please select a valid image file')
+      return
+    }
+
+    try {
+      console.log('Original file size:', file.size, 'bytes')
+      
+      // Resize image if it's larger than 1MB or dimensions are too big
+      let processedFile = file
+      if (file.size > 1024 * 1024 || file.size > 500 * 1024) {
+        console.log('Resizing image...')
+        processedFile = await resizeImage(file, {
+          maxWidth: 400,
+          maxHeight: 400,
+          quality: 0.8,
+          format: 'jpeg'
+        })
+        console.log('Resized file size:', processedFile.size, 'bytes')
+      }
+
+      setEditForm(prev => ({ ...prev, profileImage: processedFile }))
+      const url = URL.createObjectURL(processedFile)
       setPreviewUrl(url)
+    } catch (error) {
+      console.error('Error processing image:', error)
+      alert('Failed to process image. Please try a different image.')
     }
   }
 
@@ -106,20 +157,35 @@ export function TwitterGroupSettings({ group, onClose, onGroupUpdated, onGroupDe
   }
 
   const handleLeaveGroup = async () => {
-    if (!confirm('Are you sure you want to leave this Hive?')) return
+    if (!showLeaveConfirmation) {
+      setShowLeaveConfirmation(true)
+      return
+    }
 
+    if (leaveConfirmationText !== 'LEAVE') {
+      return
+    }
+
+    setIsLeavingGroup(true)
     try {
-      const response = await fetch(`/api/groups/${group.id}/join`, {
-        method: 'DELETE'
+      const response = await fetch(`/api/groups/${group.id}/leave`, {
+        method: 'POST'
       })
 
       if (response.ok) {
-        onClose()
-        // Navigate away from the group
-        window.location.href = '/'
+        showSuccess('Successfully left the Hive')
+        setShowLeaveConfirmation(false)
+        setLeaveConfirmationText('')
+        // The WebSocket listener will handle navigation automatically
+      } else {
+        const data = await response.json()
+        alert(data.error || 'Failed to leave group')
       }
     } catch (error) {
       console.error('Error leaving group:', error)
+      alert('Failed to leave group')
+    } finally {
+      setIsLeavingGroup(false)
     }
   }
 
@@ -404,7 +470,76 @@ export function TwitterGroupSettings({ group, onClose, onGroupUpdated, onGroupDe
             </div>
           </div>
         )}
+
+        {/* Leave Confirmation Modal */}
+        {showLeaveConfirmation && (
+          <div className="absolute inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-10">
+            <div className="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl">
+              <div className="flex items-center justify-center w-16 h-16 bg-orange-100 rounded-full mx-auto mb-6">
+                <LogOut className="w-8 h-8 text-orange-600" />
+              </div>
+
+              <div className="text-center mb-6">
+                <h3 className="text-xl font-bold text-gray-900 mb-2">Leave "{group.name}"?</h3>
+                <p className="text-gray-600 text-sm leading-relaxed">
+                  Are you sure you want to leave this Hive? You'll need to request to join again if you want to come back.
+                </p>
+              </div>
+
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Type <span className="font-bold text-orange-600">LEAVE</span> to confirm:
+                </label>
+                <input
+                  type="text"
+                  value={leaveConfirmationText}
+                  onChange={(e) => setLeaveConfirmationText(e.target.value)}
+                  placeholder="Type LEAVE here"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-gray-900 placeholder-gray-500"
+                  autoFocus
+                />
+              </div>
+
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => {
+                    setShowLeaveConfirmation(false)
+                    setLeaveConfirmationText('')
+                  }}
+                  disabled={isLeavingGroup}
+                  className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-colors disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleLeaveGroup}
+                  disabled={isLeavingGroup || leaveConfirmationText !== 'LEAVE'}
+                  className="flex-1 px-4 py-3 bg-orange-600 hover:bg-orange-700 disabled:bg-orange-400 text-white rounded-xl font-medium transition-colors flex items-center justify-center"
+                >
+                  {isLeavingGroup ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                      Leaving...
+                    </>
+                  ) : (
+                    'Leave Hive'
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
+
+      {/* Native Notification */}
+      {notification && (
+        <NativeNotification
+          message={notification.message}
+          type={notification.type}
+          isVisible={notification.isVisible}
+          onClose={hideNotification}
+        />
+      )}
     </div>
   )
 }

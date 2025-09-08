@@ -43,6 +43,11 @@ export function ModernApp() {
     setRefreshTrigger(prev => prev + 1) // Trigger sidebar refresh
   }
 
+  const handleNavigateToMyHives = () => {
+    setSelectedGroupId(null)
+    setActiveTab('chats')
+  }
+
   if (!session) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-white to-purple-100 flex items-center justify-center p-4">
@@ -95,6 +100,7 @@ export function ModernApp() {
                 groupId={selectedGroupId} 
                 onBack={handleBackToList}
                 onGroupDeleted={handleGroupDeleted}
+                onNavigateToMyHives={handleNavigateToMyHives}
               />
             ) : activeTab === 'profile' ? (
               <div className="flex-1 overflow-y-auto bg-gray-50">
@@ -126,6 +132,7 @@ export function ModernApp() {
               onBack={handleBackToList}
               isMobile={true}
               onGroupDeleted={handleGroupDeleted}
+              onNavigateToMyHives={handleNavigateToMyHives}
             />
           ) : activeTab === 'profile' ? (
             <div className="flex-1 overflow-y-auto bg-gray-50 pb-20">

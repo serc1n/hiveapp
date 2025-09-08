@@ -15,6 +15,8 @@ interface SocketContextType {
   offGroupDeleted: () => void
   onGroupCreated: (callback: (data: any) => void) => void
   offGroupCreated: () => void
+  onMemberLeft: (callback: (data: any) => void) => void
+  offMemberLeft: () => void
 }
 
 const SocketContext = createContext<SocketContextType>({
@@ -27,6 +29,8 @@ const SocketContext = createContext<SocketContextType>({
   offGroupDeleted: () => {},
   onGroupCreated: () => {},
   offGroupCreated: () => {},
+  onMemberLeft: () => {},
+  offMemberLeft: () => {},
 })
 
 export const useSocket = () => {
@@ -46,6 +50,7 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
   const [messageCallback, setMessageCallback] = useState<((data: any) => void) | null>(null)
   const [groupDeletedCallback, setGroupDeletedCallback] = useState<((data: any) => void) | null>(null)
   const [groupCreatedCallback, setGroupCreatedCallback] = useState<((data: any) => void) | null>(null)
+  const [memberLeftCallback, setMemberLeftCallback] = useState<((data: any) => void) | null>(null)
   const [channels, setChannels] = useState<RealtimeChannel[]>([])
   const [currentGroupIds, setCurrentGroupIds] = useState<string[]>([])
   const { data: session } = useSession()
@@ -199,6 +204,34 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
           console.log('🔌 ===================================')
         }
       )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'GroupMember'
+        },
+        async (payload: any) => {
+          console.log('🔌 ===== REALTIME MEMBER LEFT =====')
+          console.log('🔌 Member left payload:', JSON.stringify(payload, null, 2))
+          console.log('🔌 Left member data:', payload.old)
+          
+          if (payload.old && memberLeftCallback) {
+            console.log('🔌 Processing member left:', payload.old.userId, 'from group:', payload.old.groupId)
+            const memberLeftData = {
+              userId: payload.old.userId,
+              groupId: payload.old.groupId,
+              currentUserId: session?.user?.id
+            }
+            
+            console.log('🔌 Calling member left callback with:', memberLeftData)
+            memberLeftCallback(memberLeftData)
+          } else {
+            console.log('🔌 No member left callback set or invalid payload')
+          }
+          console.log('🔌 =================================')
+        }
+      )
       .subscribe((status, err) => {
         console.log('🔌 Realtime subscription status:', status)
         if (err) {
@@ -216,7 +249,7 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
 
     setChannels([channel])
     console.log('🔌 Channel created and subscribed')
-  }, [session?.user?.id, currentGroupIds, messageCallback, groupDeletedCallback, groupCreatedCallback]) // Include dependencies for proper closure
+  }, [session?.user?.id, currentGroupIds, messageCallback, groupDeletedCallback, groupCreatedCallback, memberLeftCallback]) // Include dependencies for proper closure
 
   const leaveGroups = useCallback((groupIds: string[]) => {
     console.log('🔌 Leaving groups:', groupIds)
@@ -257,6 +290,16 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
     setGroupCreatedCallback(null)
   }, [])
 
+  const onMemberLeft = useCallback((callback: (data: any) => void) => {
+    console.log('🔌 Setting member left callback')
+    setMemberLeftCallback(callback)
+  }, [])
+
+  const offMemberLeft = useCallback(() => {
+    console.log('🔌 Removing member left callback')
+    setMemberLeftCallback(null)
+  }, [])
+
   return (
     <SocketContext.Provider
       value={{
@@ -269,6 +312,8 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
         offGroupDeleted,
         onGroupCreated,
         offGroupCreated,
+        onMemberLeft,
+        offMemberLeft,
       }}
     >
       {children}

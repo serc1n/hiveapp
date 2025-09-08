@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { X, Upload, Hash } from 'lucide-react'
+import { resizeImage, isImageFile } from '../lib/imageResize'
 
 interface CreateGroupModalProps {
   onClose: () => void
@@ -18,12 +19,37 @@ export function CreateGroupModal({ onClose, onGroupCreated }: CreateGroupModalPr
   const [isLoading, setIsLoading] = useState(false)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (file) {
-      setFormData(prev => ({ ...prev, profileImage: file }))
-      const url = URL.createObjectURL(file)
+    if (!file) return
+
+    if (!isImageFile(file)) {
+      alert('Please select a valid image file')
+      return
+    }
+
+    try {
+      console.log('Original file size:', file.size, 'bytes')
+      
+      // Resize image if it's larger than 1MB or dimensions are too big
+      let processedFile = file
+      if (file.size > 1024 * 1024 || file.size > 500 * 1024) {
+        console.log('Resizing image...')
+        processedFile = await resizeImage(file, {
+          maxWidth: 400,
+          maxHeight: 400,
+          quality: 0.8,
+          format: 'jpeg'
+        })
+        console.log('Resized file size:', processedFile.size, 'bytes')
+      }
+
+      setFormData(prev => ({ ...prev, profileImage: processedFile }))
+      const url = URL.createObjectURL(processedFile)
       setPreviewUrl(url)
+    } catch (error) {
+      console.error('Error processing image:', error)
+      alert('Failed to process image. Please try a different image.')
     }
   }
 
