@@ -25,6 +25,7 @@ model User {
   createdGroups     Group[]   @relation("GroupCreator")
   groupMembers      GroupMember[]
   messages          Message[]
+  messageReactions  MessageReaction[]
   announcements     Announcement[]
   pushSubscriptions PushSubscription[]
   joinRequests      JoinRequest[]
@@ -76,8 +77,24 @@ model Message {
   // Relations
   user      User     @relation(fields: [userId], references: [id])
   group     Group    @relation(fields: [groupId], references: [id])
+  reactions MessageReaction[]
   
   @@map("messages")
+}
+
+model MessageReaction {
+  id        String   @id @default(cuid())
+  emoji     String   // The emoji character (👍, ❤️, 😂, etc.)
+  userId    String
+  messageId String
+  createdAt DateTime @default(now())
+  
+  // Relations
+  user      User     @relation(fields: [userId], references: [id])
+  message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, messageId, emoji]) // One user can only react with same emoji once per message
+  @@map("message_reactions")
 }
 
 model Announcement {

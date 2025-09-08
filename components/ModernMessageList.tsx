@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { MoreHorizontal, Megaphone, User, MessageCircle, Bell } from 'lucide-react'
+import { MoreHorizontal, Megaphone, User, MessageCircle, Bell, Smile, Plus } from 'lucide-react'
 
 // Helper function to detect Twitter/X URLs and extract tweet ID
 const extractTweetId = (url: string) => {
@@ -86,6 +86,17 @@ const linkifyText = (text: string) => {
   })
 }
 
+interface Reaction {
+  emoji: string
+  count: number
+  users: Array<{
+    id: string
+    name: string
+    twitterHandle: string
+  }>
+  userReacted: boolean
+}
+
 interface Message {
   id: string
   content: string
@@ -95,6 +106,7 @@ interface Message {
     twitterHandle: string
     profileImage: string | null
   }
+  reactions?: Reaction[]
   createdAt: string
 }
 
@@ -117,6 +129,7 @@ export function ModernMessageList({
 }: ModernMessageListProps) {
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
   const [showingUsername, setShowingUsername] = useState<string | null>(null)
+  const [showEmojiPicker, setShowEmojiPicker] = useState<string | null>(null)
 
   const formatTime = (dateString: string) => {
     const date = new Date(dateString)
@@ -178,6 +191,28 @@ export function ModernMessageList({
   }
 
   const messageGroups = groupMessagesByDate(messages)
+
+  const handleEmojiReaction = async (messageId: string, emoji: string) => {
+    try {
+      const response = await fetch(`/api/messages/${messageId}/reactions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ emoji })
+      })
+
+      if (response.ok) {
+        // The message list should refresh automatically via real-time updates
+        // For now, we could trigger a manual refresh if needed
+        console.log('Reaction updated successfully')
+      } else {
+        console.error('Failed to update reaction')
+      }
+    } catch (error) {
+      console.error('Error updating reaction:', error)
+    }
+  }
 
   return (
     <div className="p-4 space-y-6">
@@ -310,6 +345,37 @@ export function ModernMessageList({
           </div>
         </div>
       ))}
+    </div>
+  )
+}
+
+// Common emoji reactions
+const COMMON_EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '😡']
+
+// Emoji picker component
+const EmojiPicker = ({ 
+  onEmojiSelect, 
+  onClose 
+}: { 
+  onEmojiSelect: (emoji: string) => void
+  onClose: () => void 
+}) => {
+  return (
+    <div className="absolute bottom-full right-0 mb-2 bg-white border border-gray-200 rounded-xl shadow-lg p-3 z-10">
+      <div className="flex flex-wrap gap-2 max-w-48">
+        {COMMON_EMOJIS.map((emoji) => (
+          <button
+            key={emoji}
+            onClick={() => {
+              onEmojiSelect(emoji)
+              onClose()
+            }}
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-lg"
+          >
+            {emoji}
+          </button>
+        ))}
+      </div>
     </div>
   )
 }

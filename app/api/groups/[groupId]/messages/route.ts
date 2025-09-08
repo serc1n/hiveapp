@@ -55,14 +55,55 @@ export async function GET(
             twitterHandle: true,
             profileImage: true
           }
+        },
+        reactions: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                twitterHandle: true
+              }
+            }
+          }
         }
       },
       orderBy: { createdAt: 'desc' }, // Changed to desc for better pagination
       take: Math.min(limit, 100) // Max 100 messages per request
     })
     
-    // Reverse to get chronological order
-    const orderedMessages = messages.reverse()
+    // Reverse to get chronological order and process reactions
+    const orderedMessages = messages.reverse().map(message => {
+      // Group reactions by emoji
+      const groupedReactions = message.reactions.reduce((acc, reaction) => {
+        if (!acc[reaction.emoji]) {
+          acc[reaction.emoji] = {
+            emoji: reaction.emoji,
+            count: 0,
+            users: [],
+            userReacted: false
+          }
+        }
+        
+        acc[reaction.emoji].count++
+        acc[reaction.emoji].users.push({
+          id: reaction.user.id,
+          name: reaction.user.name,
+          twitterHandle: reaction.user.twitterHandle
+        })
+        
+        if (reaction.userId === session.user.id) {
+          acc[reaction.emoji].userReacted = true
+        }
+        
+        return acc
+      }, {} as Record<string, any>)
+
+      return {
+        ...message,
+        reactions: Object.values(groupedReactions)
+      }
+    })
 
     return NextResponse.json({ messages: orderedMessages })
   } catch (error) {
