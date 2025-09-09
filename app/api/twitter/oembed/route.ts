@@ -15,6 +15,7 @@ export async function GET(request: NextRequest) {
     const response = await fetch(oembedUrl, {
       headers: {
         'User-Agent': 'HiveApp/1.0 (https://hiveapp.vercel.app)',
+        'Accept': 'application/json',
       },
     })
 
@@ -27,8 +28,26 @@ export async function GET(request: NextRequest) {
     console.log('✅ Twitter oEmbed data received:', {
       author_name: data.author_name,
       author_url: data.author_url,
-      html_length: data.html?.length || 0
+      html_length: data.html?.length || 0,
+      html_preview: data.html?.substring(0, 200) + '...'
     })
+
+    // Also try to extract additional info from the HTML
+    if (data.html) {
+      try {
+        // Server-side HTML parsing (if needed)
+        const htmlContent = data.html
+        
+        // Log more details for debugging
+        console.log('🔍 HTML content analysis:', {
+          hasProfileImage: htmlContent.includes('twimg.com'),
+          hasVerifiedBadge: htmlContent.includes('verified'),
+          contentLength: htmlContent.length
+        })
+      } catch (parseError) {
+        console.warn('⚠️ HTML parsing warning:', parseError)
+      }
+    }
 
     return NextResponse.json(data)
   } catch (error) {

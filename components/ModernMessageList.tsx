@@ -59,16 +59,72 @@ const RichTwitterEmbed = ({ tweetId, url }: { tweetId: string, url: string }) =>
         const parser = new DOMParser()
         const doc = parser.parseFromString(data.html, 'text/html')
         
-        // Extract basic info (fallback data)
-        const tweetText = doc.querySelector('p')?.textContent || ''
+        // Extract tweet text with proper formatting (preserve line breaks)
+        const tweetElement = doc.querySelector('p')
+        let tweetText = ''
+        if (tweetElement) {
+          // Get innerHTML and convert <br> tags to newlines
+          const innerHTML = tweetElement.innerHTML
+          tweetText = innerHTML
+            .replace(/<br\s*\/?>/gi, '\n')
+            .replace(/<[^>]*>/g, '') // Remove other HTML tags
+            .trim()
+        }
+        
+        // Extract username from author_url (more reliable than author_name)
         const authorName = data.author_name || 'Twitter User'
         const authorUrl = data.author_url || url
         
+        // Extract username from URL like https://twitter.com/serc1n
+        let username = authorName
+        if (authorUrl) {
+          const urlMatch = authorUrl.match(/(?:twitter\.com|x\.com)\/([^\/\?]+)/)
+          if (urlMatch && urlMatch[1]) {
+            username = urlMatch[1]
+          }
+        }
+        
+        // Try to extract profile image from the HTML
+        let profileImageUrl = `https://unavatar.io/twitter/${username}`
+        
+        // Look for Twitter profile images in the HTML
+        const imgElements = doc.querySelectorAll('img')
+        for (let i = 0; i < imgElements.length; i++) {
+          const imgElement = imgElements[i]
+          const imgSrc = imgElement.getAttribute('src')
+          if (imgSrc && (
+            imgSrc.includes('twimg.com/profile_images') || 
+            imgSrc.includes('pbs.twimg.com/profile_images')
+          )) {
+            profileImageUrl = imgSrc
+            break
+          }
+        }
+        
+        // If no profile image found in HTML, try alternative services
+        if (!profileImageUrl.includes('twimg.com')) {
+          // Try multiple avatar services as fallbacks
+          const avatarServices = [
+            `https://unavatar.io/twitter/${username}`,
+            `https://avatars.githubusercontent.com/${username}?size=48`,
+            `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&size=48&background=1da1f2&color=fff`
+          ]
+          profileImageUrl = avatarServices[0] // Use unavatar as primary
+        }
+        
+        console.log('🐦 Extracted tweet data:', {
+          authorName,
+          username,
+          authorUrl,
+          tweetText: tweetText.substring(0, 100) + '...',
+          profileImageUrl
+        })
+        
         setTweetData({
-          author_name: authorName,
+          author_name: `@${username}`,
           author_url: authorUrl,
           text: tweetText,
-          author_profile_image_url: `https://unavatar.io/twitter/${authorName.replace('@', '')}`,
+          author_profile_image_url: profileImageUrl,
           public_metrics: {
             like_count: Math.floor(Math.random() * 1000), // Placeholder
             reply_count: Math.floor(Math.random() * 100),
@@ -166,7 +222,7 @@ const RichTwitterEmbed = ({ tweetId, url }: { tweetId: string, url: string }) =>
             <div className="flex-1 min-w-0">
               <div className="flex items-center space-x-1">
                 <h3 className="font-bold text-gray-900 text-sm truncate">
-                  {tweetData.author_name.replace('@', '')}
+                  {tweetData.author_name.startsWith('@') ? tweetData.author_name.substring(1) : tweetData.author_name}
                 </h3>
                 {tweetData.verified && (
                   <svg viewBox="0 0 24 24" className="w-4 h-4 text-blue-500 fill-current">
@@ -175,7 +231,7 @@ const RichTwitterEmbed = ({ tweetId, url }: { tweetId: string, url: string }) =>
                 )}
               </div>
               <p className="text-gray-500 text-sm">
-                {tweetData.author_name}
+                {tweetData.author_name.startsWith('@') ? tweetData.author_name : `@${tweetData.author_name}`}
               </p>
             </div>
           </div>
