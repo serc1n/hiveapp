@@ -13,11 +13,13 @@ const extractTweetId = (url: string) => {
   return match ? match[1] : null
 }
 
-// Simple Twitter embed component using react-tweet
+// Compact Twitter embed component using react-tweet
 const RichTwitterEmbed = ({ tweetId }: { tweetId: string, url: string }) => {
   return (
-    <div className="my-2 max-w-lg">
-      <Tweet id={tweetId} />
+    <div className="my-1 max-w-xs transform scale-75 origin-top-left -mb-4">
+      <div className="compact-tweet">
+        <Tweet id={tweetId} />
+      </div>
     </div>
   )
 }
