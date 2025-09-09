@@ -15,10 +15,12 @@ const extractTweetId = (url: string) => {
 // Twitter embed data interface
 interface TwitterEmbedData {
   author_name: string
+  author_username?: string
   author_url: string
   author_profile_image_url?: string
   text?: string
   created_at?: string
+  twitter_card?: string
   public_metrics?: {
     like_count: number
     reply_count: number
@@ -55,97 +57,92 @@ const RichTwitterEmbed = ({ tweetId, url }: { tweetId: string, url: string }) =>
         
         const data = await response.json()
         
-        // Parse the HTML to extract tweet information
-        const parser = new DOMParser()
-        const doc = parser.parseFromString(data.html, 'text/html')
+        // Use enriched Twitter data from meta tags when available
+        const displayName = data.twitter_display_name || data.author_name || 'Twitter User'
+        const username = data.twitter_creator || '@unknown'
+        const authorUrl = data.author_url || url
         
-        // Extract tweet text with proper formatting (preserve line breaks)
-        const tweetElement = doc.querySelector('p')
-        let tweetText = ''
-        if (tweetElement) {
-          // Get innerHTML and convert <br> tags to newlines
-          const innerHTML = tweetElement.innerHTML
-          tweetText = innerHTML
-            .replace(/<br\s*\/?>/gi, '\n')
-            .replace(/<[^>]*>/g, '') // Remove other HTML tags
-            .trim()
+        // Use Twitter card image if available, otherwise parse HTML
+        let mediaImages: Array<{type: string, url: string, preview_image_url?: string}> = []
+        let profileImageUrl = data.twitter_profile_image || `https://unavatar.io/twitter/${username.replace('@', '')}`
+        
+        // Primary: Use Twitter card image
+        if (data.meta_image && data.twitter_card) {
+          mediaImages.push({
+            type: 'photo',
+            url: data.meta_image,
+            preview_image_url: data.meta_image
+          })
+        } else {
+          // Fallback: Parse HTML for media images
+          const parser = new DOMParser()
+          const doc = parser.parseFromString(data.html, 'text/html')
+          const imgElements = doc.querySelectorAll('img')
+          
+          for (let i = 0; i < imgElements.length; i++) {
+            const imgElement = imgElements[i]
+            const imgSrc = imgElement.getAttribute('src')
+            if (imgSrc) {
+              // Check if it's a profile image
+              if (imgSrc.includes('twimg.com/profile_images') || imgSrc.includes('pbs.twimg.com/profile_images')) {
+                if (!data.twitter_profile_image) {
+                  profileImageUrl = imgSrc
+                }
+              }
+              // Check if it's a media image (not profile image)
+              else if (imgSrc.includes('pbs.twimg.com/media/') || imgSrc.includes('twimg.com/media/')) {
+                // Convert to larger size if possible
+                let largerImageUrl = imgSrc
+                if (imgSrc.includes('?format=')) {
+                  // Try to get larger version
+                  largerImageUrl = imgSrc.replace(/&name=\w+/, '&name=medium').replace(/\?format=\w+&name=\w+/, '?format=jpg&name=medium')
+                }
+                
+                mediaImages.push({
+                  type: 'photo',
+                  url: largerImageUrl,
+                  preview_image_url: imgSrc
+                })
+              }
+            }
+          }
+        }
+        
+        // Extract tweet text with proper formatting
+        let tweetText = data.meta_description || ''
+        if (!tweetText && data.html) {
+          const parser = new DOMParser()
+          const doc = parser.parseFromString(data.html, 'text/html')
+          const tweetElement = doc.querySelector('p')
+          if (tweetElement) {
+            const innerHTML = tweetElement.innerHTML
+            tweetText = innerHTML
+              .replace(/<br\s*\/?>/gi, '\n')
+              .replace(/<[^>]*>/g, '') // Remove other HTML tags
+              .trim()
+          }
         }
         
         // Remove pic.twitter.com links from tweet text
         tweetText = tweetText.replace(/https:\/\/t\.co\/\w+/g, '').replace(/pic\.twitter\.com\/\w+/g, '').trim()
         
-        // Extract username from author_url (more reliable than author_name)
-        const authorName = data.author_name || 'Twitter User'
-        const authorUrl = data.author_url || url
-        
-        // Extract username from URL like https://twitter.com/serc1n
-        let username = authorName
-        if (authorUrl) {
-          const urlMatch = authorUrl.match(/(?:twitter\.com|x\.com)\/([^\/\?]+)/)
-          if (urlMatch && urlMatch[1]) {
-            username = urlMatch[1]
-          }
-        }
-        
-        // Try to extract profile image from the HTML
-        let profileImageUrl = `https://unavatar.io/twitter/${username}`
-        
-        // Extract media images from the HTML
-        const mediaImages: Array<{type: string, url: string, preview_image_url?: string}> = []
-        const imgElements = doc.querySelectorAll('img')
-        
-        for (let i = 0; i < imgElements.length; i++) {
-          const imgElement = imgElements[i]
-          const imgSrc = imgElement.getAttribute('src')
-          if (imgSrc) {
-            // Check if it's a profile image
-            if (imgSrc.includes('twimg.com/profile_images') || imgSrc.includes('pbs.twimg.com/profile_images')) {
-              profileImageUrl = imgSrc
-            }
-            // Check if it's a media image (not profile image)
-            else if (imgSrc.includes('pbs.twimg.com/media/') || imgSrc.includes('twimg.com/media/')) {
-              // Convert to larger size if possible
-              let largerImageUrl = imgSrc
-              if (imgSrc.includes('?format=')) {
-                // Try to get larger version
-                largerImageUrl = imgSrc.replace(/&name=\w+/, '&name=medium').replace(/\?format=\w+&name=\w+/, '?format=jpg&name=medium')
-              }
-              
-              mediaImages.push({
-                type: 'photo',
-                url: largerImageUrl,
-                preview_image_url: imgSrc
-              })
-            }
-          }
-        }
-        
-        // If no profile image found in HTML, try alternative services
-        if (!profileImageUrl.includes('twimg.com')) {
-          // Try multiple avatar services as fallbacks
-          const avatarServices = [
-            `https://unavatar.io/twitter/${username}`,
-            `https://avatars.githubusercontent.com/${username}?size=48`,
-            `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&size=48&background=1da1f2&color=fff`
-          ]
-          profileImageUrl = avatarServices[0] // Use unavatar as primary
-        }
-        
-        console.log('🐦 Extracted tweet data:', {
-          authorName,
+        console.log('🐦 Processed Twitter data:', {
+          displayName,
           username,
-          authorUrl,
-          tweetText: tweetText.substring(0, 100) + '...',
-          profileImageUrl,
-          mediaCount: mediaImages.length
+          cardType: data.twitter_card,
+          hasMetaImage: !!data.meta_image,
+          mediaCount: mediaImages.length,
+          tweetText: tweetText.substring(0, 100) + '...'
         })
         
         setTweetData({
-          author_name: `@${username}`,
+          author_name: displayName,
+          author_username: username,
           author_url: authorUrl,
           text: tweetText,
           author_profile_image_url: profileImageUrl,
           media: mediaImages,
+          twitter_card: data.twitter_card,
           public_metrics: {
             like_count: Math.floor(Math.random() * 1000), // Placeholder
             reply_count: Math.floor(Math.random() * 100),
@@ -241,19 +238,19 @@ const RichTwitterEmbed = ({ tweetId, url }: { tweetId: string, url: string }) =>
               />
             </div>
             <div className="flex-1 min-w-0">
-              <div className="flex items-center space-x-1">
-                <h3 className="font-semibold text-gray-900 text-xs truncate">
-                  {tweetData.author_name.startsWith('@') ? tweetData.author_name.substring(1) : tweetData.author_name}
-                </h3>
-                {tweetData.verified && (
-                  <svg viewBox="0 0 24 24" className="w-3 h-3 text-blue-500 fill-current">
-                    <path d="M22.25 12c0-1.43-.88-2.67-2.19-3.34.46-1.39.2-2.9-.81-3.91s-2.52-1.27-3.91-.81c-.66-1.31-1.91-2.19-3.34-2.19s-2.67.88-3.33 2.19c-1.4-.46-2.91-.2-3.92.81s-1.26 2.52-.8 3.91c-1.31.67-2.2 1.91-2.2 3.34s.89 2.67 2.2 3.34c-.46 1.39-.21 2.9.8 3.91s2.52 1.26 3.91.81c.67 1.31 1.91 2.19 3.34 2.19s2.68-.88 3.34-2.19c1.39.45 2.9.2 3.91-.81s1.27-2.52.81-3.91c1.31-.67 2.19-1.91 2.19-3.34zm-11.71 4.2L6.8 12.46l1.41-1.42 2.26 2.26 4.8-5.23 1.47 1.36-6.2 6.77z"/>
-                  </svg>
-                )}
-                <span className="text-gray-400 text-xs">
-                  {tweetData.author_name.startsWith('@') ? tweetData.author_name : `@${tweetData.author_name}`}
-                </span>
-              </div>
+               <div className="flex items-center space-x-1">
+                 <h3 className="font-semibold text-gray-900 text-xs truncate">
+                   {tweetData.author_name}
+                 </h3>
+                 {tweetData.verified && (
+                   <svg viewBox="0 0 24 24" className="w-3 h-3 text-blue-500 fill-current">
+                     <path d="M22.25 12c0-1.43-.88-2.67-2.19-3.34.46-1.39.2-2.9-.81-3.91s-2.52-1.27-3.91-.81c-.66-1.31-1.91-2.19-3.34-2.19s-2.67.88-3.33 2.19c-1.4-.46-2.91-.2-3.92.81s-1.26 2.52-.8 3.91c-1.31.67-2.2 1.91-2.2 3.34s.89 2.67 2.2 3.34c-.46 1.39-.21 2.9.8 3.91s2.52 1.26 3.91.81c.67 1.31 1.91 2.19 3.34 2.19s2.68-.88 3.34-2.19c1.39.45 2.9.2 3.91-.81s1.27-2.52.81-3.91c1.31-.67 2.19-1.91 2.19-3.34zm-11.71 4.2L6.8 12.46l1.41-1.42 2.26 2.26 4.8-5.23 1.47 1.36-6.2 6.77z"/>
+                   </svg>
+                 )}
+                 <span className="text-gray-400 text-xs">
+                   {tweetData.author_username || `@${tweetData.author_name}`}
+                 </span>
+               </div>
             </div>
           </div>
           
