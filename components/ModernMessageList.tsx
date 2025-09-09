@@ -23,16 +23,83 @@ const extractTweetId = (url: string) => {
           const response = await fetch(`/api/twitter/oembed?url=${encodeURIComponent(url)}`)
           if (response.ok) {
             const data = await response.json()
-            setTweetData(data)
+            
+            // Extract images from the HTML if available
+            let mediaUrl = data.meta_image
+            if (!mediaUrl && data.html) {
+              const parser = new DOMParser()
+              const doc = parser.parseFromString(data.html, 'text/html')
+              const imgs = doc.querySelectorAll('img')
+              for (let i = 0; i < imgs.length; i++) {
+                const img = imgs[i]
+                if (img.src && !img.src.includes('profile_images') && !img.src.includes('avatar')) {
+                  // Convert to larger size if it's a Twitter image
+                  let imgSrc = img.src
+                  if (imgSrc.includes('pbs.twimg.com')) {
+                    imgSrc = imgSrc.replace(/(\?.*)?$/, '?format=jpg&name=small')
+                  }
+                  mediaUrl = imgSrc
+                  break
+                }
+              }
+            }
+
+            // Extract clean tweet text from HTML, preserving line breaks
+            let tweetText = data.meta_description || ''
+            if (!tweetText && data.html) {
+              const parser = new DOMParser()
+              const doc = parser.parseFromString(data.html, 'text/html')
+              const textElement = doc.querySelector('.tweet-text') || doc.querySelector('p')
+              if (textElement) {
+                tweetText = textElement.textContent || (textElement as HTMLElement).innerText || ''
+              } else {
+                // Fallback: extract text from HTML
+                tweetText = data.html
+                  .replace(/<[^>]*>/g, ' ')
+                  .replace(/\s+/g, ' ')
+                  .replace(/pic\.twitter\.com\/\w+/g, '')
+                  .replace(/https?:\/\/[^\s]+/g, '')
+                  .trim()
+              }
+            }
+
+            // Get proper display name and username
+            const displayName = data.twitter_display_name || data.author_name || ''
+            const username = data.twitter_creator?.replace('@', '') || data.author_name || ''
+            
+            // Get profile image
+            const profileImage = data.twitter_profile_image || 
+                               `https://unavatar.io/twitter/${username}` ||
+                               `https://unavatar.io/twitter/${data.author_name}`
+
+            const processedData = {
+              ...data,
+              display_name: displayName,
+              username: username,
+              profile_image: profileImage,
+              tweet_text: tweetText,
+              media_url: mediaUrl,
+              has_media: !!mediaUrl
+            }
+
+            console.log('🐦 Processed Twitter data:', {
+              display_name: displayName,
+              username: username,
+              tweet_text: tweetText.substring(0, 100) + '...',
+              has_media: !!mediaUrl,
+              profile_image: profileImage
+            })
+
+            setTweetData(processedData)
           } else {
             // Fallback: extract basic info from URL
             const match = url.match(/twitter\.com\/([^/]+)\/status\/(\d+)/)
             if (match) {
               setTweetData({
-                author_name: match[1],
-                author_username: match[1],
-                html: `Check out this tweet: ${url}`,
-                author_url: `https://twitter.com/${match[1]}`,
+                display_name: match[1],
+                username: match[1],
+                tweet_text: 'Check out this tweet',
+                profile_image: `https://unavatar.io/twitter/${match[1]}`,
                 url: url
               })
             }
@@ -43,10 +110,10 @@ const extractTweetId = (url: string) => {
           const match = url.match(/twitter\.com\/([^/]+)\/status\/(\d+)/)
           if (match) {
             setTweetData({
-              author_name: match[1],
-              author_username: match[1],
-              html: `Check out this tweet: ${url}`,
-              author_url: `https://twitter.com/${match[1]}`,
+              display_name: match[1],
+              username: match[1],
+              tweet_text: 'Check out this tweet',
+              profile_image: `https://unavatar.io/twitter/${match[1]}`,
               url: url
             })
           }
@@ -62,11 +129,12 @@ const extractTweetId = (url: string) => {
       return (
         <div className="bg-gray-50 border border-gray-200 rounded-xl p-3 my-2 max-w-sm animate-pulse">
           <div className="flex items-start space-x-2">
-            <div className="w-8 h-8 bg-gray-300 rounded-full"></div>
+            <div className="w-10 h-10 bg-gray-300 rounded-full"></div>
             <div className="flex-1 space-y-2">
               <div className="h-3 bg-gray-300 rounded w-1/2"></div>
               <div className="h-2 bg-gray-300 rounded w-3/4"></div>
               <div className="h-2 bg-gray-300 rounded w-1/2"></div>
+              <div className="h-20 bg-gray-300 rounded-lg w-full"></div>
             </div>
           </div>
         </div>
@@ -80,15 +148,15 @@ const extractTweetId = (url: string) => {
         className="bg-gray-50 border border-gray-200 rounded-xl p-3 my-2 max-w-sm hover:bg-gray-100 transition-colors cursor-pointer"
         onClick={() => window.open(url, '_blank')}
       >
-        <div className="flex items-start space-x-2">
+        <div className="flex items-start space-x-3">
           {/* Profile Image */}
           <img
-            src={tweetData.profile_image_url || tweetData.twitter_image || `https://unavatar.io/twitter/${tweetData.author_username || tweetData.author_name}`}
-            alt={tweetData.author_name}
-            className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+            src={tweetData.profile_image}
+            alt={tweetData.display_name}
+            className="w-10 h-10 rounded-full object-cover flex-shrink-0"
             onError={(e) => {
               const target = e.target as HTMLImageElement
-              target.src = `https://unavatar.io/twitter/${tweetData.author_username || tweetData.author_name}`
+              target.src = `https://unavatar.io/twitter/${tweetData.username}`
             }}
           />
           
@@ -96,36 +164,36 @@ const extractTweetId = (url: string) => {
             {/* Header */}
             <div className="flex items-center space-x-1 mb-1">
               <span className="font-semibold text-gray-900 text-sm truncate">
-                {tweetData.twitter_title || tweetData.author_name}
+                {tweetData.display_name}
               </span>
               {tweetData.verified && (
-                <svg className="w-3 h-3 text-blue-500 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                <svg className="w-4 h-4 text-blue-500 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M22.5 12.5c0-1.58-.875-2.95-2.148-3.6.154-.435.238-.905.238-1.4 0-2.21-1.71-3.998-3.818-3.998-.47 0-.92.084-1.336.25C14.818 2.415 13.51 1.5 12 1.5s-2.816.917-3.437 2.25c-.415-.165-.866-.25-1.336-.25-2.11 0-3.818 1.79-3.818 4 0 .494.083.964.237 1.4-1.272.65-2.147 2.018-2.147 3.6 0 1.495.782 2.798 1.942 3.486-.02.17-.032.34-.032.514 0 2.21 1.708 4 3.818 4 .47 0 .92-.086 1.335-.25.62 1.334 1.926 2.25 3.437 2.25 1.512 0 2.818-.916 3.437-2.25.415.163.865.248 1.336.248 2.11 0 3.818-1.79 3.818-4 0-.174-.012-.344-.033-.513 1.158-.687 1.943-1.99 1.943-3.484zm-6.616-3.334l-4.334 6.5c-.145.217-.382.334-.625.334-.143 0-.288-.04-.416-.126l-2.5-1.67c-.331-.221-.419-.67-.196-1.001.221-.331.669-.419 1.001-.196l1.896 1.265 3.751-5.627c.253-.38.76-.484 1.14-.231.381.253.484.759.231 1.14z"/>
                 </svg>
               )}
-              <span className="text-gray-500 text-xs truncate">
-                @{tweetData.author_username || tweetData.author_name}
+              <span className="text-gray-500 text-sm truncate">
+                @{tweetData.username}
               </span>
-              <span className="text-gray-400 text-xs">·</span>
-              <div className="text-gray-400 text-xs flex items-center">
-                <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
+              <span className="text-gray-400 text-sm">·</span>
+              <div className="text-gray-400 text-sm flex items-center">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
                 </svg>
               </div>
             </div>
             
-            {/* Tweet Content */}
-            <div className="text-gray-800 text-sm leading-relaxed mb-2">
-              {tweetData.twitter_description || tweetData.html?.replace(/<[^>]*>/g, '') || 'View tweet'}
+            {/* Tweet Content - with proper line breaks */}
+            <div className="text-gray-800 text-sm leading-relaxed mb-3 whitespace-pre-line">
+              {tweetData.tweet_text}
             </div>
             
             {/* Media Preview */}
-            {tweetData.media_url && (
-              <div className="rounded-lg overflow-hidden mb-2">
+            {tweetData.has_media && tweetData.media_url && (
+              <div className="rounded-lg overflow-hidden mb-3 border border-gray-200">
                 <img
                   src={tweetData.media_url}
                   alt="Tweet media"
-                  className="w-full h-24 object-cover"
+                  className="w-full h-32 object-cover"
                 />
               </div>
             )}

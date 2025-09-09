@@ -63,15 +63,50 @@ export async function GET(request: NextRequest) {
           profileImage: extractMetaContent(htmlContent, 'twitter:image:src'),
         }
 
-        // Extract username from creator (e.g., "@serc1n")
-        const username = metaTags.creator || metaTags.site || ''
+        // Extract username from creator (e.g., "@serc1n") or from URL
+        let username = metaTags.creator || metaTags.site || ''
+        if (!username) {
+          const urlMatch = tweetUrl.match(/twitter\.com\/([^/]+)\/status/)
+          if (urlMatch) {
+            username = '@' + urlMatch[1]
+          }
+        }
         
-        // Extract display name from title (usually "Name (@username)")
+        // Extract display name from title (usually "Name (@username)" or "Name on X")
         let displayName = oembedData.author_name || ''
         if (metaTags.title) {
-          const titleMatch = metaTags.title.match(/^([^(]+)\s*\(@[^)]+\)/)
+          // Try to extract name from "Name (@username)" format
+          let titleMatch = metaTags.title.match(/^([^(]+)\s*\(@[^)]+\)/)
           if (titleMatch) {
             displayName = titleMatch[1].trim()
+          } else {
+            // Try to extract from "Name on X:" format
+            titleMatch = metaTags.title.match(/^([^:]+)(?:\s*on\s*X)?:?/)
+            if (titleMatch) {
+              displayName = titleMatch[1].trim()
+            }
+          }
+        }
+
+        // Clean up the description to preserve line breaks
+        let cleanDescription = metaTags.description || ''
+        if (cleanDescription) {
+          // Replace common patterns that indicate line breaks
+          cleanDescription = cleanDescription
+            .replace(/\.\s+([A-Z])/g, '.\n$1')  // Period followed by capital letter
+            .replace(/([a-z])\s+([A-Z][a-z])/g, '$1\n$2')  // Lowercase followed by capitalized word
+            .trim()
+        }
+
+        // Try to find profile image from the HTML content
+        let profileImageUrl = metaTags.profileImage
+        if (!profileImageUrl) {
+          // Look for profile images in the HTML
+          const profileImgMatch = htmlContent.match(/<img[^>]+src="([^"]*profile_images[^"]*)"/)
+          if (profileImgMatch) {
+            profileImageUrl = profileImgMatch[1]
+            // Convert to larger size
+            profileImageUrl = profileImageUrl.replace(/_normal\./, '_400x400.')
           }
         }
 
@@ -79,12 +114,12 @@ export async function GET(request: NextRequest) {
         enrichedData = {
           ...oembedData,
           meta_title: metaTags.title,
-          meta_description: metaTags.description,
+          meta_description: cleanDescription,
           meta_image: metaTags.image,
           twitter_card: metaTags.card,
           twitter_creator: username,
           twitter_display_name: displayName,
-          twitter_profile_image: metaTags.profileImage,
+          twitter_profile_image: profileImageUrl,
         }
 
         console.log('✅ Enriched Twitter data:', {
