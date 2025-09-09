@@ -1,5 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+// Add CORS headers for public access
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
+}
+
+export async function OPTIONS() {
+  return new NextResponse(null, { status: 200, headers: corsHeaders })
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
@@ -90,12 +101,12 @@ export async function GET(request: NextRequest) {
       // Continue with basic oEmbed data
     }
 
-    return NextResponse.json(enrichedData)
+    return NextResponse.json(enrichedData, { headers: corsHeaders })
   } catch (error) {
     console.error('❌ Error fetching Twitter data:', error)
     return NextResponse.json(
       { error: 'Failed to fetch tweet data' },
-      { status: 500 }
+      { status: 500, headers: corsHeaders }
     )
   }
 }

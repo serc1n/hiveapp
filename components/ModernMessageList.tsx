@@ -152,7 +152,28 @@ const RichTwitterEmbed = ({ tweetId, url }: { tweetId: string, url: string }) =>
         })
       } catch (err) {
         console.error('Error fetching tweet data:', err)
-        setError(true)
+        
+        // Fallback: Create basic tweet data from URL
+        const urlMatch = url.match(/(?:twitter\.com|x\.com)\/(\w+)\/status\/(\d+)/)
+        if (urlMatch) {
+          const [, username, tweetIdFromUrl] = urlMatch
+          setTweetData({
+            author_name: username,
+            author_username: `@${username}`,
+            author_url: `https://twitter.com/${username}`,
+            text: 'Click to view this post on X',
+            author_profile_image_url: `https://unavatar.io/twitter/${username}`,
+            media: [],
+            public_metrics: {
+              like_count: 0,
+              reply_count: 0,
+              retweet_count: 0
+            },
+            verified: false
+          })
+        } else {
+          setError(true)
+        }
       } finally {
         setLoading(false)
       }
