@@ -333,7 +333,7 @@ export function ModernMessageList({
           const existingReaction = acc.find((r: any) => r.emoji === reaction.emoji)
           if (existingReaction) {
             existingReaction.count += 1
-            existingReaction.users.push(reaction.user)
+            existingReaction.users.push(reaction.user || { id: reaction.userId, name: 'User', twitterHandle: '' })
             if (reaction.userId === currentUserId) {
               existingReaction.userReacted = true
             }
@@ -341,7 +341,7 @@ export function ModernMessageList({
             acc.push({
               emoji: reaction.emoji,
               count: 1,
-              users: [reaction.user],
+              users: [reaction.user || { id: reaction.userId, name: 'User', twitterHandle: '' }],
               userReacted: reaction.userId === currentUserId
             })
           }
@@ -354,10 +354,10 @@ export function ModernMessageList({
               {/* Avatar */}
               {showAvatar && (
                 <div className="flex-shrink-0 w-8 h-8">
-                  {message.user.profileImage ? (
+                  {message.user?.profileImage ? (
                     <img
                       src={message.user.profileImage}
-                      alt={message.user.name}
+                      alt={message.user?.name || 'User'}
                       className="w-8 h-8 rounded-full object-cover"
                       onError={(e) => {
                         const target = e.target as HTMLImageElement
@@ -377,7 +377,7 @@ export function ModernMessageList({
                 {/* Sender name - only for others when showing avatar */}
                 {showName && (
                   <span className="text-xs text-gray-500 mb-1 px-3">
-                    {message.user.name}
+                    {message.user?.name || 'User'}
                   </span>
                 )}
                 
@@ -429,7 +429,7 @@ export function ModernMessageList({
                               ? 'bg-blue-100 text-blue-700 border border-blue-200'
                               : 'bg-gray-100 text-gray-600 border border-gray-200 hover:bg-gray-200'
                           }`}
-                          title={`${reaction.users.map((u: any) => u.name).join(', ')} reacted with ${reaction.emoji}`}
+                          title={`${reaction.users.map((u: any) => u?.name || 'User').join(', ')} reacted with ${reaction.emoji}`}
                         >
                           <span>{reaction.emoji}</span>
                           <span>{reaction.count}</span>
