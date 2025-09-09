@@ -71,6 +71,9 @@ const RichTwitterEmbed = ({ tweetId, url }: { tweetId: string, url: string }) =>
             .trim()
         }
         
+        // Remove pic.twitter.com links from tweet text
+        tweetText = tweetText.replace(/https:\/\/t\.co\/\w+/g, '').replace(/pic\.twitter\.com\/\w+/g, '').trim()
+        
         // Extract username from author_url (more reliable than author_name)
         const authorName = data.author_name || 'Twitter User'
         const authorUrl = data.author_url || url
@@ -87,17 +90,33 @@ const RichTwitterEmbed = ({ tweetId, url }: { tweetId: string, url: string }) =>
         // Try to extract profile image from the HTML
         let profileImageUrl = `https://unavatar.io/twitter/${username}`
         
-        // Look for Twitter profile images in the HTML
+        // Extract media images from the HTML
+        const mediaImages: Array<{type: string, url: string, preview_image_url?: string}> = []
         const imgElements = doc.querySelectorAll('img')
+        
         for (let i = 0; i < imgElements.length; i++) {
           const imgElement = imgElements[i]
           const imgSrc = imgElement.getAttribute('src')
-          if (imgSrc && (
-            imgSrc.includes('twimg.com/profile_images') || 
-            imgSrc.includes('pbs.twimg.com/profile_images')
-          )) {
-            profileImageUrl = imgSrc
-            break
+          if (imgSrc) {
+            // Check if it's a profile image
+            if (imgSrc.includes('twimg.com/profile_images') || imgSrc.includes('pbs.twimg.com/profile_images')) {
+              profileImageUrl = imgSrc
+            }
+            // Check if it's a media image (not profile image)
+            else if (imgSrc.includes('pbs.twimg.com/media/') || imgSrc.includes('twimg.com/media/')) {
+              // Convert to larger size if possible
+              let largerImageUrl = imgSrc
+              if (imgSrc.includes('?format=')) {
+                // Try to get larger version
+                largerImageUrl = imgSrc.replace(/&name=\w+/, '&name=medium').replace(/\?format=\w+&name=\w+/, '?format=jpg&name=medium')
+              }
+              
+              mediaImages.push({
+                type: 'photo',
+                url: largerImageUrl,
+                preview_image_url: imgSrc
+              })
+            }
           }
         }
         
@@ -117,7 +136,8 @@ const RichTwitterEmbed = ({ tweetId, url }: { tweetId: string, url: string }) =>
           username,
           authorUrl,
           tweetText: tweetText.substring(0, 100) + '...',
-          profileImageUrl
+          profileImageUrl,
+          mediaCount: mediaImages.length
         })
         
         setTweetData({
@@ -125,6 +145,7 @@ const RichTwitterEmbed = ({ tweetId, url }: { tweetId: string, url: string }) =>
           author_url: authorUrl,
           text: tweetText,
           author_profile_image_url: profileImageUrl,
+          media: mediaImages,
           public_metrics: {
             like_count: Math.floor(Math.random() * 1000), // Placeholder
             reply_count: Math.floor(Math.random() * 100),
@@ -259,10 +280,63 @@ const RichTwitterEmbed = ({ tweetId, url }: { tweetId: string, url: string }) =>
           </div>
         )}
 
-        {/* Media placeholder */}
+        {/* Media images */}
         {tweetData.media && tweetData.media.length > 0 && (
-          <div className="mb-2 bg-gray-100 rounded-md h-24 flex items-center justify-center">
-            <span className="text-gray-500 text-xs">Media</span>
+          <div className="mb-2">
+            {tweetData.media.length === 1 ? (
+              // Single image - full width
+              <div className="rounded-md overflow-hidden bg-gray-100">
+                <img
+                  src={tweetData.media?.[0]?.url || ''}
+                  alt="Tweet media"
+                  className="w-full h-32 object-cover hover:opacity-95 transition-opacity cursor-pointer"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    if (tweetData.media && tweetData.media[0]) {
+                      window.open(tweetData.media[0].url, '_blank')
+                    }
+                  }}
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement
+                    target.style.display = 'none'
+                  }}
+                />
+              </div>
+            ) : (
+              // Multiple images - grid layout
+              <div className={`grid gap-1 rounded-md overflow-hidden ${
+                (tweetData.media?.length === 2) ? 'grid-cols-2' : 
+                (tweetData.media?.length === 3) ? 'grid-cols-2' : 'grid-cols-2'
+              }`}>
+                {(tweetData.media || []).slice(0, 4).map((media, index) => (
+                  <div key={index} className="relative bg-gray-100">
+                    <img
+                      src={media.url}
+                      alt={`Tweet media ${index + 1}`}
+                      className={`w-full object-cover hover:opacity-95 transition-opacity cursor-pointer ${
+                        (tweetData.media?.length === 3 && index === 0) ? 'row-span-2 h-32' : 'h-16'
+                      }`}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        window.open(media.url, '_blank')
+                      }}
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement
+                        target.style.display = 'none'
+                      }}
+                    />
+                    {/* Show +N indicator for more than 4 images */}
+                    {index === 3 && (tweetData.media?.length || 0) > 4 && (
+                      <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                        <span className="text-white text-xs font-semibold">
+                          +{(tweetData.media?.length || 0) - 4}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
