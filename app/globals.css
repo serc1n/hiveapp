@@ -3,66 +3,6 @@
 @tailwind utilities;
 
 /* React Tweet Styles */
-@import "react-tweet/theme.css";
-
-/* Compact Twitter embed styles for chat */
-.compact-tweet .tweet-container_root__0rJLq {
-  max-width: 240px !important;
-  font-size: 11px !important;
-  border-radius: 8px !important;
-}
-
-.compact-tweet .tweet-header_header__CXzdi {
-  padding: 6px 8px 2px 8px !important;
-}
-
-.compact-tweet .tweet-body_root__ChzUj {
-  padding: 0 8px 6px 8px !important;
-  font-size: 11px !important;
-  line-height: 1.2 !important;
-}
-
-.compact-tweet .tweet-media_root__k6gQ2 {
-  margin: 4px 8px !important;
-}
-
-.compact-tweet .tweet-media_mediaWrapper__6rfqr {
-  max-height: 80px !important;
-  border-radius: 4px !important;
-}
-
-.compact-tweet .tweet-actions_actions__UDw7H {
-  padding: 4px 8px 6px 8px !important;
-  gap: 12px !important;
-}
-
-.compact-tweet .tweet-actions_like__H1xYv,
-.compact-tweet .tweet-actions_reply__S4rFc,
-.compact-tweet .tweet-actions_copy__Tbdg_ {
-  font-size: 10px !important;
-}
-
-.compact-tweet .tweet-info_info__ll_kH {
-  padding: 0 8px 4px 8px !important;
-  font-size: 9px !important;
-}
-
-.compact-tweet .tweet-header_avatar__0Wi9G img {
-  width: 20px !important;
-  height: 20px !important;
-}
-
-.compact-tweet .tweet-header_author___jWoR {
-  font-size: 11px !important;
-}
-
-.compact-tweet .tweet-header_username__UebZb {
-  font-size: 10px !important;
-}
-
-.compact-tweet .tweet-replies_replies__PUxl8 {
-  display: none !important;
-}
 
 /* Import Poppins font */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');

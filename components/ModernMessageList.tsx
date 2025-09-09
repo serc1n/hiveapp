@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import { MoreHorizontal, Megaphone, User, MessageCircle, Bell, Smile, Plus } from 'lucide-react'
 import { useSocket } from '../lib/socketContext'
 import { HiveLogo } from './HiveLogo'
-import { Tweet } from 'react-tweet'
 
 // Helper function to detect Twitter/X URLs and extract tweet ID
 const extractTweetId = (url: string) => {
@@ -13,16 +12,136 @@ const extractTweetId = (url: string) => {
   return match ? match[1] : null
 }
 
-// Compact Twitter embed component using react-tweet
-const RichTwitterEmbed = ({ tweetId }: { tweetId: string, url: string }) => {
-  return (
-    <div className="my-1 max-w-xs transform scale-75 origin-top-left -mb-4">
-      <div className="compact-tweet">
-        <Tweet id={tweetId} />
+  // Compact Twitter card component - authentic style but smaller
+  const CompactTwitterCard = ({ tweetId, url }: { tweetId: string, url: string }) => {
+    const [tweetData, setTweetData] = useState<any>(null)
+    const [loading, setLoading] = useState(true)
+
+    useEffect(() => {
+      const fetchTweetData = async () => {
+        try {
+          const response = await fetch(`/api/twitter/oembed?url=${encodeURIComponent(url)}`)
+          if (response.ok) {
+            const data = await response.json()
+            setTweetData(data)
+          } else {
+            // Fallback: extract basic info from URL
+            const match = url.match(/twitter\.com\/([^/]+)\/status\/(\d+)/)
+            if (match) {
+              setTweetData({
+                author_name: match[1],
+                author_username: match[1],
+                html: `Check out this tweet: ${url}`,
+                author_url: `https://twitter.com/${match[1]}`,
+                url: url
+              })
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching tweet:', error)
+          // Fallback for any error
+          const match = url.match(/twitter\.com\/([^/]+)\/status\/(\d+)/)
+          if (match) {
+            setTweetData({
+              author_name: match[1],
+              author_username: match[1],
+              html: `Check out this tweet: ${url}`,
+              author_url: `https://twitter.com/${match[1]}`,
+              url: url
+            })
+          }
+        } finally {
+          setLoading(false)
+        }
+      }
+
+      fetchTweetData()
+    }, [url])
+
+    if (loading) {
+      return (
+        <div className="bg-gray-50 border border-gray-200 rounded-xl p-3 my-2 max-w-sm animate-pulse">
+          <div className="flex items-start space-x-2">
+            <div className="w-8 h-8 bg-gray-300 rounded-full"></div>
+            <div className="flex-1 space-y-2">
+              <div className="h-3 bg-gray-300 rounded w-1/2"></div>
+              <div className="h-2 bg-gray-300 rounded w-3/4"></div>
+              <div className="h-2 bg-gray-300 rounded w-1/2"></div>
+            </div>
+          </div>
+        </div>
+      )
+    }
+
+    if (!tweetData) return null
+
+    return (
+      <div 
+        className="bg-gray-50 border border-gray-200 rounded-xl p-3 my-2 max-w-sm hover:bg-gray-100 transition-colors cursor-pointer"
+        onClick={() => window.open(url, '_blank')}
+      >
+        <div className="flex items-start space-x-2">
+          {/* Profile Image */}
+          <img
+            src={tweetData.profile_image_url || tweetData.twitter_image || `https://unavatar.io/twitter/${tweetData.author_username || tweetData.author_name}`}
+            alt={tweetData.author_name}
+            className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+            onError={(e) => {
+              const target = e.target as HTMLImageElement
+              target.src = `https://unavatar.io/twitter/${tweetData.author_username || tweetData.author_name}`
+            }}
+          />
+          
+          <div className="flex-1 min-w-0">
+            {/* Header */}
+            <div className="flex items-center space-x-1 mb-1">
+              <span className="font-semibold text-gray-900 text-sm truncate">
+                {tweetData.twitter_title || tweetData.author_name}
+              </span>
+              {tweetData.verified && (
+                <svg className="w-3 h-3 text-blue-500 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M22.5 12.5c0-1.58-.875-2.95-2.148-3.6.154-.435.238-.905.238-1.4 0-2.21-1.71-3.998-3.818-3.998-.47 0-.92.084-1.336.25C14.818 2.415 13.51 1.5 12 1.5s-2.816.917-3.437 2.25c-.415-.165-.866-.25-1.336-.25-2.11 0-3.818 1.79-3.818 4 0 .494.083.964.237 1.4-1.272.65-2.147 2.018-2.147 3.6 0 1.495.782 2.798 1.942 3.486-.02.17-.032.34-.032.514 0 2.21 1.708 4 3.818 4 .47 0 .92-.086 1.335-.25.62 1.334 1.926 2.25 3.437 2.25 1.512 0 2.818-.916 3.437-2.25.415.163.865.248 1.336.248 2.11 0 3.818-1.79 3.818-4 0-.174-.012-.344-.033-.513 1.158-.687 1.943-1.99 1.943-3.484zm-6.616-3.334l-4.334 6.5c-.145.217-.382.334-.625.334-.143 0-.288-.04-.416-.126l-2.5-1.67c-.331-.221-.419-.67-.196-1.001.221-.331.669-.419 1.001-.196l1.896 1.265 3.751-5.627c.253-.38.76-.484 1.14-.231.381.253.484.759.231 1.14z"/>
+                </svg>
+              )}
+              <span className="text-gray-500 text-xs truncate">
+                @{tweetData.author_username || tweetData.author_name}
+              </span>
+              <span className="text-gray-400 text-xs">·</span>
+              <div className="text-gray-400 text-xs flex items-center">
+                <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
+                </svg>
+              </div>
+            </div>
+            
+            {/* Tweet Content */}
+            <div className="text-gray-800 text-sm leading-relaxed mb-2">
+              {tweetData.twitter_description || tweetData.html?.replace(/<[^>]*>/g, '') || 'View tweet'}
+            </div>
+            
+            {/* Media Preview */}
+            {tweetData.media_url && (
+              <div className="rounded-lg overflow-hidden mb-2">
+                <img
+                  src={tweetData.media_url}
+                  alt="Tweet media"
+                  className="w-full h-24 object-cover"
+                />
+              </div>
+            )}
+            
+            {/* Footer */}
+            <div className="flex items-center text-gray-400 text-xs">
+              <span>View on</span>
+              <svg className="w-3 h-3 mx-1" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
+              </svg>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
-  )
-}
+    )
+  }
 
 // Emoji picker component
 const EmojiPicker = ({ onEmojiSelect, position, messageId }: { 
@@ -61,7 +180,7 @@ const renderMessageContent = (content: string) => {
       // Check if it's a Twitter/X link
       const tweetId = extractTweetId(part)
       if (tweetId) {
-        return <RichTwitterEmbed key={index} tweetId={tweetId} url={part} />
+        return <CompactTwitterCard key={index} tweetId={tweetId} url={part} />
       }
       
       const isInstagramLink = part.includes('instagram.com')
