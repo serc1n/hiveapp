@@ -509,7 +509,7 @@ export function ModernMessageList({
   }
 
   return (
-    <div className="flex-1 overflow-y-auto p-4">
+    <div className="flex-1 overflow-y-auto p-4 bg-black">
       {localMessages.map((message, index) => {
         const isOwn = message.userId === currentUserId
         const showAvatar = !isOwn && (index === 0 || localMessages[index - 1].userId !== message.userId)
@@ -566,34 +566,18 @@ export function ModernMessageList({
               )}
               
               {/* Message container */}
-              <div className={`flex flex-col ${isOwn ? 'items-end' : 'items-start'}`}>
-                {/* Sender name - only for others when showing avatar */}
-                {showName && (
-                  <span className="text-xs text-gray-500 mb-1 px-3">
-                    {message.user?.name || 'User'}
-                  </span>
-                )}
-                
+              <div className={`flex flex-col ${isOwn ? 'items-end' : 'items-start'} flex-1`}>
                 {/* Message bubble with reactions */}
                 <div className="relative">
                   <div
-                    className={`px-4 py-3 rounded-2xl shadow-sm ${
+                    className={`px-4 py-2 rounded-2xl shadow-sm max-w-xs ${
                       isOwn
-                        ? 'bg-gradient-primary text-white rounded-br-md'
-                        : 'bg-white text-gray-900 border border-gray-200 rounded-bl-md'
+                        ? 'bg-blue-500 text-white'
+                        : 'bg-gray-700 text-white'
                     }`}
                   >
                     <div className="text-sm leading-relaxed whitespace-pre-wrap break-words">
                       {renderMessageContent(message.content)}
-                    </div>
-                    
-                    {/* Timestamp */}
-                    <div className={`text-xs text-gray-400 mt-1 ${isOwn ? 'text-right' : 'text-left'}`}>
-                      {new Date(message.createdAt).toLocaleTimeString('en-US', { 
-                        hour: 'numeric', 
-                        minute: '2-digit',
-                        hour12: true 
-                      })}
                     </div>
                     
                     {/* Reaction button */}
@@ -640,6 +624,21 @@ export function ModernMessageList({
                     </div>
                   )}
                 </div>
+                
+                {/* Username and timestamp below message - only for first message from sender */}
+                {showName && (
+                  <div className="text-xs text-gray-400 mt-1 px-1">
+                    <span className="font-medium text-gray-300">{message.user?.name || 'User'}</span>
+                    <span className="mx-1">•</span>
+                    <span>
+                      {new Date(message.createdAt).toLocaleTimeString('en-US', { 
+                        hour: 'numeric', 
+                        minute: '2-digit',
+                        hour12: true 
+                      })}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
