@@ -509,11 +509,12 @@ export function ModernMessageList({
   }
 
   return (
-    <div className="flex-1 overflow-y-auto p-4 space-y-4">
+    <div className="flex-1 overflow-y-auto p-4">
       {localMessages.map((message, index) => {
         const isOwn = message.userId === currentUserId
         const showAvatar = !isOwn && (index === 0 || localMessages[index - 1].userId !== message.userId)
         const showName = !isOwn && (index === 0 || localMessages[index - 1].userId !== message.userId)
+        const isConsecutive = index > 0 && localMessages[index - 1].userId === message.userId
         
         // Process reactions to group by emoji
         const processedReactions = (message.reactions || []).reduce((acc: any, reaction: any) => {
@@ -536,25 +537,30 @@ export function ModernMessageList({
         }, [])
 
         return (
-          <div key={message.id} className={`flex ${isOwn ? 'justify-end' : 'justify-start'} group`}>
-            <div className={`flex max-w-[70%] ${isOwn ? 'flex-row-reverse' : 'flex-row'} items-end space-x-2`}>
-              {/* Avatar */}
-              {showAvatar && (
+          <div key={message.id} className={`flex ${isOwn ? 'justify-end' : 'justify-start'} group ${isConsecutive ? 'mt-1' : 'mt-4'}`}>
+            <div className={`flex max-w-[70%] ${isOwn ? 'flex-row-reverse' : 'flex-row'} ${showAvatar ? 'items-end' : 'items-start'} space-x-2`}>
+              {/* Avatar - only show for other users */}
+              {!isOwn && (
                 <div className="flex-shrink-0 w-8 h-8">
-                  {message.user?.profileImage ? (
-                    <img
-                      src={message.user.profileImage}
-                      alt={message.user?.name || 'User'}
-                      className="w-8 h-8 rounded-full object-cover"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement
-                        target.src = '/default-avatar.png'
-                      }}
-                    />
+                  {showAvatar ? (
+                    message.user?.profileImage ? (
+                      <img
+                        src={message.user.profileImage}
+                        alt={message.user?.name || 'User'}
+                        className="w-8 h-8 rounded-full object-cover"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement
+                          target.src = '/default-avatar.png'
+                        }}
+                      />
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-gradient-primary flex items-center justify-center">
+                        <User className="w-4 h-4 text-white" />
+                      </div>
+                    )
                   ) : (
-                    <div className="w-8 h-8 rounded-full bg-gradient-primary flex items-center justify-center">
-                      <User className="w-4 h-4 text-white" />
-                    </div>
+                    // Empty space to maintain alignment for consecutive messages
+                    <div className="w-8 h-8"></div>
                   )}
                 </div>
               )}
@@ -579,6 +585,15 @@ export function ModernMessageList({
                   >
                     <div className="text-sm leading-relaxed whitespace-pre-wrap break-words">
                       {renderMessageContent(message.content)}
+                    </div>
+                    
+                    {/* Timestamp */}
+                    <div className={`text-xs text-gray-400 mt-1 ${isOwn ? 'text-right' : 'text-left'}`}>
+                      {new Date(message.createdAt).toLocaleTimeString('en-US', { 
+                        hour: 'numeric', 
+                        minute: '2-digit',
+                        hour12: true 
+                      })}
                     </div>
                     
                     {/* Reaction button */}
