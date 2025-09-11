@@ -198,16 +198,16 @@ export function MobileExploreView({ onSelectGroup }: MobileExploreViewProps) {
                         {/* Group Avatar */}
                         <div className="flex-shrink-0">
                           <div className="w-16 h-16 bg-gradient-primary rounded-2xl flex items-center justify-center overflow-hidden">
-                          {group.profileImage ? (
-                            <img
-                              src={group.profileImage}
-                              alt={group.name}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <Hash className="w-8 h-8 text-white" />
-                          )}
-                        </div>
+                            {group.profileImage ? (
+                              <img
+                                src={group.profileImage}
+                                alt={group.name}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <Hash className="w-8 h-8 text-white" />
+                            )}
+                          </div>
                         </div>
                         
                         {/* Group Info */}
