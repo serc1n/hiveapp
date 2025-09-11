@@ -127,15 +127,15 @@ export function MobileExploreView({ onSelectGroup }: MobileExploreViewProps) {
   return (
     <div className="h-full flex flex-col bg-white">
       {/* Search Header */}
-      <div className="px-6 py-4 bg-white border-b border-gray-100">
-        <div className="relative">
-          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+      <div className="px-4 py-6 bg-white border-b border-gray-100">
+        <div className="relative max-w-7xl mx-auto">
+          <Search className="absolute left-5 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
           <input
             type="text"
             placeholder="Search hives..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-base placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+            className="w-full pl-14 pr-4 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-base placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
           />
         </div>
       </div>
@@ -165,14 +165,16 @@ export function MobileExploreView({ onSelectGroup }: MobileExploreViewProps) {
           <>
             {/* Featured Section */}
             {!searchQuery && (
-              <div className="px-6 py-4 bg-gradient-to-r from-indigo-50 to-purple-50 border-b border-gray-100">
-                <div className="flex items-center space-x-2 mb-2">
-                  <Sparkles className="w-5 h-5 text-indigo-600" />
-                  <h2 className="text-lg font-semibold text-gray-900">Discover New Hives</h2>
+              <div className="px-4 py-6 bg-gradient-to-r from-indigo-50 to-purple-50 border-b border-gray-100">
+                <div className="max-w-7xl mx-auto">
+                  <div className="flex items-center space-x-3 mb-3">
+                    <Sparkles className="w-6 h-6 text-indigo-600" />
+                    <h2 className="text-xl font-semibold text-gray-900">Discover New Hives</h2>
+                  </div>
+                  <p className="text-base text-gray-600">
+                    Join conversations that match your interests
+                  </p>
                 </div>
-                <p className="text-sm text-gray-600">
-                  Join conversations that match your interests
-                </p>
               </div>
             )}
 
@@ -190,11 +192,12 @@ export function MobileExploreView({ onSelectGroup }: MobileExploreViewProps) {
                     }
                   }}
                 >
-                  <div className="px-6 py-4">
-                    <div className="flex items-center space-x-4">
-                      {/* Group Avatar */}
-                      <div className="flex-shrink-0">
-                        <div className="w-14 h-14 bg-gradient-primary rounded-2xl flex items-center justify-center overflow-hidden">
+                  <div className="px-4 py-5">
+                    <div className="max-w-7xl mx-auto">
+                      <div className="flex items-center space-x-4">
+                        {/* Group Avatar */}
+                        <div className="flex-shrink-0">
+                          <div className="w-16 h-16 bg-gradient-primary rounded-2xl flex items-center justify-center overflow-hidden">
                           {group.profileImage ? (
                             <img
                               src={group.profileImage}
@@ -202,18 +205,18 @@ export function MobileExploreView({ onSelectGroup }: MobileExploreViewProps) {
                               className="w-full h-full object-cover"
                             />
                           ) : (
-                            <Hash className="w-7 h-7 text-white" />
+                            <Hash className="w-8 h-8 text-white" />
                           )}
                         </div>
-                      </div>
-                      
-                      {/* Group Info */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between mb-1">
-                          <div className="flex items-center space-x-2 flex-1 min-w-0">
-                            <h3 className="font-semibold text-gray-900 truncate text-base">
-                              {group.name}
-                            </h3>
+                        </div>
+                        
+                        {/* Group Info */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center space-x-2 flex-1 min-w-0">
+                              <h3 className="font-semibold text-gray-900 truncate text-lg">
+                                {group.name}
+                              </h3>
                             
                             {/* Badges */}
                             <div className="flex items-center space-x-1 flex-shrink-0">
@@ -248,31 +251,31 @@ export function MobileExploreView({ onSelectGroup }: MobileExploreViewProps) {
                           )}
                         </div>
                         
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-4">
-                            <p className="text-sm text-gray-600 flex items-center">
-                              <Users className="w-3 h-3 mr-1" />
-                              {formatMemberCount(group.memberCount)} members
-                            </p>
-                            
-                            {group.contractAddress && (
-                              <p className="text-xs text-yellow-600 bg-yellow-50 px-2 py-1 rounded-lg font-medium">
-                                Token Gated
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-4">
+                              <p className="text-base text-gray-600 flex items-center">
+                                <Users className="w-4 h-4 mr-2" />
+                                {formatMemberCount(group.memberCount)} members
                               </p>
-                            )}
+                              
+                              {group.contractAddress && (
+                                <p className="text-sm text-yellow-600 bg-yellow-50 px-3 py-1 rounded-lg font-medium">
+                                  Token Gated
+                                </p>
+                              )}
+                            </div>
                           </div>
+                          
+                          {/* Description if available */}
+                          {group.description && (
+                            <p className="text-base text-gray-500 mt-2 line-clamp-2">
+                              {group.description}
+                            </p>
+                          )}
                         </div>
-                        
-                        {/* Description if available */}
-                        {group.description && (
-                          <p className="text-sm text-gray-500 mt-1 line-clamp-2">
-                            {group.description}
-                          </p>
-                        )}
                       </div>
                     </div>
                   </div>
-                </div>
               ))}
             </div>
           </>

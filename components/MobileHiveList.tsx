@@ -248,11 +248,12 @@ export function MobileHiveList({ selectedGroupId, onSelectGroup, refreshTrigger 
                   onSelectGroup(group.id)
                 }}
               >
-                <div className="px-6 py-4">
-                  <div className="flex items-center space-x-4">
-                    {/* Group Avatar */}
-                    <div className="relative flex-shrink-0">
-                      <div className="w-14 h-14 bg-gradient-primary rounded-2xl flex items-center justify-center overflow-hidden">
+                <div className="px-4 py-5">
+                  <div className="max-w-7xl mx-auto">
+                    <div className="flex items-center space-x-4">
+                      {/* Group Avatar */}
+                      <div className="relative flex-shrink-0">
+                        <div className="w-16 h-16 bg-gradient-primary rounded-2xl flex items-center justify-center overflow-hidden">
                         {group.profileImage ? (
                           <img
                             src={group.profileImage}
@@ -260,13 +261,13 @@ export function MobileHiveList({ selectedGroupId, onSelectGroup, refreshTrigger 
                             className="w-full h-full object-cover"
                           />
                         ) : (
-                          <Hash className="w-7 h-7 text-white" />
+                          <Hash className="w-8 h-8 text-white" />
                         )}
                       </div>
                       
                       {/* Unread badge */}
                       {unreadCounts[group.id] > 0 && (
-                        <div className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full min-w-[22px] h-5 flex items-center justify-center px-1 font-semibold border-2 border-white">
+                        <div className="absolute -top-2 -right-2 bg-red-500 text-white text-sm rounded-full min-w-[24px] h-6 flex items-center justify-center px-1 font-semibold border-2 border-white">
                           {unreadCounts[group.id] > 99 ? '99+' : unreadCounts[group.id]}
                         </div>
                       )}
@@ -274,9 +275,9 @@ export function MobileHiveList({ selectedGroupId, onSelectGroup, refreshTrigger 
                     
                     {/* Group Info */}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center space-x-2 flex-1 min-w-0">
-                          <h3 className="font-semibold text-gray-900 truncate text-base">
+                          <h3 className="font-semibold text-gray-900 truncate text-lg">
                             {group.name}
                           </h3>
                           
@@ -296,18 +297,18 @@ export function MobileHiveList({ selectedGroupId, onSelectGroup, refreshTrigger 
                         </div>
                         
                         <div className="flex items-center space-x-2 flex-shrink-0 ml-2">
-                          <span className="text-xs text-gray-500">
+                          <span className="text-sm text-gray-500">
                             {group.lastMessage 
                               ? formatTime(group.lastMessage.createdAt)
                               : formatTime(group.updatedAt)
                             }
                           </span>
-                          <ChevronRight className="w-4 h-4 text-gray-400" />
+                          <ChevronRight className="w-5 h-5 text-gray-400" />
                         </div>
                       </div>
                       
                       <div className="flex items-center justify-between">
-                        <p className="text-sm text-gray-600 truncate flex-1">
+                        <p className="text-base text-gray-600 truncate flex-1">
                           {group.lastMessage 
                             ? (
                               <span>
@@ -317,7 +318,7 @@ export function MobileHiveList({ selectedGroupId, onSelectGroup, refreshTrigger 
                             )
                             : (
                               <span className="flex items-center">
-                                <Users className="w-3 h-3 mr-1" />
+                                <Users className="w-4 h-4 mr-2" />
                                 {group.memberCount} member{group.memberCount !== 1 ? 's' : ''}
                               </span>
                             )
@@ -325,6 +326,7 @@ export function MobileHiveList({ selectedGroupId, onSelectGroup, refreshTrigger 
                         </p>
                       </div>
                     </div>
+                  </div>
                   </div>
                 </div>
               </div>

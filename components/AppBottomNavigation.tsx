@@ -20,7 +20,7 @@ export function AppBottomNavigation({ activeTab, onTabChange, onCreateHive }: Ap
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 safe-area-pb">
       {/* Tab Bar */}
-      <div className="flex items-center justify-around px-2 py-2">
+      <div className="flex items-center justify-around px-4 py-3 max-w-7xl mx-auto">
         {tabs.map((tab, index) => {
           const Icon = tab.icon
           const isActive = activeTab === tab.id
@@ -34,30 +34,30 @@ export function AppBottomNavigation({ activeTab, onTabChange, onCreateHive }: Ap
                   onTabChange(tab.id as any)
                 }
               }}
-              className={`flex flex-col items-center justify-center py-2 px-4 min-w-0 flex-1 transition-all duration-200 haptic-light ${
+              className={`flex flex-col items-center justify-center py-3 px-6 min-w-0 flex-1 transition-all duration-200 haptic-light ${
                 isActive 
                   ? 'text-indigo-600' 
                   : 'text-gray-500'
               }`}
             >
-              <div className={`relative p-2 rounded-2xl transition-all duration-200 ${
+              <div className={`relative p-3 rounded-2xl transition-all duration-200 ${
                 isActive 
                   ? 'bg-indigo-100 transform scale-105' 
                   : 'hover:bg-gray-100'
               }`}>
                 {tab.useCustomIcon && tab.id === 'chats' ? (
-                  <HiveLogo className={`w-6 h-6 ${isActive ? 'text-indigo-600' : 'text-gray-500'}`} />
+                  <HiveLogo className={`w-7 h-7 ${isActive ? 'text-indigo-600' : 'text-gray-500'}`} />
                 ) : (
-                  <Icon className={`w-6 h-6 ${isActive ? 'text-indigo-600' : 'text-gray-500'}`} />
+                  <Icon className={`w-7 h-7 ${isActive ? 'text-indigo-600' : 'text-gray-500'}`} />
                 )}
                 
                 {/* Active indicator dot */}
                 {isActive && (
-                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-indigo-600 rounded-full border-2 border-white"></div>
+                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-indigo-600 rounded-full border-2 border-white"></div>
                 )}
               </div>
               
-              <span className={`text-xs font-medium mt-1 transition-all duration-200 ${
+              <span className={`text-sm font-medium mt-2 transition-all duration-200 ${
                 isActive 
                   ? 'text-indigo-600 font-semibold' 
                   : 'text-gray-500'

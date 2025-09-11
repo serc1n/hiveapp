@@ -61,17 +61,17 @@ export function MobileAppLayout() {
       <div className="h-safe-area-top bg-white"></div>
       
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-primary rounded-2xl flex items-center justify-center">
-              <HiveLogo className="w-6 h-6 text-white" />
+      <div className="bg-white border-b border-gray-200 px-4 py-6">
+        <div className="flex items-center justify-between max-w-7xl mx-auto">
+          <div className="flex items-center space-x-4">
+            <div className="w-12 h-12 bg-gradient-primary rounded-2xl flex items-center justify-center">
+              <HiveLogo className="w-7 h-7 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-gray-900">
+              <h1 className="text-2xl font-bold text-gray-900">
                 {activeTab === 'chats' ? 'Hives' : activeTab === 'explore' ? 'Explore' : 'Profile'}
               </h1>
-              <p className="text-sm text-gray-500">
+              <p className="text-base text-gray-500">
                 {activeTab === 'chats' ? 'Your conversations' : activeTab === 'explore' ? 'Discover new hives' : 'Manage your account'}
               </p>
             </div>
@@ -79,7 +79,7 @@ export function MobileAppLayout() {
           
           {/* Optional header actions */}
           {session?.user?.image && (
-            <div className="w-8 h-8 rounded-full overflow-hidden">
+            <div className="w-10 h-10 rounded-full overflow-hidden">
               <img
                 src={session.user.image}
                 alt="Profile"
