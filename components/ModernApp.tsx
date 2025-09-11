@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react'
 import { ModernSidebar } from './ModernSidebar'
 import { ModernChatView } from './ModernChatView'
 import { ModernMobileNav } from './ModernMobileNav'
+import { MobileAppLayout } from './MobileAppLayout'
 import { ProfileTab } from './ProfileTab'
 import { HiveLogo } from './HiveLogo'
 import { NotificationPermission } from './NotificationPermission'
@@ -123,42 +124,9 @@ export function ModernApp() {
         </>
       )}
       
-      {/* Mobile Layout */}
+      {/* Mobile Layout - New App-like Design */}
       {isMobile && (
-        <div className="flex-1 flex flex-col mobile-full">
-          {selectedGroupId ? (
-            <ModernChatView 
-              groupId={selectedGroupId} 
-              onBack={handleBackToList}
-              isMobile={true}
-              onGroupDeleted={handleGroupDeleted}
-              onNavigateToMyHives={handleNavigateToMyHives}
-            />
-          ) : activeTab === 'profile' ? (
-            <div className="flex-1 overflow-y-auto bg-gray-50 pb-20">
-              <ProfileTab />
-            </div>
-          ) : (
-            <div className="flex-1 overflow-hidden">
-            <ModernSidebar
-              activeTab={activeTab}
-              onTabChange={setActiveTab}
-              selectedGroupId={selectedGroupId}
-              onSelectGroup={handleSelectGroup}
-              isMobile={true}
-              refreshTrigger={refreshTrigger}
-            />
-            </div>
-          )}
-          {!selectedGroupId && (
-            <div className="fixed bottom-0 left-0 right-0 z-50">
-              <ModernMobileNav
-                activeTab={activeTab}
-                onTabChange={setActiveTab}
-              />
-            </div>
-          )}
-        </div>
+        <MobileAppLayout />
       )}
     </div>
   )

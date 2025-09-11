@@ -2,6 +2,105 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Mobile App Safe Areas */
+.safe-area-pb {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.safe-area-pt {
+  padding-top: env(safe-area-inset-top);
+}
+
+.h-safe-area-top {
+  height: env(safe-area-inset-top);
+}
+
+.h-safe-area-bottom {
+  height: env(safe-area-inset-bottom);
+}
+
+/* Mobile App Styles */
+.mobile-full {
+  height: 100vh;
+  height: 100dvh; /* Dynamic viewport height for mobile */
+}
+
+/* Smooth scrolling for mobile */
+.mobile-scroll {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* Hide scrollbar but keep functionality */
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Haptic feedback simulation */
+.haptic-light {
+  transition: transform 0.1s ease;
+}
+
+.haptic-light:active {
+  transform: scale(0.98);
+}
+
+.haptic-medium {
+  transition: transform 0.1s ease;
+}
+
+.haptic-medium:active {
+  transform: scale(0.95);
+}
+
+/* App-like card styles */
+.app-card {
+  @apply bg-white rounded-2xl shadow-sm border border-gray-100;
+  transition: all 0.2s ease;
+}
+
+.app-card:hover {
+  @apply shadow-md transform -translate-y-0.5;
+}
+
+.app-card:active {
+  @apply transform scale-98;
+}
+
+/* Mobile-first button styles */
+.btn-mobile {
+  @apply w-full py-4 px-6 rounded-2xl font-semibold text-base;
+  min-height: 52px;
+  touch-action: manipulation;
+}
+
+.btn-mobile-primary {
+  @apply btn-mobile bg-gradient-primary text-white;
+}
+
+.btn-mobile-secondary {
+  @apply btn-mobile bg-gray-100 text-gray-900;
+}
+
+/* Pull to refresh styles */
+.ptr-container {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Status bar styles for PWA */
+@media (display-mode: standalone) {
+  .status-bar-spacer {
+    height: env(safe-area-inset-top);
+    background: white;
+  }
+}
+
 /* React Tweet Styles */
 
 /* Import Poppins font */

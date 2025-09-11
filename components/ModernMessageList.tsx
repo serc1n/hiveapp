@@ -509,7 +509,7 @@ export function ModernMessageList({
   }
 
   return (
-    <div className="flex-1 overflow-y-auto p-4 bg-black">
+    <div className="flex-1 overflow-y-auto p-4">
       {localMessages.map((message, index) => {
         const isOwn = message.userId === currentUserId
         const showAvatar = !isOwn && (index === 0 || localMessages[index - 1].userId !== message.userId)

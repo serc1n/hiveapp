@@ -1,12 +1,13 @@
 {
   "name": "HiveApp - Token Gated Chat",
   "short_name": "HiveApp",
-  "description": "Modern token-gated chat application with Twitter authentication",
+  "description": "Modern token-gated chat application with Web3 authentication",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0f172a",
-  "theme_color": "#3b82f6",
+  "background_color": "#ffffff",
+  "theme_color": "#4f46e5",
   "orientation": "portrait-primary",
+  "scope": "/",
   "icons": [
     {
       "src": "/hive.png",
@@ -33,7 +34,47 @@
       "purpose": "maskable"
     }
   ],
-  "categories": ["social", "communication"],
+  "categories": ["social", "communication", "productivity"],
   "lang": "en",
-  "dir": "ltr"
+  "dir": "ltr",
+  "prefer_related_applications": false,
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
+  "display_override": ["window-controls-overlay", "standalone"],
+  "launch_handler": {
+    "client_mode": "focus-existing"
+  },
+  "protocol_handlers": [
+    {
+      "protocol": "web+hiveapp",
+      "url": "/?action=%s"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "My Hives",
+      "short_name": "Hives",
+      "description": "View your conversations",
+      "url": "/?tab=chats",
+      "icons": [
+        {
+          "src": "/hive.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Explore",
+      "short_name": "Explore",
+      "description": "Discover new hives",
+      "url": "/?tab=explore",
+      "icons": [
+        {
+          "src": "/hive.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ]
 }
