@@ -69,7 +69,7 @@
 }
 
 .app-card:active {
-  @apply transform scale-98;
+  @apply transform scale-95;
 }
 
 /* Mobile-first button styles */
