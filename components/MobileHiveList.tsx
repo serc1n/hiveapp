@@ -332,7 +332,6 @@ export function MobileHiveList({ selectedGroupId, onSelectGroup, refreshTrigger 
           ))}
         </div>
       </div>
-    </PullToRefresh>
 
       {/* Native Notification */}
       {notification && (
@@ -343,6 +342,6 @@ export function MobileHiveList({ selectedGroupId, onSelectGroup, refreshTrigger 
           onClose={hideNotification}
         />
       )}
-    </div>
+    </PullToRefresh>
   )
 }
